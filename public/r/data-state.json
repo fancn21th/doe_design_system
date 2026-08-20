@@ -1,8 +1,8 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "data-state",
-  "title": "DOE Data State",
-  "description": "Displays DOE evaluation and data readiness states while preserving semantic differences between PARTIAL, NO_DATA, FAILED, N/A and INSUFFICIENT_DATA.",
+  "title": "DOE 数据状态 / Data State",
+  "description": "展示 DOE evaluation 与 data readiness states，并保留 PARTIAL、NO_DATA、FAILED、N/A、INSUFFICIENT_DATA 之间的语义差异。",
   "dependencies": [
     "@base-ui/react",
     "class-variance-authority",

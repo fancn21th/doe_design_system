@@ -1,11 +1,11 @@
 ---
-title: Coding Rules
-description: First AI-readable rules for using DOE UI components correctly.
+title: 编码规则 / Coding Rules
+description: 面向 AI 的第一批 DOE UI 使用规则。
 ---
 
-1. Reuse existing domain components before creating new ones.
-2. Do not convert `NO_DATA`, `N/A`, or missing values to zero.
-3. Planned Condition must not be presented as Actual Condition.
-4. Current Round Report is read-only.
-5. Descriptive evidence must not be presented as causal conclusions.
-6. Use `DataState` for DOE data and evaluation states.
+1. 创建新组件前，优先复用已有领域组件 / Domain Components。
+2. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
+3. Planned Condition 不能展示成 Actual Condition。
+4. Current Round Report 必须保持只读 / Read-only。
+5. 描述性证据 / Descriptive Evidence 不能被展示成因果结论 / Causal Conclusion。
+6. DOE 数据状态和 Evaluation State 应优先使用 `DataState`。

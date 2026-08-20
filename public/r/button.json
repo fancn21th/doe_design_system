@@ -2,7 +2,7 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "button",
   "title": "Button",
-  "description": "Base DOE UI action component built on the local shadcn/Base UI foundation.",
+  "description": "DOE 基础 UI action 组件，基于本地 shadcn/Base UI foundation。",
   "dependencies": [
     "@base-ui/react",
     "class-variance-authority",

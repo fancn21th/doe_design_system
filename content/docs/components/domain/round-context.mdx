@@ -1,15 +1,15 @@
 ---
 title: RoundContext
-description: A compact summary for the active DOE Round boundary.
+description: 用于展示当前 DOE Round boundary 的紧凑摘要组件。
 ---
 
 import { RoundContextDemo } from "@/components/docs/demos/round-context-demo"
 
-## Preview
+## 预览 / Preview
 
 <RoundContextDemo />
 
-## Usage
+## 用法 / Usage
 
 ```tsx
 import { RoundContext } from "@/components/domain/round-context"
@@ -29,13 +29,13 @@ export function Example() {
 }
 ```
 
-Round represents one DOE iteration.
+Round 表示一次 DOE iteration。
 
-A Round owns its own:
+一个 Round 拥有自己的：
 
 - Split design
 - Execution
 - Data
 - Current-round analysis boundary
 
-Current Round Report equals one Round plus one read-only Round Snapshot.
+Current Round Report 等于一个 Round 加一个只读 Round Snapshot。

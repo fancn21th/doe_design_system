@@ -1,15 +1,15 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "round-context",
-  "title": "DOE Round Context",
-  "description": "Displays the active DOE Round boundary including Round, Lot, Split Version and Wafer Count for current-round analysis surfaces.",
+  "title": "DOE 轮次上下文 / Round Context",
+  "description": "展示当前 DOE Round boundary，包括 Round、Lot、Split Version 和 Wafer Count，用于 current-round analysis surfaces。",
   "dependencies": [
     "zod"
   ],
   "files": [
     {
       "path": "src/components/domain/round-context.tsx",
-      "content": "import type { Round } from \"../../schemas/round\"\n\ninterface RoundContextProps {\n  round: Round\n}\n\nexport function RoundContext({\n  round,\n}: RoundContextProps) {\n  return (\n    <div className=\"flex gap-6 text-sm\">\n      <div>\n        <div className=\"text-muted-foreground\">Round</div>\n        <div>{round.name}</div>\n      </div>\n\n      <div>\n        <div className=\"text-muted-foreground\">Lot</div>\n        <div>{round.lot}</div>\n      </div>\n\n      {round.splitVersion && (\n        <div>\n          <div className=\"text-muted-foreground\">Split</div>\n          <div>{round.splitVersion}</div>\n        </div>\n      )}\n\n      <div>\n        <div className=\"text-muted-foreground\">Wafers</div>\n        <div>{round.waferCount}</div>\n      </div>\n    </div>\n  )\n}\n",
+      "content": "import type { Round } from \"../../schemas/round\"\n\ninterface RoundContextProps {\n  round: Round\n}\n\nexport function RoundContext({\n  round,\n}: RoundContextProps) {\n  return (\n    <div className=\"flex gap-6 text-sm\">\n      <div>\n        <div className=\"text-muted-foreground\">轮次 / Round</div>\n        <div>{round.name}</div>\n      </div>\n\n      <div>\n        <div className=\"text-muted-foreground\">批次 / Lot</div>\n        <div>{round.lot}</div>\n      </div>\n\n      {round.splitVersion && (\n        <div>\n          <div className=\"text-muted-foreground\">Split 版本</div>\n          <div>{round.splitVersion}</div>\n        </div>\n      )}\n\n      <div>\n        <div className=\"text-muted-foreground\">晶圆数 / Wafers</div>\n        <div>{round.waferCount}</div>\n      </div>\n    </div>\n  )\n}\n",
       "type": "registry:ui",
       "target": "src/components/domain/round-context.tsx"
     },

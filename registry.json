@@ -7,7 +7,7 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "Base DOE UI action component built on the local shadcn/Base UI foundation.",
+      "description": "DOE 基础 UI action 组件，基于本地 shadcn/Base UI foundation。",
       "dependencies": [
         "@base-ui/react",
         "class-variance-authority",
@@ -30,8 +30,8 @@
     {
       "name": "data-state",
       "type": "registry:ui",
-      "title": "DOE Data State",
-      "description": "Displays DOE evaluation and data readiness states while preserving semantic differences between PARTIAL, NO_DATA, FAILED, N/A and INSUFFICIENT_DATA.",
+      "title": "DOE 数据状态 / Data State",
+      "description": "展示 DOE evaluation 与 data readiness states，并保留 PARTIAL、NO_DATA、FAILED、N/A、INSUFFICIENT_DATA 之间的语义差异。",
       "dependencies": [
         "@base-ui/react",
         "class-variance-authority",
@@ -65,8 +65,8 @@
     {
       "name": "round-context",
       "type": "registry:ui",
-      "title": "DOE Round Context",
-      "description": "Displays the active DOE Round boundary including Round, Lot, Split Version and Wafer Count for current-round analysis surfaces.",
+      "title": "DOE 轮次上下文 / Round Context",
+      "description": "展示当前 DOE Round boundary，包括 Round、Lot、Split Version 和 Wafer Count，用于 current-round analysis surfaces。",
       "dependencies": [
         "zod"
       ],

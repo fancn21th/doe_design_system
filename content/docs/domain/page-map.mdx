@@ -1,16 +1,16 @@
 ---
-title: Page / Flow / Concept Map
-description: How the first pages and components map to DOE concepts.
+title: 页面 / 流程 / 概念图
+description: 第一批页面和组件如何映射到 DOE concepts。
 ---
 
-## Showcase
+## 展示页 / Showcase
 
-The home page demonstrates the first three layers:
+首页展示第一批三层能力：
 
-- `Button` for ordinary UI actions.
-- `DataState` for DOE data and evaluation states.
-- `RoundContext` for the current Round summary.
+- `Button`：普通 UI action。
+- `DataState`：DOE 数据状态和 Evaluation State。
+- `RoundContext`：当前 Round 的上下文摘要。
 
-## Flow Boundaries
+## 流程边界 / Flow Boundaries
 
-Use `RoundContext` anywhere a page needs to establish the Round boundary before showing data. Use `DataState` when reporting data readiness, data quality, evaluation status, or missing-data semantics.
+当页面需要先建立 Round 边界再展示数据时，使用 `RoundContext`。当页面需要表达 Data Readiness、Data Quality、Evaluation Status 或缺失数据语义时，使用 `DataState`。

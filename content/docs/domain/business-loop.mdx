@@ -1,16 +1,16 @@
 ---
-title: Information Architecture
-description: The minimal DOE business loop and documentation boundary.
+title: 信息架构 / Information Architecture
+description: DOE 最小业务闭环与文档边界。
 ---
 
-DOE applications should preserve the difference between planning, execution, observed data, and analysis.
+DOE 应用需要清楚区分规划 / Planning、执行 / Execution、观测数据 / Observed Data 和分析 / Analysis。
 
-## Business Loop
+## 业务闭环 / Business Loop
 
-1. Define the Round boundary.
-2. Plan split design and intended conditions.
-3. Execute and observe actual conditions.
-4. Evaluate data readiness and quality.
-5. Analyze current-round facts from a read-only snapshot.
+1. 定义 Round 边界。
+2. 规划 Split Design 和 Planned Condition。
+3. 执行并观察 Actual Condition。
+4. 评估数据就绪度 / Data Readiness 和数据质量 / Data Quality。
+5. 基于只读 Snapshot 分析 Current Round Facts。
 
-Planned Condition must not be presented as Actual Condition. Current Round Report is read-only and should not behave like an execution workflow or a final decision flow.
+Planned Condition 不能展示成 Actual Condition。Current Round Report 是只读分析视图，不应该表现成执行流程，也不是最终决策流程。

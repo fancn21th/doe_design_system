@@ -1,16 +1,16 @@
 ---
-title: Concept Index
-description: Canonical DOE concepts used by the first component set.
+title: 概念索引 / Concept Index
+description: 第一组组件使用的 canonical DOE concepts。
 ---
 
 ## Round
 
-Round represents one DOE iteration. A Round owns its own split design, execution, data, and current-round analysis boundary.
+Round 表示一次 DOE iteration。一个 Round 拥有自己的 Split Design、Execution、Data，以及 Current Round Analysis Boundary。
 
-## Evaluation State
+## Evaluation State / 评估状态
 
-Evaluation State describes the readiness or validity of DOE data. `PARTIAL`, `NO_DATA`, `N/A`, `FAILED`, and `INSUFFICIENT_DATA` are distinct semantics and must not be flattened.
+Evaluation State 描述 DOE 数据的就绪度或有效性。`PARTIAL`、`NO_DATA`、`N/A`、`FAILED`、`INSUFFICIENT_DATA` 是不同语义，不能被压平成同一种状态。
 
-## Current Round Report
+## Current Round Report / 当前 Round 报告
 
-Current Round Report equals one Round plus one read-only Round Snapshot. It is current-round fact analysis, not live execution and not a final decision workflow.
+Current Round Report 等于一个 Round 加一个只读 Round Snapshot。它是当前 Round 的事实分析 / Fact Analysis，不是实时执行页面，也不是最终决策流程。

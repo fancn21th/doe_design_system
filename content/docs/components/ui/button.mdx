@@ -1,22 +1,22 @@
 ---
 title: Button
-description: The base UI action component for DOE interfaces.
+description: DOE 界面的基础操作组件 / UI Action Component。
 ---
 
 import { ButtonDemo } from "@/components/docs/demos/button-demo"
 
-## Preview
+## 预览 / Preview
 
 <ButtonDemo />
 
-## Usage
+## 用法 / Usage
 
 ```tsx
 import { Button } from "@/components/ui/button"
 
 export function Example() {
-  return <Button>Release Round</Button>
+  return <Button>发布 Round</Button>
 }
 ```
 
-Use `Button` for ordinary UI actions. Domain-specific meaning should come from surrounding copy and domain components, not from a new button implementation.
+`Button` 用于普通 UI actions。领域含义应该由页面文案和 Domain Components 提供，而不是重新实现一个新的按钮组件。

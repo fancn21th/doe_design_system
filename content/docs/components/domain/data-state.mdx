@@ -1,15 +1,15 @@
 ---
 title: DataState
-description: DOE data state display that preserves missing-data and evaluation semantics.
+description: DOE 数据状态展示组件，用于保留 missing-data 与 evaluation semantics。
 ---
 
 import { DataStateDemo } from "@/components/docs/demos/data-state-demo"
 
-## Preview
+## 预览 / Preview
 
 <DataStateDemo />
 
-## Usage
+## 用法 / Usage
 
 ```tsx
 import { DataState } from "@/components/domain/data-state"
@@ -19,20 +19,20 @@ export function Example() {
 }
 ```
 
-## Semantic Rules
+## 语义规则 / Semantic Rules
 
-`PARTIAL` is not `NO_DATA`.
+`PARTIAL` 不等于 `NO_DATA`。
 
-`NO_DATA` is not `N/A`.
+`NO_DATA` 不等于 `N/A`。
 
-`N/A` is not `0`.
+`N/A` 不等于 `0`。
 
-Missing data must not be converted to zero.
+Missing data 不能被转换成 zero。
 
 ## Schema
 
-`DataState` accepts values from `EvaluationStateSchema`.
+`DataState` 接收来自 `EvaluationStateSchema` 的值。
 
-## When To Use
+## 使用场景 / When To Use
 
-Use `DataState` in reports, stage observations, data-quality feedback, and DOE evaluation surfaces.
+在报告页面、Stage Observation、Data Quality Feedback 和 DOE Evaluation surfaces 中使用 `DataState`。

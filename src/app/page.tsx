@@ -14,12 +14,12 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-5xl space-y-12 p-10">
       <section>
-        <h2 className="mb-4 text-xl font-semibold">UI</h2>
-        <Button>Release Round</Button>
+        <h2 className="mb-4 text-xl font-semibold">基础 UI / UI</h2>
+        <Button>发布 Round</Button>
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Data State</h2>
+        <h2 className="mb-4 text-xl font-semibold">数据状态 / Data State</h2>
         <div className="flex gap-2">
           <DataState state="READY" />
           <DataState state="PARTIAL" />
@@ -28,7 +28,7 @@ export default function Home() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Round Context</h2>
+        <h2 className="mb-4 text-xl font-semibold">轮次上下文 / Round Context</h2>
         <RoundContext round={round} />
       </section>
     </main>
