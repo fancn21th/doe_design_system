@@ -1,0 +1,16 @@
+---
+title: Concept Index
+description: Canonical DOE concepts used by the first component set.
+---
+
+## Round
+
+Round represents one DOE iteration. A Round owns its own split design, execution, data, and current-round analysis boundary.
+
+## Evaluation State
+
+Evaluation State describes the readiness or validity of DOE data. `PARTIAL`, `NO_DATA`, `N/A`, `FAILED`, and `INSUFFICIENT_DATA` are distinct semantics and must not be flattened.
+
+## Current Round Report
+
+Current Round Report equals one Round plus one read-only Round Snapshot. It is current-round fact analysis, not live execution and not a final decision workflow.

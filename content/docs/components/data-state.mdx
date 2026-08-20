@@ -1,0 +1,32 @@
+---
+title: DataState
+description: DOE data state display that preserves missing-data and evaluation semantics.
+---
+
+## Usage
+
+```tsx
+import { DataState } from "@/components/domain/data-state"
+
+export function Example() {
+  return <DataState state="PARTIAL" />
+}
+```
+
+## Semantic Rules
+
+`PARTIAL` is not `NO_DATA`.
+
+`NO_DATA` is not `N/A`.
+
+`N/A` is not `0`.
+
+Missing data must not be converted to zero.
+
+## Schema
+
+`DataState` accepts values from `EvaluationStateSchema`.
+
+## When To Use
+
+Use `DataState` in reports, stage observations, data-quality feedback, and DOE evaluation surfaces.

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "doe",
+  "homepage": "https://github.com/YOUR_ORG/doe-ui",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "Base DOE UI action component built on the local shadcn/Base UI foundation.",
+      "dependencies": [
+        "@base-ui/react",
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "src/components/ui/button.tsx",
+          "type": "registry:ui",
+          "target": "src/components/ui/button.tsx"
+        },
+        {
+          "path": "src/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "src/lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "data-state",
+      "type": "registry:ui",
+      "title": "DOE Data State",
+      "description": "Displays DOE evaluation and data readiness states while preserving semantic differences between PARTIAL, NO_DATA, FAILED, N/A and INSUFFICIENT_DATA.",
+      "dependencies": [
+        "@base-ui/react",
+        "class-variance-authority",
+        "clsx",
+        "tailwind-merge",
+        "zod"
+      ],
+      "files": [
+        {
+          "path": "src/components/domain/data-state.tsx",
+          "type": "registry:ui",
+          "target": "src/components/domain/data-state.tsx"
+        },
+        {
+          "path": "src/components/ui/badge.tsx",
+          "type": "registry:ui",
+          "target": "src/components/ui/badge.tsx"
+        },
+        {
+          "path": "src/schemas/data-state.ts",
+          "type": "registry:lib",
+          "target": "src/schemas/data-state.ts"
+        },
+        {
+          "path": "src/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "src/lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "round-context",
+      "type": "registry:ui",
+      "title": "DOE Round Context",
+      "description": "Displays the active DOE Round boundary including Round, Lot, Split Version and Wafer Count for current-round analysis surfaces.",
+      "dependencies": [
+        "zod"
+      ],
+      "files": [
+        {
+          "path": "src/components/domain/round-context.tsx",
+          "type": "registry:ui",
+          "target": "src/components/domain/round-context.tsx"
+        },
+        {
+          "path": "src/schemas/round.ts",
+          "type": "registry:lib",
+          "target": "src/schemas/round.ts"
+        }
+      ]
+    }
+  ]
+}

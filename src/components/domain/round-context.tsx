@@ -1,4 +1,4 @@
-import type { Round } from "@/schemas/round"
+import type { Round } from "../../schemas/round"
 
 interface RoundContextProps {
   round: Round

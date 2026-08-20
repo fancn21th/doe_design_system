@@ -1,0 +1,16 @@
+---
+title: Information Architecture
+description: The minimal DOE business loop and documentation boundary.
+---
+
+DOE applications should preserve the difference between planning, execution, observed data, and analysis.
+
+## Business Loop
+
+1. Define the Round boundary.
+2. Plan split design and intended conditions.
+3. Execute and observe actual conditions.
+4. Evaluate data readiness and quality.
+5. Analyze current-round facts from a read-only snapshot.
+
+Planned Condition must not be presented as Actual Condition. Current Round Report is read-only and should not behave like an execution workflow or a final decision flow.

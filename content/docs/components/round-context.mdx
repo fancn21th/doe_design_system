@@ -1,0 +1,35 @@
+---
+title: RoundContext
+description: A compact summary for the active DOE Round boundary.
+---
+
+## Usage
+
+```tsx
+import { RoundContext } from "@/components/domain/round-context"
+
+export function Example() {
+  return (
+    <RoundContext
+      round={{
+        id: "round-03",
+        name: "Round 03",
+        lot: "LOT-2408",
+        splitVersion: "Split V3",
+        waferCount: 25,
+      }}
+    />
+  )
+}
+```
+
+Round represents one DOE iteration.
+
+A Round owns its own:
+
+- Split design
+- Execution
+- Data
+- Current-round analysis boundary
+
+Current Round Report equals one Round plus one read-only Round Snapshot.

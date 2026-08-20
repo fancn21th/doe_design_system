@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import type { EvaluationState } from "@/schemas/data-state"
+import type { EvaluationState } from "../../schemas/data-state"
 
 interface DataStateProps {
   state: EvaluationState

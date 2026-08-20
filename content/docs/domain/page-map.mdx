@@ -1,0 +1,16 @@
+---
+title: Page / Flow / Concept Map
+description: How the first pages and components map to DOE concepts.
+---
+
+## Showcase
+
+The home page demonstrates the first three layers:
+
+- `Button` for ordinary UI actions.
+- `DataState` for DOE data and evaluation states.
+- `RoundContext` for the current Round summary.
+
+## Flow Boundaries
+
+Use `RoundContext` anywhere a page needs to establish the Round boundary before showing data. Use `DataState` when reporting data readiness, data quality, evaluation status, or missing-data semantics.
