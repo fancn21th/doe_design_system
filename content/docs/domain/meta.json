@@ -1,4 +1,10 @@
 {
   "title": "领域知识 / Domain",
-  "pages": ["business-loop", "concepts", "page-map", "coding-rules"]
+  "pages": [
+    "business-loop",
+    "concepts",
+    "page-map",
+    "open-questions",
+    "coding-rules"
+  ]
 }

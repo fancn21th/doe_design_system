@@ -1,16 +1,80 @@
 ---
-title: 信息架构 / Information Architecture
-description: DOE 最小业务闭环与文档边界。
+title: 领域语义 / Domain Semantics
+description: DOE POC 的业务循环与组件资产需要保留的语义边界。
 ---
 
-DOE 应用需要清楚区分规划 / Planning、执行 / Execution、观测数据 / Observed Data 和分析 / Analysis。
+DOE POC 应该被理解成一个业务循环，而不是单纯的页面树。
 
-## 业务闭环 / Business Loop
+```text
+实验设计与配置
+→ 实验下发与执行控制
+→ Stage 实时观察
+→ 当前轮次只读事实分析
+→ Round Review
+→ 知识沉淀与下一轮辅助
+→ 回到下一轮实验设计
+```
 
-1. 定义 Round 边界。
-2. 规划 Split Design 和 Planned Condition。
-3. 执行并观察 Actual Condition。
-4. 评估数据就绪度 / Data Readiness 和数据质量 / Data Quality。
-5. 基于只读 Snapshot 分析 Current Round Facts。
+## Product Surfaces
 
-Planned Condition 不能展示成 Actual Condition。Current Round Report 是只读分析视图，不应该表现成执行流程，也不是最终决策流程。
+### Experiment Design and Configuration
+
+工程师的 DOE 意图在这里变成可执行的冻结 Split Version。
+
+```text
+Experiment intent
+→ Lot
+→ Wafer scope
+→ Step
+→ Planned Condition
+→ Recipe
+→ Split Table
+→ Frozen Split Version
+```
+
+当前原型里这是 gap，但它是领域骨架的一部分。
+
+### Experiment Release and Execution Control
+
+负责 release、MES 状态、生产状态、异常和 action handling。
+
+```text
+Frozen Split Version
+→ Release Step / Release Round
+→ MES submission state
+→ Production execution state
+→ Data arrival state
+→ Attention / intervention
+```
+
+### Stage Real-time Monitoring
+
+Stage Dashboard 是执行和分析之间的 source-backed observation surface。它可以提供 snapshot input，但不拥有 MES 控制，也不输出 Current Round Report 结论。
+
+重要边界：当前 Step 关系是 candidate/source-mapping relationship，不能默认为 source-confirmed DOE Step mapping。
+
+### Current Round Report
+
+当前轮次报告消费一个 Read-only Round Snapshot，组织 Split design、Yield、Final Bin、CP、Inline SPC、Wafer Map、summary 和 limitations。
+
+它不拥有 MES Release、live stage status、Final DOE Report、formal RCA、Verdict、Action、Next Plan 或自动创建下一轮。
+
+### Knowledge and Next Round Assistance
+
+知识库应接收 reviewed round evidence 和 engineer annotations，然后再把 reusable design reference 反馈给下一轮设计。
+
+Current Round Report 可以喂给它，但必须经过 Round Review。
+
+## Cross-cutting Rules
+
+Planned Condition 不能展示成 Actual Condition。
+
+Observed Data 不能被组件转换成因果结论。
+
+Missing data 不能被转换成 zero。
+
+Observed Wafer Scope 不能被默认为 planned、released、executed 或 completed wafer scope。
+
+Mock、derived、provisional data 不能展示成 real production fact。
+
+Known limitations 是正式数据表面的一部分，不是边角注释。

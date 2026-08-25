@@ -1,4 +1,12 @@
 {
   "title": "领域组件 / Domain",
-  "pages": ["data-state", "round-context"]
+  "pages": [
+    "lot",
+    "steps",
+    "runcard",
+    "wafer",
+    "wafer-defect",
+    "runcard-history",
+    "history"
+  ]
 }

@@ -26,62 +26,6 @@
           "target": "src/lib/utils.ts"
         }
       ]
-    },
-    {
-      "name": "data-state",
-      "type": "registry:ui",
-      "title": "DOE 数据状态 / Data State",
-      "description": "展示 DOE evaluation 与 data readiness states，并保留 PARTIAL、NO_DATA、FAILED、N/A、INSUFFICIENT_DATA 之间的语义差异。",
-      "dependencies": [
-        "@base-ui/react",
-        "class-variance-authority",
-        "clsx",
-        "tailwind-merge",
-        "zod"
-      ],
-      "files": [
-        {
-          "path": "src/components/domain/data-state.tsx",
-          "type": "registry:ui",
-          "target": "src/components/domain/data-state.tsx"
-        },
-        {
-          "path": "src/components/ui/badge.tsx",
-          "type": "registry:ui",
-          "target": "src/components/ui/badge.tsx"
-        },
-        {
-          "path": "src/schemas/data-state.ts",
-          "type": "registry:lib",
-          "target": "src/schemas/data-state.ts"
-        },
-        {
-          "path": "src/lib/utils.ts",
-          "type": "registry:lib",
-          "target": "src/lib/utils.ts"
-        }
-      ]
-    },
-    {
-      "name": "round-context",
-      "type": "registry:ui",
-      "title": "DOE 轮次上下文 / Round Context",
-      "description": "展示当前 DOE Round boundary，包括 Round、Lot、Split Version 和 Wafer Count，用于 current-round analysis surfaces。",
-      "dependencies": [
-        "zod"
-      ],
-      "files": [
-        {
-          "path": "src/components/domain/round-context.tsx",
-          "type": "registry:ui",
-          "target": "src/components/domain/round-context.tsx"
-        },
-        {
-          "path": "src/schemas/round.ts",
-          "type": "registry:lib",
-          "target": "src/schemas/round.ts"
-        }
-      ]
     }
   ]
 }

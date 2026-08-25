@@ -8,4 +8,9 @@ description: 面向 AI 的第一批 DOE UI 使用规则。
 3. Planned Condition 不能展示成 Actual Condition。
 4. Current Round Report 必须保持只读 / Read-only。
 5. 描述性证据 / Descriptive Evidence 不能被展示成因果结论 / Causal Conclusion。
-6. DOE 数据状态和 Evaluation State 应优先使用 `DataState`。
+6. Observed Wafer Scope 不能被默认解释成 planned、released、executed 或 completed wafer scope。
+7. Candidate Step Mapping 不能展示成 confirmed DOE Step mapping。
+8. Mock、derived、deterministic-template、source-provisional data 必须显式标记，不能伪装成 real production fact。
+9. Coverage Unknown 不能展示成 pass、no issue 或 defect-free。
+10. DOE 数据状态和 Evaluation State 应优先使用对应领域状态组件。
+11. shadcn 是本项目的基础设计系统层；基础 UI 控件必须使用原生 shadcn 组件，不要自写 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 的替代 React 组件、variant system 或 primitive abstraction。

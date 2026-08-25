@@ -1,16 +1,115 @@
 ---
 title: 概念索引 / Concept Index
-description: 第一组组件使用的 canonical DOE concepts。
+description: 从 DOE POC 资料沉淀出的浅层概念索引。
 ---
 
-## Round
+这个索引是给 Domain UI 资产库使用的业务语言，不是应用 workflow 说明。
 
-Round 表示一次 DOE iteration。一个 Round 拥有自己的 Split Design、Execution、Data，以及 Current Round Analysis Boundary。
+## Core Experiment Concepts
 
-## Evaluation State / 评估状态
+**Product / 产品**  
+被研究的半导体产品。Product 决定工艺路线和实验上下文。
 
-Evaluation State 描述 DOE 数据的就绪度或有效性。`PARTIAL`、`NO_DATA`、`N/A`、`FAILED`、`INSUFFICIENT_DATA` 是不同语义，不能被压平成同一种状态。
+**Lot / 批次**  
+包含本轮 DOE 使用 wafer 的生产或实验批次。
 
-## Current Round Report / 当前 Round 报告
+**Wafer / 晶圆**  
+Lot 内的一片晶圆。DOE 会把 wafer 分配到 baseline 或 split condition，并按 wafer 分析结果。
 
-Current Round Report 等于一个 Round 加一个只读 Round Snapshot。它是当前 Round 的事实分析 / Fact Analysis，不是实时执行页面，也不是最终决策流程。
+**Round / 一轮 DOE 实验**  
+一次 DOE iteration，拥有自己的 split design、execution、data 和 current-round analysis boundary。
+
+**Step / 工艺执行单元**  
+DOE Round 中可以配置、下发、执行、观察和跟踪的工艺执行单元。
+
+**Stage / 工艺观察阶段**  
+用于观察 source-backed Inline/SPC 数据的工艺观察框架。Stage / Step / Sequence 的准确关系仍需 RD/customer 确认。
+
+## Design Concepts
+
+**Split Table / 实验分配表**  
+把 wafer 映射到 factor、planned condition、step、recipe、baseline/split role 的 assignment table。
+
+**Split Version / Split 版本**  
+冻结后的实验分配版本，用于执行和分析。
+
+**Baseline / 基线**  
+用于比较 split condition 的标准或参考条件。
+
+**Planned Condition / 计划条件**  
+Split Table 中计划的实验条件，不能替代实际量测值。
+
+**Actual Condition / 实际条件**  
+从 Inline/SPC summary 或 raw measurement 中观察到的实际工艺表现。缺失实际值必须保持缺失。
+
+**Recipe / 配方**  
+MES 执行 step 时使用的 process recipe。
+
+## Execution Concepts
+
+**Release Configuration / 下发配置**  
+决定 Round 或 Step 是否可下发的冻结执行配置，包括 Split Version、Step、Recipe 和 wafer scope。
+
+**MES Release / MES 下发**  
+向 MES 提交 step 或 round release request 并跟踪返回状态。
+
+**Execution State / 执行状态**  
+Step 的 configuration、MES submission、production 和 data arrival 的组合状态。
+
+**Action Center / 行动中心**  
+把 release readiness、data lag、wafer hold 或 blocker 转成可处理 action 的执行工作区。
+
+**MES Event Log / MES 事件记录**  
+Release check、MES return、production event、retry、hold、exception 的时间顺序记录。
+
+## Observation And Analysis Concepts
+
+**Inline / SPC / 过程检测数据**  
+制造过程中采集的过程量测数据，用来观察实际工艺表现。
+
+**CP / 电性测试数据**  
+Wafer-level electrical test data，用于评估最终芯片表现和参数分布。
+
+**Final Bin / 最终 Bin**  
+按 wafer 和 die 坐标索引的 die-level final CP classification。
+
+**Yield / 良率**  
+通常为 pass die / tested die。
+
+**Wafer Map / 晶圆图**  
+基于合法 die 坐标展示 CP、defect 或 overlay 的空间视图。
+
+**Read-only Round Snapshot / 只读 Round 快照**  
+Current Round Report 消费的不可变或 versioned 数据快照。数据修正应产生新 snapshot/version。
+
+**Current Round Report / 当前轮次报告**  
+一个 Round 加一个 Read-only Round Snapshot 的只读事实分析 surface。
+
+**Round Review / Round 评审**  
+人工评审 report facts、data boundaries、engineering interpretation、limitations 和 open questions 的过程。
+
+## Trust And Mapping Concepts
+
+**Data Authenticity Classification / 数据真实性分类**  
+区分 real、mock-derived、deterministic-template、source-provisional 和 unavailable data 的标签。
+
+**Evaluation State / 评价状态**  
+DOE 数据就绪度或有效性状态。`PARTIAL`、`NO_DATA`、`N/A`、`FAILED`、`INSUFFICIENT_DATA` 是不同语义。
+
+**Observed Wafer Scope / 观察到的 Wafer 范围**  
+source-backed observation view 中出现的 wafer 范围，不能默认等于 planned/released/executed/completed scope。
+
+**Candidate Step Mapping / 候选 Step 映射**  
+把 source-backed Stage/SPC evidence 连接到 candidate Step 的 review relationship，不是官方 MES route confirmation。
+
+**Mapping Confidence / 映射置信度**  
+candidate Stage/Step/source relationship 的 high、medium、conflicting 或 pending 状态。
+
+**Mapping Conflict / 映射冲突**  
+同一 wafer 或 source evidence 可能属于多个 candidate variant、step 或 mapping，需要 review。
+
+**Coverage Unknown / 覆盖未知**  
+source 不证明 coverage；没有记录不能解释成 pass。
+
+**Source Provisional / 来源暂定**  
+上游 source 存在，但正式业务定义仍需 RD/customer 确认的 metric state。

@@ -1,0 +1,27 @@
+---
+title: 开放问题 / Open Questions
+description: 影响 UX、数据契约和术语，但仍需 RD/customer 确认的领域关系。
+---
+
+这些问题不能写成最终业务真相。组件文案和场景应使用 `candidate`、`observed`、`source-backed`、`derived`、`provisional`、`needs review` 这类谨慎语言。
+
+| ID | Relationship | Question | Working Position | Status |
+| --- | --- | --- | --- | --- |
+| OQ-001 | Stage / Step / Sequence | 这些客户侧概念是层级、等价，还是只在部分上下文 loosely mapped？ | Stage 作为 observation frame；Step 作为 execution/detail/candidate context。 | Open |
+| OQ-002 | Candidate Step / source Step | 什么证据足以说明 Inline/SPC source record 属于某个 DOE Step？ | 使用 Candidate Step Mapping，不宣称 source-confirmed DOE Step mapping。 | Open |
+| OQ-003 | Observed Wafer Scope / planned / executed scope | SPC 里观察到 wafer 是否意味着 planned、released、executed、completed，还是 only measured？ | Observed scope 只是 source-observed，不默认等于 MES scope。 | Open |
+| OQ-004 | Recipe / Chamber / Sub-lot / Variant | 哪些 source differences 应生成 Variant candidate，哪些只是 source metadata？ | Recipe、chamber、sub-lot differences 是 candidate evidence，不是 confirmed Variant truth。 | Open |
+| OQ-005 | Actual Condition / Planned Condition | 哪些 Inline/SPC 参数能代表 planned DOE condition 的 actual process condition？ | Planned 和 Actual 分开；missing actuals 保持 missing。 | Open |
+| OQ-006 | Inline/SPC / CP association | RD 认为哪一级 association 有意义：wafer、condition、Step、parameter？ | 当前报告只做 condition-level descriptive association，不做 causality。 | Partially Answered |
+| OQ-007 | Defect / CP Fail | 需要哪些真实 DMS 字段，defect overlay 才能作为工程证据？ | Mock Defect 只是交互/demo 层；same-die overlap 只是坐标事实。 | Open |
+| OQ-008 | Source Flag / business meaning | 哪些 source flags 是工程质量信号，哪些只是抽取或转换 metadata？ | source flags 靠近 affected data 展示，但不当作最终工程判断。 | Open |
+| OQ-009 | Mapping Conflict / user action | wafer 或 source row 映射到多个 candidates 时，工程师应该做什么？ | conflict 是 review state，不自动解决。 | Open |
+| OQ-010 | deterministic summary / AI summary / engineer review | 哪些 summary statement 可以从 deterministic fact recap 进入 AI-assisted interpretation？ | summary 可复述 facts、limitations、evidence；不能生成 RCA、verdict、action、next-round recommendation。 | Partially Answered |
+
+## First RD / Customer Agenda
+
+1. Stage、Step、Sequence 的准确关系是什么？
+2. Inline/SPC record 归属 DOE Step 需要哪些 source evidence？
+3. observed SPC wafer coverage 是否意味着 execution coverage？
+4. 哪些差异会形成真实 DOE variant？
+5. mapping conflict 出现时产品上应如何 review / confirm？

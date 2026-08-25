@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             },
           }}
         >
-          {children}
+          <TooltipProvider>{children}</TooltipProvider>
         </RootProvider>
       </body>
     </html>
