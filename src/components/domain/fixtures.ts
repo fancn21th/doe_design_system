@@ -2,6 +2,12 @@ export const waferIds = Array.from({ length: 25 }, (_, index) => {
   return `AF.${String(index + 1).padStart(2, "0")}`
 })
 
+export const experimentFormDefaultsFixture = {
+  lotId: "",
+  experimentName: "",
+  experimentDescription: "",
+}
+
 export const lotFixture = {
   lotId: "AF",
   productName: "S0269A · Power MOSFET",

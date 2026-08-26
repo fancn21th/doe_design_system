@@ -1,3 +1,4 @@
+export { Experiment } from "@/components/domain/experiment"
 export { Lot } from "@/components/domain/lot"
 export { Steps } from "@/components/domain/steps"
 export { RunCard } from "@/components/domain/runcard"

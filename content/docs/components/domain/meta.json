@@ -1,6 +1,7 @@
 {
   "title": "领域组件 / Domain",
   "pages": [
+    "experiment",
     "lot",
     "steps",
     "runcard",

@@ -3,6 +3,7 @@ import { BookOpen } from "lucide-react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
+  Experiment,
   History,
   Lot,
   RunCard,
@@ -35,6 +36,10 @@ export default function Home() {
 
       <section>
         <h2 className="mb-4 text-xl font-semibold">领域组件 / Domain</h2>
+        <Experiment />
+      </section>
+
+      <section>
         <History />
       </section>
 
