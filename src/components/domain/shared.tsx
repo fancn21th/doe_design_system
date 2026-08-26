@@ -27,7 +27,7 @@ export function DomainSection({
   className?: string
 }) {
   return (
-    <Collapsible defaultOpen className={cn("not-prose", className)}>
+    <Collapsible defaultOpen className={cn("not-prose domain-ui-typography", className)}>
       <Card className="gap-0 rounded-lg py-0 shadow-none">
         <CardHeader className="border-b py-4">
           <CardTitle className="text-xl">{title}</CardTitle>

@@ -1,0 +1,50 @@
+---
+title: 组件边界 / Component Boundaries
+description: 当前 7 个领域组件的业务边界、命名和上游输入映射。
+---
+
+## Naming Rule
+
+领域组件代码命名取上游路径的最后一级。
+
+| Upstream Path | Component Name | Code Export |
+| --- | --- | --- |
+| `实验/lot` | `lot` | `Lot` |
+| `实验/lot/step/steps` | `steps` | `Steps` |
+| `实验/lot/step/steps/runcard` | `runcard` | `RunCard` |
+| `实验/lot/step/steps/stage/wafer` | `wafer` | `Wafer` |
+| `实验/lot/step/steps/stage/wafer-defect` | `wafer-defect` | `WaferDefect` |
+| `实验/lot/step/steps/runcard/history` | `runcard-history` | `RunCardHistory` |
+| `实验/history` | `history` | `History` |
+
+`history` 有两个来源：实验级 history 和 RunCard 下的 history。代码里保留 `History` 给实验历史列表，使用 `RunCardHistory` 表达 MES 事件记录，避免语义碰撞。
+
+## Component Boundary Map
+
+| Component | Domain Object | Owns Local Interaction | Must Not Own |
+| --- | --- | --- | --- |
+| `Lot` | 当前实验 / Lot 基础信息。 | collapse、wafer count dropdown。 | fetch Lot、切换页面、创建 Round。 |
+| `Steps` | Step × Wafer split assignment。 | baseline radio、wafer assignment cell、table-local affordance。 | 保存 split plan、选择真实模板服务、直接下发 MES。 |
+| `RunCard` | Step 到 RunCard 的分组和下发准备。 | checkbox selection、expand/collapse、RunCard selector。 | 创建真实 RunCard、提交 MES、维护跨组件 release workflow。 |
+| `Wafer` | source-backed process capability by wafer。 | parameter selection、source snapshot display、chart hover/selection。 | 推断因果、把 observed wafer 当作 executed wafer。 |
+| `WaferDefect` | wafer-level defect observation。 | wafer selection、defect point selection、defect image paging。 | 宣称 defect-free、把原型示意图当真实 DMS 证据。 |
+| `RunCardHistory` | RunCard / MES event log。 | collapse、table sorting/filtering if needed。 | 轮询 MES、重试请求、修正事件事实。 |
+| `History` | 实验历史列表。 | search filter、selected item、scroll position。 | 应用导航、远程查询、实验状态 mutation。 |
+
+## Implementation Boundary
+
+所有领域组件放在 `src/components/domain`。
+
+所有基础 UI 必须使用 shadcn 组件拼装，例如 `Card`、`Table`、`Button`、`Badge`、`Input`、`Checkbox`、`Select`、`Dialog`、`Collapsible`、`Tooltip`。
+
+领域组件可以包含业务布局和业务交互片段，但不能自建基础组件体系，也不能暴露内部 helper 作为公共 API。
+
+## Documentation Boundary
+
+每个领域组件文档只保留三类信息：
+
+1. `预览 / Preview`
+2. `Shadcn Components`
+3. `Schema`
+
+Schema 作为运行时入参契约先保留空对象，后续再由真实业务模型补齐。

@@ -1,69 +1,57 @@
 ---
-title: 领域语义 / Domain Semantics
-description: DOE POC 的业务循环与组件资产需要保留的语义边界。
+title: 业务循环 / Business Loop
+description: 当前 Domain UI 资产库需要保留的 DOE 业务循环语义。
 ---
 
 DOE POC 应该被理解成一个业务循环，而不是单纯的页面树。
 
 ```text
-实验设计与配置
-→ 实验下发与执行控制
-→ Stage 实时观察
-→ 当前轮次只读事实分析
-→ Round Review
-→ 知识沉淀与下一轮辅助
-→ 回到下一轮实验设计
+实验历史检索
+→ Lot / 实验上下文确认
+→ Step × Wafer split 配置
+→ RunCard 配置与下发准备
+→ MES 事件观察
+→ Wafer 过程能力 / 缺陷观察
+→ 回到下一轮实验配置
 ```
 
-## Product Surfaces
+当前项目只沉淀这个循环里的业务 UI 资产。跨组件流程、页面状态机、真实后端提交、MES Gateway 和应用路由都属于 DOE Application。
 
-### Experiment Design and Configuration
+## Component Surfaces
 
-工程师的 DOE 意图在这里变成可执行的冻结 Split Version。
+### History
 
-```text
-Experiment intent
-→ Lot
-→ Wafer scope
-→ Step
-→ Planned Condition
-→ Recipe
-→ Split Table
-→ Frozen Split Version
-```
+用于检索和选择历史实验 / Lot。它只表达历史实验列表、Lot ID、实验状态和本地筛选，不决定应用导航。
 
-当前原型里这是 gap，但它是领域骨架的一部分。
+### Lot
 
-### Experiment Release and Execution Control
+用于确认当前实验和 Lot 的基础上下文。它表达 Lot、Product、试验名称、试验描述、Step 数量和 Wafer 数量。
 
-负责 release、MES 状态、生产状态、异常和 action handling。
+### Steps
 
-```text
-Frozen Split Version
-→ Release Step / Release Round
-→ MES submission state
-→ Production execution state
-→ Data arrival state
-→ Attention / intervention
-```
+用于表达 Step × Wafer split assignment。它展示 Stage、Step / Seq、Baseline、Condition、Factor、Recipe 和 wafer assignment，不在组件内部保存 split plan。
 
-### Stage Real-time Monitoring
+### RunCard
 
-Stage Dashboard 是执行和分析之间的 source-backed observation surface。它可以提供 snapshot input，但不拥有 MES 控制，也不输出 Current Round Report 结论。
+用于把 Step 组织到 RunCard 并准备下发。它可以管理本地勾选、展开、RunCard 选择，但不能直接调用 MES submit。
 
-重要边界：当前 Step 关系是 candidate/source-mapping relationship，不能默认为 source-confirmed DOE Step mapping。
+### RunCard History
 
-### Current Round Report
+用于展示 RunCard / MES event log。它表达事件事实、状态、描述和操作人，不负责轮询或重试动作。
 
-当前轮次报告消费一个 Read-only Round Snapshot，组织 Split design、Yield、Final Bin、CP、Inline SPC、Wafer Map、summary 和 limitations。
+### Wafer
 
-它不拥有 MES Release、live stage status、Final DOE Report、formal RCA、Verdict、Action、Next Plan 或自动创建下一轮。
+用于展示 source-backed process capability by wafer。它比较 raw values、Mean ± 3σ、spec window 和 Cpk，但不把观察值解释成因果结论。
 
-### Knowledge and Next Round Assistance
+### Wafer Defect
 
-知识库应接收 reviewed round evidence 和 engineer annotations，然后再把 reusable design reference 反馈给下一轮设计。
+用于展示 wafer-level defect observation。缺陷数量和采样时间可以是 source-backed；点位、坐标、类型和缺陷图如果来自原型示意，必须显式说明。
 
-Current Round Report 可以喂给它，但必须经过 Round Review。
+## Domain Boundaries
+
+Domain UI Project 只知道“数据是什么、怎么呈现、怎么局部操作”。
+
+DOE Application 才知道“什么时候展示、流程怎么走、数据从哪来、提交到哪里”。
 
 ## Cross-cutting Rules
 

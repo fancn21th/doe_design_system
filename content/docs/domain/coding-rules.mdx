@@ -1,16 +1,22 @@
 ---
 title: 编码规则 / Coding Rules
-description: 面向 AI 的第一批 DOE UI 使用规则。
+description: 面向 AI 的 DOE Domain UI 编码与文案规则。
 ---
 
-1. 创建新组件前，优先复用已有领域组件 / Domain Components。
-2. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
-3. Planned Condition 不能展示成 Actual Condition。
-4. Current Round Report 必须保持只读 / Read-only。
-5. 描述性证据 / Descriptive Evidence 不能被展示成因果结论 / Causal Conclusion。
-6. Observed Wafer Scope 不能被默认解释成 planned、released、executed 或 completed wafer scope。
-7. Candidate Step Mapping 不能展示成 confirmed DOE Step mapping。
-8. Mock、derived、deterministic-template、source-provisional data 必须显式标记，不能伪装成 real production fact。
-9. Coverage Unknown 不能展示成 pass、no issue 或 defect-free。
-10. DOE 数据状态和 Evaluation State 应优先使用对应领域状态组件。
-11. shadcn 是本项目的基础设计系统层；基础 UI 控件必须使用原生 shadcn 组件，不要自写 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 的替代 React 组件、variant system 或 primitive abstraction。
+1. 领域组件必须来自 `docs/upstream/components` 中确认过的业务切分；不要恢复旧的 `DataState`、`RoundContext` 或页面级组件。
+2. 组件命名取上游路径最后一级：`lot`、`steps`、`runcard`、`wafer`、`wafer-defect`、`runcard-history`、`history`。
+3. 领域组件放在 `src/components/domain`；只通过稳定公共 API export。
+4. MDX 文档只保留 `预览 / Preview`、`Shadcn Components`、`Schema`。
+5. Schema 作为运行时入参契约保留，但在业务模型确认前先使用空对象。
+6. shadcn 是本项目的基础设计系统层；基础 UI 控件必须使用原生 shadcn 组件，不要自写 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 的替代 React 组件、variant system 或 primitive abstraction。
+7. 领域组件只能组合 shadcn 基础组件、业务 schema、fixtures/scenarios 和局部交互状态。
+8. 领域组件不能直接调用 `fetch`、App Service、Gateway、Oracle/MES API 或任何真实提交函数。
+9. `RunCard` 可以暴露 `onConfirm`、`onCancel`、`onChange` 等回调，但不能在内部执行 MES 下发。
+10. `History` 可以本地过滤和选中实验，但不能决定应用路由。
+11. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
+12. Planned Condition 不能展示成 Actual Condition。
+13. 描述性证据 / Descriptive Evidence 不能被展示成因果结论 / Causal Conclusion。
+14. Observed Wafer Scope 不能被默认解释成 planned、released、executed 或 completed wafer scope。
+15. Candidate Step Mapping 不能展示成 confirmed DOE Step mapping。
+16. Mock、derived、deterministic-template、source-provisional data 必须显式标记，不能伪装成 real production fact。
+17. Coverage Unknown 不能展示成 pass、no issue 或 defect-free。

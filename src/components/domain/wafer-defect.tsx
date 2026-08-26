@@ -19,7 +19,7 @@ export function WaferDefect({ input = {} }: { input?: WaferDefectInput }) {
   waferDefectInputSchema.parse(input)
 
   return (
-    <Card className="not-prose gap-0 overflow-hidden rounded-lg py-0">
+    <Card className="not-prose domain-ui-typography gap-0 overflow-hidden rounded-lg py-0">
       <CardHeader className="border-b p-5">
         <div className="flex items-start justify-between gap-4">
           <div>

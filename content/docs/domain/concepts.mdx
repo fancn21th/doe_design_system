@@ -1,9 +1,22 @@
 ---
 title: 概念索引 / Concept Index
-description: 从 DOE POC 资料沉淀出的浅层概念索引。
+description: 当前 Domain UI 资产库使用的 DOE 概念索引。
 ---
 
 这个索引是给 Domain UI 资产库使用的业务语言，不是应用 workflow 说明。
+
+## Component-facing Concepts
+
+| Concept | Domain Meaning | Current Component Surface |
+| --- | --- | --- |
+| Experiment / 试验 | 一次 DOE 工作对象，通常围绕 Lot、Product、Step、Wafer split 和执行观察展开。 | `history`, `lot` |
+| Lot / 批次 | 包含本次实验 wafer 的生产或实验批次。 | `lot`, `history` |
+| Step / 工艺步骤 | 可配置、下发、执行、观察和跟踪的工艺执行单元。 | `steps`, `runcard`, `runcard-history` |
+| Stage / 工艺阶段 | 用于组织 Step 或 source observation 的工艺上下文。Stage / Step / Sequence 的严格关系仍需确认。 | `steps`, `wafer`, `wafer-defect` |
+| Wafer / 晶圆 | Lot 内的一片晶圆，可被分配到 baseline / variant，并在 SPC / defect 中被观察。 | `steps`, `wafer`, `wafer-defect` |
+| RunCard | 下发执行前组织 Step 的生产执行载体。 | `runcard`, `runcard-history` |
+| MES Event / MES 事件 | MES 或系统返回的执行事实记录。 | `runcard-history` |
+| Source-backed Observation / 有来源观察 | 来自 SPC、MES 或其他 source 的观察事实。它不是因果结论。 | `wafer`, `wafer-defect`, `runcard-history` |
 
 ## Core Experiment Concepts
 
@@ -61,6 +74,9 @@ Step 的 configuration、MES submission、production 和 data arrival 的组合�
 
 **MES Event Log / MES 事件记录**  
 Release check、MES return、production event、retry、hold、exception 的时间顺序记录。
+
+**RunCard / 执行卡**  
+组织一个或多个 Step 的下发执行载体。Domain UI 可以表达 RunCard grouping、progress、selection 和 local assignment；真实创建、提交、重试由应用服务负责。
 
 ## Observation And Analysis Concepts
 

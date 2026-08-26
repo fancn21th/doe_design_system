@@ -24,7 +24,7 @@ export function RunCard({ input = {} }: { input?: RunCardInput }) {
   runCardInputSchema.parse(input)
 
   return (
-    <div className="not-prose rounded-lg border bg-muted/40 p-6">
+    <div className="not-prose domain-ui-typography rounded-lg border bg-muted/40 p-6">
       <Card className="mx-auto max-w-5xl gap-0 overflow-hidden rounded-xl py-0 shadow-sm">
         <CardHeader className="border-b p-6">
           <CardTitle className="text-3xl">配置RunCard并下发</CardTitle>

@@ -132,3 +132,22 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  .domain-ui-typography {
+    --text-sm: 0.8125rem;
+    --text-sm--line-height: calc(1.25 / 0.8125);
+    --text-base: 0.875rem;
+    --text-base--line-height: calc(1.375 / 0.875);
+    --text-lg: 1rem;
+    --text-lg--line-height: calc(1.5 / 1);
+    --text-xl: 1.125rem;
+    --text-xl--line-height: calc(1.625 / 1.125);
+    --text-2xl: 1.25rem;
+    --text-2xl--line-height: calc(1.75 / 1.25);
+    --text-3xl: 1.5rem;
+    --text-3xl--line-height: calc(2 / 1.5);
+    --text-4xl: 1.875rem;
+    --text-4xl--line-height: calc(2.25 / 1.875);
+  }
+}

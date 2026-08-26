@@ -9,7 +9,7 @@ export function History({ input = {} }: { input?: HistoryInput }) {
   historyInputSchema.parse(input)
 
   return (
-    <div className="not-prose w-[28rem] rounded-lg border bg-muted/30 p-5">
+    <div className="not-prose domain-ui-typography w-[28rem] rounded-lg border bg-muted/30 p-5">
       <h3 className="text-lg font-medium text-muted-foreground">历史试验</h3>
       <div className="relative mt-4">
         <Search className="absolute left-3 top-3 size-5 text-muted-foreground" />
