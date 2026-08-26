@@ -2,6 +2,96 @@
 
 This context defines the language of a domain UI asset library for DOE interfaces. It is not the language of a DOE application, page workflow, backend service, MES integration, or Oracle gateway.
 
+## AI Coding Execution Protocol
+
+Use this protocol for DOE Domain UI work. The goal is to make agents execute established project systems instead of re-discovering architecture on every task.
+
+### Global Sources
+
+- `AGENTS.md` is the always-loaded constitution: framework safety, Domain UI hard rules, and routing pointers.
+- `CONTEXT.md` is the handbook: glossary, rationale, conventions, and execution protocol.
+- `docs/adr/` records architectural boundaries: domain UI assets, schema independence, scenarios, dependency direction, shadcn foundation, and layout assets.
+- `docs/upstream/` stores raw prototype screenshots and notes. Treat them as evidence to distill, not as runtime instructions.
+- `content/docs/domain/coding-rules.mdx` is the user-facing coding rule page.
+
+### Scope Lock
+
+Start implementation tasks by identifying the smallest requested scope. For a single domain component task, limit edits to:
+
+- `src/components/domain/<component>.tsx`
+- `src/components/domain/<component>.fixtures.ts`
+- `src/components/domain/<component>.scenarios.ts`
+- `src/schemas/domain-component-inputs.ts`
+- `content/docs/components/domain/<component>.mdx`
+
+Extend the scope only when the requested behavior requires it. Do not modify application pages, app services, gateways, shared foundation UI, or unrelated domain components during a scoped component task.
+
+### Component Pattern
+
+Use the current flat component pattern unless the repository adopts a different package layout:
+
+```text
+src/components/domain/<component>.tsx
+src/components/domain/<component>.fixtures.ts
+src/components/domain/<component>.scenarios.ts
+src/schemas/domain-component-inputs.ts
+content/docs/components/domain/<component>.mdx
+```
+
+The component receives schema-shaped input through props and emits local callbacks. Fixtures and scenarios provide mock and demo data. Components do not hide mock data inside rendering logic.
+
+### UI Primitive Rule
+
+Foundation UI comes from this repository's `src/components/ui` shadcn components. Compose them directly for domain components. Do not invent replacement primitives, local variant systems, or a second design system.
+
+Important local shadcn detail: this project uses Base UI style primitives in places such as `Select` and `DropdownMenu`. Before using a primitive in a new way, check an existing local usage or the component source under `src/components/ui`.
+
+### Prototype Distillation
+
+Use the product prototype to confirm a new interaction once. After confirmation, capture the result as upstream notes, schema, fixtures, scenarios, component contract, or ADR. Future small changes should use scenarios and contracts as the fact source instead of repeatedly re-opening the prototype.
+
+The desired flow is:
+
+```text
+Product Prototype
+  -> Domain Knowledge / Scenario
+  -> Domain UI Contract
+  -> DOE App
+  -> App Service
+  -> Mock / Real Data
+```
+
+### Validation Ladder
+
+Use validation in layers:
+
+1. During development, run targeted TypeScript or affected lint checks.
+2. Run component-level tests when they exist for the touched component.
+3. Browser-verify only the critical interaction path requested by the user.
+4. Run full build once at completion.
+
+Avoid using full build or browser verification as the inner edit/debug loop unless the failure only reproduces there.
+
+### Analysis vs Implementation
+
+Separate discovery from execution. If the task asks for component boundaries, data structure, or interaction modeling, produce analysis and affected files first. Once the user confirms the plan, implementation should follow the confirmed scope without reopening broad architecture questions.
+
+### Single Component Checklist
+
+For a single component implementation:
+
+1. Read local rules and this context.
+2. Identify the closest canonical component or primitive usage.
+3. List the affected files mentally and keep edits within scope.
+4. Implement component, schema, fixtures, scenarios, and MDX preview together.
+5. Run targeted type or lint checks.
+6. Verify the requested critical browser path if interaction changed.
+7. Run full build once before final response.
+
+### AI-Friendly Test
+
+The project is AI-friendly when a new agent can receive a request such as "add a Recipe selector to Steps" and know the expected files, schema boundary, scenario source, shadcn primitive rule, and validation path without browsing unrelated code.
+
 ## Language
 
 **Domain UI Project**:

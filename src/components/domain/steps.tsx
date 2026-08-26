@@ -1,6 +1,10 @@
-import { Clock3, MoreHorizontal, Plus, Send } from "lucide-react"
+"use client"
 
-import { stepsFixture } from "@/components/domain/fixtures"
+import { useState } from "react"
+import { ChevronUp, Clock3, MoreHorizontal, Plus, Send } from "lucide-react"
+
+import { createStepRowFromCandidate } from "@/components/domain/steps.fixtures"
+import { stepsScenarios } from "@/components/domain/steps.scenarios"
 import { AssignmentBadge, DomainSection } from "@/components/domain/shared"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,6 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -20,19 +32,94 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { stepsInputSchema, type StepsInput } from "@/schemas/domain-component-inputs"
+import {
+  stepsInputSchema,
+  type StepCandidate,
+  type StepRow,
+  type StepsInput,
+} from "@/schemas/domain-component-inputs"
 
-export function Steps({ input = {} }: { input?: StepsInput }) {
-  stepsInputSchema.parse(input)
+const recipePlaceholder = "选择Recipe"
+const recipePlaceholderValue = "__recipe_placeholder__"
+
+export function Steps({ input = stepsScenarios.normal.input }: { input?: StepsInput }) {
+  const scenarioInput = stepsScenarios.normal.input
+  const parsedInput = stepsInputSchema.parse(input)
+  const [rows, setRows] = useState<StepRow[]>(
+    parsedInput.rows ?? scenarioInput.rows ?? []
+  )
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const candidates = parsedInput.candidates ?? scenarioInput.candidates ?? []
+  const waferCount = parsedInput.waferCount ?? scenarioInput.waferCount ?? 25
+
+  const waferColumns = Array.from({ length: waferCount }, (_, index) => index + 1)
+
+  function addCandidate(candidate: StepCandidate) {
+    setRows((currentRows) => [
+      ...currentRows,
+      {
+        ...createStepRowFromCandidate(candidate, waferCount),
+        id: `added-${candidate.id}-${currentRows.length + 1}`,
+      },
+    ])
+    setAddMenuOpen(false)
+  }
+
+  function updateRow(rowId: string, patch: Partial<StepRow>) {
+    setRows((currentRows) =>
+      currentRows.map((row) => {
+        if (row.id !== rowId) {
+          return row
+        }
+
+        return { ...row, ...patch }
+      })
+    )
+  }
 
   return (
     <DomainSection title="Step × Wafer Split Table">
       <div className="space-y-5 p-6">
         <div className="flex items-center justify-between gap-3">
-          <Button variant="outline" size="lg">
-            <Plus />
-            新增Step
-          </Button>
+          <DropdownMenu open={addMenuOpen} onOpenChange={setAddMenuOpen}>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="min-w-40 justify-between"
+                >
+                  {addMenuOpen ? (
+                    <>
+                      选择Stage / Step
+                      <ChevronUp />
+                    </>
+                  ) : (
+                    <>
+                      <Plus />
+                      新增Step
+                    </>
+                  )}
+                </Button>
+              }
+            />
+            <DropdownMenuContent className="w-80 p-2">
+              {candidates.map((candidate, index) => (
+                <DropdownMenuItem
+                  key={candidate.id}
+                  className="px-3 py-3 text-base"
+                  onClick={() => addCandidate(candidate)}
+                >
+                  <span className={index === 1 ? "font-semibold text-primary" : "font-semibold"}>
+                    {candidate.stage}
+                    <span className="mx-2 text-muted-foreground">/</span>
+                    <span className="font-mono">{candidate.step}</span>
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="outline" size="lg">
             选择模板
           </Button>
@@ -47,21 +134,21 @@ export function Steps({ input = {} }: { input?: StepsInput }) {
                     {head}
                   </TableHead>
                 ))}
-                {Array.from({ length: 12 }, (_, index) => (
+                {waferColumns.map((index) => (
                   <TableHead key={index} className="text-center text-base">
-                    #{index + 1}
+                    #{index}
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stepsFixture.map((row) => (
+              {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="text-base font-semibold text-primary">
                     {row.stage}
                   </TableCell>
                   <TableCell>
-                    <div className="flex min-w-36 items-center gap-3">
+                    <div className="flex min-w-44 items-center gap-3">
                       <Badge
                         variant="outline"
                         className="size-6 rounded-full border-orange-100 bg-orange-50 p-0 text-orange-600"
@@ -77,11 +164,67 @@ export function Steps({ input = {} }: { input?: StepsInput }) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Checkbox checked={row.baseline} aria-label={`${row.id} baseline`} />
+                    <Checkbox defaultChecked={row.baseline} aria-label={`${row.id} baseline`} />
                   </TableCell>
-                  <TableCell className="text-base">{row.condition}</TableCell>
-                  <TableCell className="text-base">{row.factor}</TableCell>
-                  <TableCell className="text-base">{row.recipe}</TableCell>
+                  <TableCell>
+                    {row.editable ? (
+                      <Input
+                        value={row.condition}
+                        placeholder="Condition"
+                        className="h-9 min-w-28"
+                        onChange={(event) =>
+                          updateRow(row.id, { condition: event.target.value })
+                        }
+                      />
+                    ) : (
+                      <span className="text-base">{row.condition}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {row.editable ? (
+                      <Input
+                        value={row.factor}
+                        placeholder="Factor"
+                        className="h-9 min-w-24"
+                        onChange={(event) =>
+                          updateRow(row.id, { factor: event.target.value })
+                        }
+                      />
+                    ) : (
+                      <span className="text-base">{row.factor}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {row.editable ? (
+                      <Select
+                        value={row.recipe || recipePlaceholderValue}
+                        onValueChange={(recipe) =>
+                          updateRow(row.id, {
+                            recipe:
+                              recipe === recipePlaceholderValue ? "" : recipe ?? "",
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-9 min-w-44">
+                          <SelectValue>
+                            {row.recipe || recipePlaceholder}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent align="start" className="min-w-48">
+                          <SelectItem value={recipePlaceholderValue}>
+                            {recipePlaceholder}
+                          </SelectItem>
+                          {row.recipeOptions.map((recipe) => (
+                            <SelectItem key={recipe} value={recipe}>
+                              {recipe}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-base">{row.recipe}</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button size="icon-sm" variant="ghost">

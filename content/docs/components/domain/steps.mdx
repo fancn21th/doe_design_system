@@ -4,10 +4,11 @@ description: Step × Wafer Split Table 组件。
 ---
 
 import { Steps } from "@/components/domain/steps"
+import { stepsScenarios } from "@/components/domain/steps.scenarios"
 
 ## 预览 / Preview
 
-<Steps />
+<Steps input={stepsScenarios.normal.input} />
 
 ## Shadcn Components
 
@@ -16,11 +17,41 @@ import { Steps } from "@/components/domain/steps"
 - `Button`
 - `Checkbox`
 - `DropdownMenu`
+- `Input`
+- `Select`
 - `Table`
 - `Badge`
 
 ## Schema
 
 ```ts
-export const stepsInputSchema = z.object({})
+export const stepAssignmentSchema = z.enum(["B", "V", "↔", "E"])
+
+export const stepRowSchema = z.object({
+  id: z.string(),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  baseline: z.boolean(),
+  condition: z.string(),
+  factor: z.string(),
+  recipe: z.string(),
+  recipeOptions: z.array(z.string()).default([]),
+  assignments: z.array(stepAssignmentSchema),
+  editable: z.boolean().default(false),
+})
+
+export const stepCandidateSchema = z.object({
+  id: z.string(),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  recipeOptions: z.array(z.string()),
+})
+
+export const stepsInputSchema = z.object({
+  rows: z.array(stepRowSchema).optional(),
+  candidates: z.array(stepCandidateSchema).optional(),
+  waferCount: z.number().int().positive().optional(),
+})
 ```

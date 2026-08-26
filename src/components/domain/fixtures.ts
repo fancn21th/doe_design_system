@@ -17,42 +17,6 @@ export const lotFixture = {
   waferCount: 25,
 }
 
-export const stepsFixture = [
-  {
-    id: "oxide-baseline",
-    stage: "OXIDE_ETCH",
-    step: "MAIN",
-    seq: "seq-num-001",
-    baseline: true,
-    condition: "Baseline",
-    factor: "Power",
-    recipe: "RCP-OXE-STD-01",
-    assignments: ["B", "B", "B", "V", "V", "V", "V", "V", "V", "V", "V", "V"],
-  },
-  {
-    id: "oxide-variant",
-    stage: "",
-    step: "MAIN",
-    seq: "seq-num-001",
-    baseline: false,
-    condition: "Power +5%",
-    factor: "Power",
-    recipe: "RCP-OXE-HP-02",
-    assignments: ["↔", "↔", "↔", "V", "V", "V", "V", "V", "V", "V", "V", "V"],
-  },
-  {
-    id: "clean-variant",
-    stage: "CLEAN",
-    step: "MAIN",
-    seq: "seq-num-002",
-    baseline: false,
-    condition: "Time +10s",
-    factor: "Time",
-    recipe: "RCP-CLN-T10-03",
-    assignments: ["↔", "↔", "↔", "V", "V", "V", "V", "V", "V", "V", "V", "V"],
-  },
-]
-
 export const runCardsFixture = [
   {
     id: "RC-001",
