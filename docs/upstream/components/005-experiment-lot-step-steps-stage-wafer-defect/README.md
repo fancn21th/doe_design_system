@@ -13,6 +13,10 @@
 
 ![实验/lot/step/steps/stage/wafer-defect](./screenshot.png)
 
+## Interaction Notes
+
+- Detailed behavior has been distilled in `docs/upstream/interactions/003-wafer-defect-map/`.
+
 ## User Notes
 
 ```text

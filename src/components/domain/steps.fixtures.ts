@@ -4,6 +4,7 @@ import type {
   StepRow,
   StepsInput,
 } from "@/schemas/domain-component-inputs"
+import { runCardFixture } from "@/components/domain/runcard.fixtures"
 
 const waferCount = 25
 
@@ -85,6 +86,10 @@ export const stepsFixture: Required<StepsInput> = {
   rows: stepRowsFixture,
   candidates: stepCandidatesFixture,
   waferCount,
+  release: runCardFixture,
+  releaseHistory: {
+    events: [],
+  },
 }
 
 export function createStepRowFromCandidate(candidate: StepCandidate, count = waferCount): StepRow {

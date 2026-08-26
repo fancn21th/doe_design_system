@@ -24,23 +24,23 @@ export function Lot({ input = {} }: { input?: LotInput }) {
 
   return (
     <DomainSection title="Lot与Round基础信息">
-      <div className="grid gap-x-24 gap-y-8 p-6 md:grid-cols-2">
+      <div className="grid gap-x-24 gap-y-6 p-6 md:grid-cols-2">
         {fields.map(([label, value]) => (
           <div key={label} className="space-y-2">
-            <div className="text-base font-medium text-muted-foreground">
+            <div className="text-sm font-medium text-muted-foreground">
               {label}
             </div>
-            <div className="text-lg font-semibold">{value}</div>
+            <div className="text-base font-semibold">{value}</div>
           </div>
         ))}
         <div className="space-y-2">
-          <div className="text-base font-medium text-muted-foreground">
+          <div className="text-sm font-medium text-muted-foreground">
             Wafer数量
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="link" className="h-auto px-0 text-lg font-semibold">
+                <Button variant="link" className="h-auto px-0 text-base font-semibold">
                   {lotFixture.waferCount}片
                   <ChevronDown />
                 </Button>

@@ -9,6 +9,7 @@ Use this protocol for DOE Domain UI work. The goal is to make agents execute est
 ### Global Sources
 
 - `AGENTS.md` is the always-loaded constitution: framework safety, Domain UI hard rules, and routing pointers.
+- `DESIGN_SYSTEM.md` is the consumer-facing entry point for application projects that integrate the Domain UI package.
 - `CONTEXT.md` is the handbook: glossary, rationale, conventions, and execution protocol.
 - `docs/adr/` records architectural boundaries: domain UI assets, schema independence, scenarios, dependency direction, shadcn foundation, and layout assets.
 - `docs/upstream/` stores raw prototype screenshots and notes. Treat them as evidence to distill, not as runtime instructions.
@@ -45,6 +46,31 @@ The component receives schema-shaped input through props and emits local callbac
 Foundation UI comes from this repository's `src/components/ui` shadcn components. Compose them directly for domain components. Do not invent replacement primitives, local variant systems, or a second design system.
 
 Important local shadcn detail: this project uses Base UI style primitives in places such as `Select` and `DropdownMenu`. Before using a primitive in a new way, check an existing local usage or the component source under `src/components/ui`.
+
+### Domain Density Tokens
+
+DOE Domain UI uses a compact workstation density derived from the prototype. The default body reading size is 14px; metadata and table text are smaller; module titles are compact; modal or workflow-start titles are the exception.
+
+Apply density through `.domain-ui-typography` and the DOE token set in `src/app/globals.css`. New domain components should inherit shadcn primitive sizing from that scope instead of adding local display-scale classes.
+
+Avoid using these classes as a component default unless the component is explicitly a workflow start screen, chart focus value, or modal title:
+
+```text
+text-xl text-2xl text-3xl text-4xl
+h-12 p-8 p-10 space-y-8
+```
+
+Prefer shadcn primitive sizes plus scoped tokens:
+
+```text
+Button size="default" | "lg"
+Input / Select / Textarea under .domain-ui-typography
+Card / Table / Badge under .domain-ui-typography
+```
+
+If a component needs a larger value, name the semantic reason first, then use an existing DOE token or add a token in `globals.css`. Do not tune one component with isolated pixel values.
+
+When a component renders a related result component from its own local interaction, wrap them with `.domain-ui-related-stack`. The gap is controlled by `--doe-related-component-gap`; do not put ad hoc margins on either child component.
 
 ### Prototype Distillation
 

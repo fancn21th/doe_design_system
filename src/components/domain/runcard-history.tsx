@@ -1,4 +1,4 @@
-import { runCardEventsFixture } from "@/components/domain/fixtures"
+import { runCardHistoryScenarios } from "@/components/domain/runcard-history.scenarios"
 import { DomainSection, StatusBadge } from "@/components/domain/shared"
 import {
   Table,
@@ -13,37 +13,51 @@ import {
   type RunCardHistoryInput,
 } from "@/schemas/domain-component-inputs"
 
-export function RunCardHistory({ input = {} }: { input?: RunCardHistoryInput }) {
-  runCardHistoryInputSchema.parse(input)
+export function RunCardHistory({
+  input = runCardHistoryScenarios.normal.input,
+}: {
+  input?: RunCardHistoryInput
+}) {
+  const scenarioInput = runCardHistoryScenarios.normal.input
+  const parsedInput = runCardHistoryInputSchema.parse(input)
+  const events = parsedInput.events ?? scenarioInput.events ?? []
 
   return (
     <DomainSection title="MES事件记录">
       <div className="p-6">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              {["RunCard ID", "时间", "Step", "状态", "描述", "操作人"].map((head) => (
-                <TableHead key={head} className="text-base">
-                  {head}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {runCardEventsFixture.map(([runCardId, time, step, status, description, operator]) => (
-              <TableRow key={`${runCardId}-${time}`}>
-                <TableCell className="font-mono text-base font-semibold">{runCardId}</TableCell>
-                <TableCell className="font-mono text-base">{time}</TableCell>
-                <TableCell className="text-base">{step}</TableCell>
-                <TableCell>
-                  <StatusBadge status={status} />
-                </TableCell>
-                <TableCell className="text-base">{description}</TableCell>
-                <TableCell className="text-base">{operator}</TableCell>
+        {events.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+            暂无MES事件记录
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                {["RunCard ID", "时间", "Step", "状态", "描述", "操作人"].map((head) => (
+                  <TableHead key={head}>
+                    {head}
+                  </TableHead>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {events.map((event) => (
+                <TableRow key={`${event.runCardId}-${event.time}-${event.step}`}>
+                  <TableCell className="font-mono font-semibold">
+                    {event.runCardId}
+                  </TableCell>
+                  <TableCell className="font-mono">{event.time}</TableCell>
+                  <TableCell>{event.step}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={event.status} />
+                  </TableCell>
+                  <TableCell>{event.description}</TableCell>
+                  <TableCell>{event.operator}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </DomainSection>
   )

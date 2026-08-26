@@ -27,10 +27,13 @@ export function DomainSection({
   className?: string
 }) {
   return (
-    <Collapsible defaultOpen className={cn("not-prose domain-ui-typography", className)}>
-      <Card className="gap-0 rounded-lg py-0 shadow-none">
+    <Collapsible
+      defaultOpen
+      className={cn("not-prose domain-ui-typography min-w-0 max-w-full", className)}
+    >
+      <Card className="min-w-0 max-w-full gap-0 rounded-lg py-0 shadow-none">
         <CardHeader className="border-b py-4">
-          <CardTitle className="text-xl">{title}</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <CardAction>
             <CollapsibleTrigger
               render={
@@ -42,7 +45,7 @@ export function DomainSection({
           </CardAction>
         </CardHeader>
         <CollapsibleContent>
-          <CardContent className="p-0">{children}</CardContent>
+          <CardContent className="min-w-0 p-0">{children}</CardContent>
         </CollapsibleContent>
       </Card>
     </Collapsible>

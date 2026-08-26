@@ -16,6 +16,7 @@ import { stepsScenarios } from "@/components/domain/steps.scenarios"
 - `Collapsible`
 - `Button`
 - `Checkbox`
+- `Dialog`
 - `DropdownMenu`
 - `Input`
 - `Select`
@@ -53,5 +54,7 @@ export const stepsInputSchema = z.object({
   rows: z.array(stepRowSchema).optional(),
   candidates: z.array(stepCandidateSchema).optional(),
   waferCount: z.number().int().positive().optional(),
+  release: runCardInputSchema.optional(),
+  releaseHistory: runCardHistoryInputSchema.optional(),
 })
 ```

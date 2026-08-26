@@ -15,7 +15,7 @@ import {
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-7xl space-y-8 p-10">
+    <main className="domain-ui-typography mx-auto max-w-7xl space-y-5 p-6">
       <section className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">DOE Domain UI</h1>

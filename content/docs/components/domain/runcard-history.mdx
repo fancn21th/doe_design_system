@@ -4,10 +4,11 @@ description: RunCard / MES 事件历史组件。
 ---
 
 import { RunCardHistory } from "@/components/domain/runcard-history"
+import { runCardHistoryScenarios } from "@/components/domain/runcard-history.scenarios"
 
 ## 预览 / Preview
 
-<RunCardHistory />
+<RunCardHistory input={runCardHistoryScenarios.normal.input} />
 
 ## Shadcn Components
 
@@ -20,5 +21,24 @@ import { RunCardHistory } from "@/components/domain/runcard-history"
 ## Schema
 
 ```ts
-export const runCardHistoryInputSchema = z.object({})
+export const runCardEventStatusSchema = z.enum([
+  "通过",
+  "OPEN",
+  "已接受",
+  "运行中",
+  "TIMEOUT",
+])
+
+export const runCardEventSchema = z.object({
+  runCardId: z.string(),
+  time: z.string(),
+  step: z.string(),
+  status: runCardEventStatusSchema,
+  description: z.string(),
+  operator: z.string(),
+})
+
+export const runCardHistoryInputSchema = z.object({
+  events: z.array(runCardEventSchema).optional(),
+})
 ```

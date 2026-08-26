@@ -4,20 +4,41 @@ description: Wafer Defect Map 组件。
 ---
 
 import { WaferDefect } from "@/components/domain/wafer-defect"
+import { waferDefectScenarios } from "@/components/domain/wafer-defect.scenarios"
 
 ## 预览 / Preview
 
-<WaferDefect />
+<WaferDefect input={waferDefectScenarios.normal.input} />
 
 ## Shadcn Components
 
 - `Card`
 - `Badge`
 - `Button`
+- `Dialog`
 - `Separator`
 
 ## Schema
 
 ```ts
-export const waferDefectInputSchema = z.object({})
+export const waferDefectInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  sourceNote: z.string().optional(),
+  wafers: z.array(waferDefectSummarySchema).optional(),
+  selectedWaferId: z.string().optional(),
+  readonly: z.boolean().optional(),
+})
 ```
+
+## Scenarios
+
+- `normal`
+- `wafer-selected`
+- `many-defect-types`
+- `no-image`
+- `empty`
+- `loading`
+- `error`
+- `readonly`

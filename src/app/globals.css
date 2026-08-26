@@ -135,19 +135,270 @@
 
 @layer components {
   .domain-ui-typography {
-    --text-sm: 0.8125rem;
+    --doe-density-spacing: 0.21875rem;
+    --doe-font-meta: 0.75rem;
+    --doe-font-label: 0.8125rem;
+    --doe-font-body: 0.875rem;
+    --doe-font-body-lg: 0.9375rem;
+    --doe-font-module-title: 1rem;
+    --doe-font-modal-title: 1.25rem;
+    --doe-font-workspace-title: 1.75rem;
+    --doe-line-meta: 1.125rem;
+    --doe-line-body: 1.375rem;
+    --doe-line-title: 1.75rem;
+    --doe-control-xs: 1.75rem;
+    --doe-control-sm: 2rem;
+    --doe-control-md: 2.25rem;
+    --doe-control-lg: 2.5rem;
+    --doe-control-padding-x: 0.75rem;
+    --doe-module-padding: 1.25rem;
+    --doe-section-gap: 1rem;
+    --doe-related-component-gap: var(--doe-section-gap);
+    --doe-table-row-height: 3.25rem;
+    --doe-table-cell-padding-x: 0.5rem;
+    --doe-table-cell-padding-y: 0.4375rem;
+    --doe-split-table-min-width: 111rem;
+    --doe-split-table-stage-column: 7rem;
+    --doe-split-table-step-column: 12rem;
+    --doe-split-table-baseline-column: 6rem;
+    --doe-split-table-condition-column: 10rem;
+    --doe-split-table-factor-column: 8rem;
+    --doe-split-table-recipe-column: 13rem;
+    --doe-split-table-action-column: 5rem;
+    --doe-split-table-wafer-column: 2rem;
+    --doe-release-modal-width: 48.75rem;
+    --doe-release-modal-max-height: min(47.5rem, calc(100vh - 2.5rem));
+    --doe-release-tree-min-width: 42rem;
+    --doe-release-owner-width: 12rem;
+    --doe-wafer-parameter-column: 15.5rem;
+    --doe-wafer-parameter-padding: 1rem;
+    --doe-wafer-parameter-list-gap: 0.625rem;
+    --doe-wafer-parameter-item-padding-x: 0.875rem;
+    --doe-wafer-parameter-item-padding-y: 0.75rem;
+    --doe-wafer-layout: var(--doe-wafer-parameter-column) minmax(0, 1fr);
+    --doe-wafer-panel-min-height: 32.5rem;
+    --doe-wafer-kpi-width: 5.75rem;
+    --doe-wafer-chart-height: 26rem;
+    --doe-defect-wafer-column: 13.5rem;
+    --doe-defect-map-column-min: 34rem;
+    --doe-defect-detail-column-min: 22rem;
+    --doe-defect-detail-column-max: 30rem;
+    --doe-defect-layout: var(--doe-defect-wafer-column) minmax(var(--doe-defect-map-column-min), 1fr) minmax(var(--doe-defect-detail-column-min), var(--doe-defect-detail-column-max));
+    --doe-defect-panel-min-height: 35rem;
+    --doe-defect-grid-size: 1.375rem;
+    --doe-defect-map-size: 29rem;
+    --doe-defect-wafer-panel-padding: 1rem;
+    --doe-defect-wafer-list-gap: 0.625rem;
+    --doe-defect-wafer-item-padding-x: 0.875rem;
+    --doe-defect-wafer-item-padding-y: 0.75rem;
+    --doe-defect-image-height: 15.75rem;
+    --doe-defect-dialog-width: 47.5rem;
+    --doe-defect-modal-image-height: 26.875rem;
+    --doe-radius-control: 0.625rem;
+    --doe-radius-card: 0.875rem;
+    --doe-radius-cell: 0.4375rem;
+    --spacing: var(--doe-density-spacing);
+    --text-xs: var(--doe-font-meta);
+    --text-xs--line-height: calc(1.125 / 0.75);
+    --text-sm: var(--doe-font-label);
     --text-sm--line-height: calc(1.25 / 0.8125);
-    --text-base: 0.875rem;
+    --text-base: var(--doe-font-body);
     --text-base--line-height: calc(1.375 / 0.875);
-    --text-lg: 1rem;
-    --text-lg--line-height: calc(1.5 / 1);
-    --text-xl: 1.125rem;
-    --text-xl--line-height: calc(1.625 / 1.125);
-    --text-2xl: 1.25rem;
+    --text-lg: var(--doe-font-body-lg);
+    --text-lg--line-height: calc(1.5 / 0.9375);
+    --text-xl: var(--doe-font-module-title);
+    --text-xl--line-height: calc(1.5 / 1);
+    --text-2xl: var(--doe-font-modal-title);
     --text-2xl--line-height: calc(1.75 / 1.25);
     --text-3xl: 1.5rem;
     --text-3xl--line-height: calc(2 / 1.5);
-    --text-4xl: 1.875rem;
-    --text-4xl--line-height: calc(2.25 / 1.875);
+    --text-4xl: var(--doe-font-workspace-title);
+    --text-4xl--line-height: calc(2.25 / 1.75);
+    font-size: var(--doe-font-body);
+    line-height: var(--doe-line-body);
+  }
+
+}
+
+@layer utilities {
+  .domain-ui-typography [data-slot="card"] {
+    border-radius: var(--doe-radius-card);
+  }
+
+  .domain-ui-typography [data-slot="card-header"] {
+    min-height: 3.375rem;
+    padding: 0.75rem var(--doe-module-padding);
+  }
+
+  .domain-ui-typography [data-slot="card-footer"] {
+    padding: 0.875rem var(--doe-module-padding);
+  }
+
+  .domain-ui-typography [data-slot="card-title"] {
+    font-size: var(--doe-font-module-title);
+    line-height: var(--doe-line-body);
+  }
+
+  .domain-ui-typography [data-slot="button"] {
+    border-radius: var(--doe-radius-control);
+    font-size: var(--doe-font-body);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="xs"] {
+    height: var(--doe-control-xs);
+    min-height: var(--doe-control-xs);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="sm"],
+  .domain-ui-typography [data-slot="button"][data-size="icon-sm"] {
+    height: var(--doe-control-sm);
+    min-height: var(--doe-control-sm);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="icon-sm"] {
+    width: var(--doe-control-sm);
+    min-width: var(--doe-control-sm);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="default"],
+  .domain-ui-typography [data-slot="button"][data-size="icon"] {
+    height: var(--doe-control-md);
+    min-height: var(--doe-control-md);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="icon"] {
+    width: var(--doe-control-md);
+    min-width: var(--doe-control-md);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="lg"],
+  .domain-ui-typography [data-slot="button"][data-size="icon-lg"] {
+    height: var(--doe-control-lg);
+    min-height: var(--doe-control-lg);
+  }
+
+  .domain-ui-typography [data-slot="button"][data-size="icon-lg"] {
+    width: var(--doe-control-lg);
+    min-width: var(--doe-control-lg);
+  }
+
+  .domain-ui-typography [data-slot="input"],
+  .domain-ui-typography [data-slot="select-trigger"] {
+    height: var(--doe-control-lg);
+    border-radius: var(--doe-radius-control);
+    padding-inline: var(--doe-control-padding-x);
+    font-size: var(--doe-font-body);
+  }
+
+  .domain-ui-typography [data-slot="textarea"] {
+    min-height: 4.5rem;
+    border-radius: var(--doe-radius-control);
+    padding: 0.5625rem var(--doe-control-padding-x);
+    font-size: var(--doe-font-body);
+  }
+
+  .domain-ui-typography [data-slot="table"] {
+    font-size: var(--doe-font-meta);
+  }
+
+  .domain-ui-typography [data-slot="table-head"],
+  .domain-ui-typography [data-slot="table-cell"] {
+    height: var(--doe-table-row-height);
+    padding: var(--doe-table-cell-padding-y) var(--doe-table-cell-padding-x);
+  }
+
+  .domain-ui-release-modal {
+    width: min(calc(100vw - 2.5rem), var(--doe-release-modal-width));
+    max-width: min(calc(100vw - 2.5rem), var(--doe-release-modal-width));
+    max-height: var(--doe-release-modal-max-height);
+  }
+
+  .domain-ui-release-tree {
+    min-width: var(--doe-release-tree-min-width);
+  }
+
+  .domain-ui-release-step-row {
+    grid-template-columns: 2rem 2rem minmax(0, 1fr) var(--doe-release-owner-width);
+  }
+
+  .domain-ui-related-stack {
+    display: grid;
+    gap: var(--doe-related-component-gap);
+  }
+
+  .domain-ui-split-table-stack,
+  .domain-ui-split-table-shell {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .domain-ui-split-table-shell {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--doe-radius-control);
+  }
+
+  .domain-ui-split-table-shell [data-slot="table-container"] {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .domain-ui-split-table {
+    min-width: var(--doe-split-table-min-width);
+    table-layout: fixed;
+  }
+
+  .domain-ui-wafer-parameter-panel {
+    padding: var(--doe-wafer-parameter-padding);
+  }
+
+  .domain-ui-wafer-parameter-list {
+    gap: var(--doe-wafer-parameter-list-gap);
+  }
+
+  .domain-ui-wafer-parameter-item {
+    padding: var(--doe-wafer-parameter-item-padding-y) var(--doe-wafer-parameter-item-padding-x);
+    white-space: normal;
+  }
+
+  .domain-ui-defect-wafer-panel {
+    padding: var(--doe-defect-wafer-panel-padding);
+  }
+
+  .domain-ui-defect-wafer-list {
+    gap: var(--doe-defect-wafer-list-gap);
+  }
+
+  .domain-ui-defect-wafer-item {
+    padding: var(--doe-defect-wafer-item-padding-y) var(--doe-defect-wafer-item-padding-x);
+    white-space: normal;
+  }
+
+  .domain-ui-defect-ripple {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: doe-defect-ripple 1.4s ease-out infinite;
+  }
+
+  .domain-ui-typography .domain-ui-defect-image-trigger {
+    height: var(--doe-defect-image-height);
+    min-height: var(--doe-defect-image-height);
+  }
+}
+
+@keyframes doe-defect-ripple {
+  0% {
+    opacity: 0.32;
+    transform: scale(0.72);
+  }
+
+  70% {
+    opacity: 0.12;
+    transform: scale(1.62);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.86);
   }
 }

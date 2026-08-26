@@ -58,27 +58,27 @@ export function Experiment({
       <div className="max-w-5xl">
         <Badge
           variant="outline"
-          className="h-8 rounded-full border-sky-100 bg-sky-50 px-4 text-base font-medium text-sky-700"
+          className="h-[var(--doe-control-sm)] rounded-full border-sky-100 bg-sky-50 px-3 text-sm font-medium text-sky-700"
         >
           DOE工作起点
         </Badge>
         <h2 className="mt-4 text-4xl font-semibold tracking-normal">新建DOE试验</h2>
-        <p className="mt-5 text-xl text-muted-foreground">
+        <p className="mt-4 text-lg text-muted-foreground">
           填写Lot ID后读取产品与Wafer信息，再进入Split Table、Recipe和MES下发配置。
         </p>
 
         <form
-          className="mt-8"
+          className="mt-6"
           noValidate
           onSubmit={form.handleSubmit(handleSubmit)}
         >
-          <FieldGroup className="gap-6">
+          <FieldGroup className="gap-4">
             <Controller
               control={form.control}
               name="lotId"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="experiment-lot-id" className="text-lg font-semibold">
+                  <FieldLabel htmlFor="experiment-lot-id" className="text-sm font-semibold">
                     Lot ID <span className="text-destructive">*</span>
                   </FieldLabel>
                   <Input
@@ -86,7 +86,7 @@ export function Experiment({
                     id="experiment-lot-id"
                     aria-invalid={fieldState.invalid}
                     autoComplete="off"
-                    className="h-12 rounded-lg px-4 text-lg"
+                    className="rounded-lg"
                     placeholder="例如 AF01112"
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -101,7 +101,7 @@ export function Experiment({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel
                     htmlFor="experiment-name"
-                    className="items-baseline text-lg font-semibold"
+                    className="items-baseline text-sm font-semibold"
                   >
                     试验名称 <span className="font-normal text-muted-foreground">非必填</span>
                   </FieldLabel>
@@ -110,7 +110,7 @@ export function Experiment({
                     id="experiment-name"
                     aria-invalid={fieldState.invalid}
                     autoComplete="off"
-                    className="h-12 rounded-lg px-4 text-lg"
+                    className="rounded-lg"
                     placeholder="例如 刻蚀功率窗口确认试验"
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -125,7 +125,7 @@ export function Experiment({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel
                     htmlFor="experiment-description"
-                    className="items-baseline text-lg font-semibold"
+                    className="items-baseline text-sm font-semibold"
                   >
                     试验描述 <span className="font-normal text-muted-foreground">非必填</span>
                   </FieldLabel>
@@ -133,7 +133,7 @@ export function Experiment({
                     {...field}
                     id="experiment-description"
                     aria-invalid={fieldState.invalid}
-                    className="min-h-28 rounded-lg px-4 py-3 text-lg"
+                    className="rounded-lg"
                     placeholder="填写试验目的、范围或需要验证的问题"
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -142,8 +142,8 @@ export function Experiment({
             />
           </FieldGroup>
 
-          <div className="mt-8 flex justify-end">
-            <Button type="submit" size="lg" className="h-12 px-6 text-lg">
+          <div className="mt-6 flex justify-end">
+            <Button type="submit" size="lg" className="px-5">
               开始试验配置
             </Button>
           </div>

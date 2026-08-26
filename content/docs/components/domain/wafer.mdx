@@ -4,10 +4,11 @@ description: Process Capability by Wafer 组件。
 ---
 
 import { Wafer } from "@/components/domain/wafer"
+import { waferScenarios } from "@/components/domain/wafer.scenarios"
 
 ## 预览 / Preview
 
-<Wafer />
+<Wafer input={waferScenarios.normal.input} />
 
 ## Shadcn Components
 
@@ -19,5 +20,22 @@ import { Wafer } from "@/components/domain/wafer"
 ## Schema
 
 ```ts
-export const waferInputSchema = z.object({})
+export const waferInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  parameters: z.array(waferCapabilityParameterSchema).optional(),
+  selectedParameterId: z.string().optional(),
+  readonly: z.boolean().optional(),
+})
 ```
+
+## Scenarios
+
+- `normal`
+- `parameter-selected`
+- `large-data`
+- `empty`
+- `loading`
+- `error`
+- `readonly`

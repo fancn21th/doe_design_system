@@ -4,13 +4,15 @@ description: 配置 RunCard 并选择本次下发 Step 的组件。
 ---
 
 import { RunCard } from "@/components/domain/runcard"
+import { runCardScenarios } from "@/components/domain/runcard.scenarios"
 
 ## 预览 / Preview
 
-<RunCard />
+<RunCard input={runCardScenarios.withUnassignedSteps.input} />
 
 ## Shadcn Components
 
+- `Badge`
 - `Card`
 - `Button`
 - `Checkbox`
@@ -20,5 +22,24 @@ import { RunCard } from "@/components/domain/runcard"
 ## Schema
 
 ```ts
-export const runCardInputSchema = z.object({})
+export const runCardReleaseStepSchema = z.object({
+  id: z.string(),
+  stage: z.string(),
+  name: z.string(),
+  seq: z.string(),
+  detail: z.string(),
+})
+
+export const runCardGroupSchema = z.object({
+  id: z.string(),
+  stepIds: z.array(z.string()),
+  collapsed: z.boolean().default(false),
+})
+
+export const runCardInputSchema = z.object({
+  steps: z.array(runCardReleaseStepSchema).optional(),
+  runCards: z.array(runCardGroupSchema).optional(),
+  releasedStepIds: z.array(z.string()).optional(),
+  selectedStepIds: z.array(z.string()).optional(),
+})
 ```
