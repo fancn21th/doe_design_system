@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { ReactNode } from "react"
 import { BookOpen } from "lucide-react"
 
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -31,41 +32,60 @@ export default function Home() {
 
       <section>
         <h2 className="mb-4 text-xl font-semibold">基础 UI / UI</h2>
-        <Button>发布 Round</Button>
+        <ComponentPreviewTitle title="button">
+          <Button>发布 Round</Button>
+        </ComponentPreviewTitle>
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-semibold">领域组件 / Domain</h2>
-        <Experiment />
+        <ComponentPreviewTitle title="experiment">
+          <Experiment />
+        </ComponentPreviewTitle>
       </section>
 
-      <section>
+      <ComponentPreviewTitle title="history">
         <History />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="lot">
         <Lot />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="steps">
         <Steps />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="runcard">
         <RunCard />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="runcard-history">
         <RunCardHistory />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="wafer">
         <Wafer />
-      </section>
+      </ComponentPreviewTitle>
 
-      <section>
+      <ComponentPreviewTitle title="wafer-defect">
         <WaferDefect />
-      </section>
+      </ComponentPreviewTitle>
     </main>
+  )
+}
+
+function ComponentPreviewTitle({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-semibold">{title}</h2>
+      {children}
+    </section>
   )
 }

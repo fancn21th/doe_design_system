@@ -49,11 +49,22 @@ import {
   type StepRow,
   type StepsInput,
 } from "@/schemas/domain-component-inputs"
+import { cn } from "@/lib/utils"
 
 const recipePlaceholder = "选择Recipe"
 const recipePlaceholderValue = "__recipe_placeholder__"
 
-export function Steps({ input = stepsScenarios.normal.input }: { input?: StepsInput }) {
+type StepsProps = {
+  input?: StepsInput
+  selectedStageId?: string
+  onStageSelect?: (stageId: string) => void
+}
+
+export function Steps({
+  input = stepsScenarios.normal.input,
+  selectedStageId,
+  onStageSelect,
+}: StepsProps) {
   const scenarioInput = stepsScenarios.normal.input
   const parsedInput = stepsInputSchema.parse(input)
   const releaseInput = parsedInput.release ?? scenarioInput.release
@@ -193,7 +204,24 @@ export function Steps({ input = stepsScenarios.normal.input }: { input?: StepsIn
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="font-semibold text-primary">
-                    {row.stage}
+                    {row.stage ? (
+                      onStageSelect ? (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          aria-pressed={selectedStageId === row.stage}
+                          className={cn(
+                            "-ml-2 justify-start px-2 font-semibold text-primary",
+                            selectedStageId === row.stage && "bg-sky-50 text-sky-700"
+                          )}
+                          onClick={() => onStageSelect(row.stage)}
+                        >
+                          {row.stage}
+                        </Button>
+                      ) : (
+                        row.stage
+                      )
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <div className="flex min-w-44 items-center gap-3">

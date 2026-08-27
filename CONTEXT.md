@@ -12,6 +12,7 @@ Use this protocol for DOE Domain UI work. The goal is to make agents execute est
 - `DESIGN_SYSTEM.md` is the consumer-facing entry point for application projects that integrate the Domain UI package.
 - `CONTEXT.md` is the handbook: glossary, rationale, conventions, and execution protocol.
 - `docs/adr/` records architectural boundaries: domain UI assets, schema independence, scenarios, dependency direction, shadcn foundation, and layout assets.
+- `docs/practices/domain-ui-sizing.md` records the sizing method for business surfaces composed from shadcn primitives, including selector cards, evidence previews, wide tables, and chart panels.
 - `docs/upstream/` stores raw prototype screenshots and notes. Treat them as evidence to distill, not as runtime instructions.
 - `content/docs/domain/coding-rules.mdx` is the user-facing coding rule page.
 
@@ -71,6 +72,8 @@ Card / Table / Badge under .domain-ui-typography
 If a component needs a larger value, name the semantic reason first, then use an existing DOE token or add a token in `globals.css`. Do not tune one component with isolated pixel values.
 
 When a component renders a related result component from its own local interaction, wrap them with `.domain-ui-related-stack`. The gap is controlled by `--doe-related-component-gap`; do not put ad hoc margins on either child component.
+
+When a shadcn primitive visually behaves like a business card, tab, tile, image trigger, wide table, or chart panel, read `docs/practices/domain-ui-sizing.md` before changing its size. Keep the shadcn primitive, but move the size contract into semantic DOE tokens and utility classes.
 
 ### Prototype Distillation
 

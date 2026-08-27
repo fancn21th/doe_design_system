@@ -11,6 +11,7 @@ DOE Domain UI 不是自建基础设计系统。基础控件来自 shadcn，本�
 
 - `DESIGN_SYSTEM.md`
 - `CONTEXT.md`
+- `docs/practices/domain-ui-sizing.md`
 - `docs/adr/0008-use-shadcn-for-foundation-ui.md`
 - `docs/adr/0009-layout-components-are-domain-assets.md`
 
@@ -47,6 +48,7 @@ Token 源头在 `src/app/globals.css`。
 | `--doe-control-lg` | `40px` | 表单控件、主操作 |
 | `--doe-table-row-height` | `52px` | Split Table 行高 |
 | `--doe-module-padding` | `20px` | 模块内边距 |
+| `--doe-component-preview-wide-width` | `1248px` | Component Lab 宽检测组件预览宽度 |
 | `--doe-related-component-gap` | `16px` | 主组件与关联结果组件之间的间距 |
 | `--doe-split-table-min-width` | `1776px` | Step x Wafer 宽表的最小可读宽度 |
 | `--doe-split-table-*-column` | varies | Stage、Step、Condition、Recipe、操作、Wafer 等语义列宽 |
@@ -61,6 +63,10 @@ Token 源头在 `src/app/globals.css`。
 | `--doe-defect-map-column-min` | `544px` | Wafer map 最小可读列宽 |
 | `--doe-defect-detail-column-min` | `352px` | 缺陷详情最小可读列宽 |
 | `--doe-defect-detail-column-max` | `480px` | 缺陷详情最大列宽，剩余空间留给 wafer map |
+| `--doe-defect-wafer-item-min-width` | `168px` | 窄布局下 Wafer defect 选择项最小宽度 |
+| `--doe-defect-wafer-item-min-height` | `64px` | Wafer defect 选择项最小高度 |
+| `--doe-defect-map-panel-padding` | `16px` | Wafer defect map 面板内边距 |
+| `--doe-defect-detail-panel-padding` | `20px` | Wafer defect detail 面板内边距 |
 | `--doe-defect-image-height` | `252px` | 内联缺陷证据图高度 |
 | `--doe-radius-control` | `10px` | 控件圆角 |
 | `--doe-radius-card` | `14px` | 业务模块卡片圆角 |
@@ -105,6 +111,20 @@ Step x Wafer 这类表格天然比普通应用容器更宽。页面不应该被�
 ```
 
 列宽由 `--doe-split-table-*-column` 系列 token 控制；组件可以用 `colgroup` 消费这些 token，避免在单元格上写一次性的宽度值。
+
+## 业务表面尺寸
+
+当 shadcn primitive 在领域组件中表现为业务卡片、tab、tile、证据图触发器、宽表或图表面板时，不要直接在 JSX 里拍局部尺寸。保留 shadcn primitive，把尺寸契约放进语义 token 和 utility。
+
+例如证据图虽然用 `Button` 打开弹窗，但视觉上是图片预览面板，所以高度走 `--doe-defect-image-height`：
+
+```css
+.domain-ui-typography [data-slot="button"].domain-ui-defect-image-trigger {
+  height: var(--doe-defect-image-height);
+}
+```
+
+完整方法见 `docs/practices/domain-ui-sizing.md`。
 
 ## 禁止项
 

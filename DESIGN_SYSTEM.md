@@ -6,6 +6,9 @@ UI density layer for business components.
 Application projects that consume these domain components should start here
 before integrating the package.
 
+For implementation practice around business-surface sizing, see
+`docs/practices/domain-ui-sizing.md`.
+
 ## Consumer Contract
 
 1. Use the package's public domain component API. Do not import internal
@@ -56,6 +59,7 @@ Current DOE workstation density:
 | `--doe-control-lg` | `40px` | Forms and primary actions |
 | `--doe-table-row-height` | `52px` | Split table row rhythm |
 | `--doe-module-padding` | `20px` | Module body/header padding |
+| `--doe-component-preview-wide-width` | `1248px` | Component Lab width for wide inspection components |
 | `--doe-related-component-gap` | `16px` | Gap between a source component and its related result component |
 | `--doe-split-table-min-width` | `1776px` | Minimum readable width for Step x Wafer assignment tables |
 | `--doe-split-table-*-column` | varies | Semantic column widths for stage, step, condition, recipe, action, and wafer cells |
@@ -70,6 +74,10 @@ Current DOE workstation density:
 | `--doe-defect-map-column-min` | `544px` | Minimum readable wafer map column |
 | `--doe-defect-detail-column-min` | `352px` | Minimum readable defect detail column |
 | `--doe-defect-detail-column-max` | `480px` | Maximum defect detail column before map gets the remaining width |
+| `--doe-defect-wafer-item-min-width` | `168px` | Wafer defect selector item minimum width on narrow layouts |
+| `--doe-defect-wafer-item-min-height` | `64px` | Wafer defect selector item minimum height |
+| `--doe-defect-map-panel-padding` | `16px` | Wafer defect map panel padding |
+| `--doe-defect-detail-panel-padding` | `20px` | Wafer defect detail panel padding |
 | `--doe-defect-image-height` | `252px` | Inline defect evidence preview height |
 | `--doe-radius-control` | `10px` | Button/input/select radius |
 | `--doe-radius-card` | `14px` | Business module card radius |
@@ -124,3 +132,23 @@ Column rhythm is controlled by:
 - `--doe-split-table-recipe-column`
 - `--doe-split-table-action-column`
 - `--doe-split-table-wafer-column`
+
+## Business Surface Sizing
+
+Some shadcn primitives act as larger business surfaces in DOE Domain UI:
+selector cards, evidence image triggers, wide tables, chart panels, and
+inspection layouts. Keep the shadcn primitive, then move its size contract into
+semantic DOE tokens and utility classes.
+
+When a shadcn `Button` behaves like a selector card or image trigger, its
+semantic utility selector must be at least as specific as the global button slot
+rule:
+
+```css
+.domain-ui-typography [data-slot="button"].domain-ui-defect-image-trigger {
+  height: var(--doe-defect-image-height);
+}
+```
+
+For the full method and acceptance checks, use
+`docs/practices/domain-ui-sizing.md`.

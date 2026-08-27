@@ -162,7 +162,7 @@ export function WaferDefect({
                 onSelectWafer={selectWafer}
               />
 
-              <section className="border-r bg-[linear-gradient(#e8edf1_1px,transparent_1px),linear-gradient(90deg,#e8edf1_1px,transparent_1px)] bg-[size:var(--doe-defect-grid-size)_var(--doe-defect-grid-size)] p-4">
+              <section className="domain-ui-defect-map-panel border-r bg-[linear-gradient(#e8edf1_1px,transparent_1px),linear-gradient(90deg,#e8edf1_1px,transparent_1px)] bg-[size:var(--doe-defect-grid-size)_var(--doe-defect-grid-size)]">
                 <h3 className="text-base font-semibold">
                   {selectedWafer?.waferId} Defect Position View
                 </h3>
@@ -175,12 +175,12 @@ export function WaferDefect({
                     onLeavePoint={() => setHoverState(null)}
                   />
                 </div>
-                <p className="mt-3 max-w-[34rem] text-sm text-muted-foreground">
+                <p className="mt-3 max-w-[var(--doe-defect-map-column-min)] text-sm text-muted-foreground">
                   悬停点位查看Wafer、坐标、缺陷数量和类型；点击后在右侧查看缺陷图。
                 </p>
               </section>
 
-              <aside className="p-5">
+              <aside className="domain-ui-defect-detail-panel">
                 <div className="flex items-end gap-3">
                   <b className="font-mono text-2xl">{selectedWafer?.waferId}</b>
                   <span className="text-sm text-muted-foreground">
@@ -276,29 +276,29 @@ function WaferList({
   return (
     <aside className="domain-ui-defect-wafer-panel flex overflow-auto border-b bg-muted/20 lg:flex-col lg:border-r lg:border-b-0">
       <div className="domain-ui-defect-wafer-list flex w-full lg:grid">
-      {wafers.map((wafer) => {
-        const active = wafer.waferId === selectedWaferId
+        {wafers.map((wafer) => {
+          const active = wafer.waferId === selectedWaferId
 
-        return (
-          <Button
-            key={wafer.waferId}
-            variant="outline"
-            className={cn(
-              "domain-ui-defect-wafer-item h-auto min-w-28 justify-start rounded-lg bg-background text-left lg:w-full",
-              active &&
-                "border-primary bg-sky-50 text-foreground shadow-[inset_3px_0_0_var(--primary)]"
-            )}
-            onClick={() => onSelectWafer(wafer.waferId)}
-          >
-            <span>
-              <b className="block font-mono text-sm">{wafer.waferId}</b>
-              <span className="mt-1 block text-sm font-normal text-red-600">
-                {wafer.defectCount} defects
+          return (
+            <Button
+              key={wafer.waferId}
+              variant="outline"
+              className={cn(
+                "domain-ui-defect-wafer-item h-auto justify-start rounded-lg bg-background text-left lg:w-full",
+                active &&
+                  "border-primary bg-sky-50 text-foreground shadow-[inset_3px_0_0_var(--primary)]"
+              )}
+              onClick={() => onSelectWafer(wafer.waferId)}
+            >
+              <span>
+                <b className="block font-mono text-sm">{wafer.waferId}</b>
+                <span className="mt-1 block text-sm font-normal text-red-600">
+                  {wafer.defectCount} defects
+                </span>
               </span>
-            </span>
-          </Button>
-        )
-      })}
+            </Button>
+          )
+        })}
       </div>
     </aside>
   )

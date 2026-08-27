@@ -127,6 +127,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    position: relative;
   }
   html {
     @apply font-sans;
@@ -157,6 +158,7 @@
     --doe-table-row-height: 3.25rem;
     --doe-table-cell-padding-x: 0.5rem;
     --doe-table-cell-padding-y: 0.4375rem;
+    --doe-component-preview-wide-width: 78rem;
     --doe-split-table-min-width: 111rem;
     --doe-split-table-stage-column: 7rem;
     --doe-split-table-step-column: 12rem;
@@ -189,8 +191,12 @@
     --doe-defect-map-size: 29rem;
     --doe-defect-wafer-panel-padding: 1rem;
     --doe-defect-wafer-list-gap: 0.625rem;
+    --doe-defect-wafer-item-min-width: 10.5rem;
+    --doe-defect-wafer-item-min-height: 4rem;
     --doe-defect-wafer-item-padding-x: 0.875rem;
     --doe-defect-wafer-item-padding-y: 0.75rem;
+    --doe-defect-map-panel-padding: 1rem;
+    --doe-defect-detail-panel-padding: 1.25rem;
     --doe-defect-image-height: 15.75rem;
     --doe-defect-dialog-width: 47.5rem;
     --doe-defect-modal-image-height: 26.875rem;
@@ -370,8 +376,22 @@
   }
 
   .domain-ui-defect-wafer-item {
+    min-width: var(--doe-defect-wafer-item-min-width);
     padding: var(--doe-defect-wafer-item-padding-y) var(--doe-defect-wafer-item-padding-x);
     white-space: normal;
+  }
+
+  .domain-ui-defect-map-panel {
+    padding: var(--doe-defect-map-panel-padding);
+  }
+
+  .domain-ui-defect-detail-panel {
+    padding: var(--doe-defect-detail-panel-padding);
+  }
+
+  .domain-ui-typography [data-slot="button"].domain-ui-defect-wafer-item {
+    height: auto;
+    min-height: var(--doe-defect-wafer-item-min-height);
   }
 
   .domain-ui-defect-ripple {
@@ -380,9 +400,15 @@
     animation: doe-defect-ripple 1.4s ease-out infinite;
   }
 
-  .domain-ui-typography .domain-ui-defect-image-trigger {
+  .domain-ui-typography [data-slot="button"].domain-ui-defect-image-trigger {
     height: var(--doe-defect-image-height);
     min-height: var(--doe-defect-image-height);
+  }
+
+  .domain-ui-preview-wide {
+    width: min(var(--doe-component-preview-wide-width), calc(100vw - 2rem));
+    max-width: none;
+    margin-inline: calc((100% - min(var(--doe-component-preview-wide-width), calc(100vw - 2rem))) / 2);
   }
 }
 
