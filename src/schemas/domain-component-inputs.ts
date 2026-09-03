@@ -103,6 +103,22 @@ export const waferInputSchema = z.object({
   selectedParameterId: z.string().optional(),
   readonly: z.boolean().optional(),
 })
+export const waferMapDieSchema = z.object({
+  id: z.string(),
+  x: z.number().finite(),
+  y: z.number().finite(),
+})
+export const waferMapBoundsSchema = z.object({
+  minX: z.number().finite(),
+  maxX: z.number().finite(),
+  minY: z.number().finite(),
+  maxY: z.number().finite(),
+})
+export const waferMapDataSchema = z.object({
+  id: z.string(),
+  dies: z.array(waferMapDieSchema),
+  bounds: waferMapBoundsSchema,
+})
 export const waferDefectSourceKindSchema = z.enum([
   "spc",
   "dms",
@@ -178,6 +194,7 @@ export type WaferCapabilityParameter = z.infer<
   typeof waferCapabilityParameterSchema
 >
 export type WaferInput = z.infer<typeof waferInputSchema>
+export type WaferMapInput = z.infer<typeof waferMapDataSchema>
 export type WaferDefectSourceKind = z.infer<typeof waferDefectSourceKindSchema>
 export type WaferDefectEvidence = z.infer<typeof waferDefectEvidenceSchema>
 export type WaferDefectPoint = z.infer<typeof waferDefectPointSchema>

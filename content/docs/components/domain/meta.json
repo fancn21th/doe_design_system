@@ -6,6 +6,7 @@
     "steps",
     "runcard",
     "wafer",
+    "wafer-map",
     "wafer-defect",
     "runcard-history",
     "history"

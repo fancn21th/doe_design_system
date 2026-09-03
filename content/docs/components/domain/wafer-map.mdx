@@ -1,0 +1,54 @@
+---
+title: wafer-map
+description: 单片 Wafer 的 Canvas Die Geometry Rendering 组件。
+---
+
+import { WaferMap } from "@/components/domain/wafer-map"
+import { waferMapScenarios } from "@/components/domain/wafer-map.scenarios"
+
+## 预览 / Preview
+
+### W01 Real Geometry · 4,099 Dies
+
+<WaferMap data={waferMapScenarios.w01RealGeometry.data} width={640} height={640} />
+
+### Small Size
+
+<WaferMap data={waferMapScenarios.base.data} width={240} height={240} />
+
+### Empty
+
+<WaferMap data={waferMapScenarios.empty.data} width={240} height={240} />
+
+## Contract
+
+`WaferMap` consumes only `id`, `dies`, and precomputed `bounds`. Each die has an `id`, `x`, and `y`; Final Bin, parameter, defect, selection, and hover data are intentionally outside V1.
+
+## Schema
+
+```ts
+export const waferMapDieSchema = z.object({
+	id: z.string(),
+	x: z.number().finite(),
+	y: z.number().finite(),
+})
+
+export const waferMapBoundsSchema = z.object({
+	minX: z.number().finite(),
+	maxX: z.number().finite(),
+	minY: z.number().finite(),
+	maxY: z.number().finite(),
+})
+
+export const waferMapDataSchema = z.object({
+	id: z.string(),
+	dies: z.array(waferMapDieSchema),
+	bounds: waferMapBoundsSchema,
+})
+```
+
+## Scenarios
+
+- `base`
+- `w01-real-geometry`
+- `empty`
