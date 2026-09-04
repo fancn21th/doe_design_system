@@ -23,7 +23,7 @@ pnpm dev
 - 承载业务组件的区域必须包在 `.domain-ui-typography` 下。
 - 应用 workflow、App Service、Gateway、MES/Oracle 调用留在应用工程内。
 
-文档站入口：[设计系统 / Design System](/docs/domain/design-system)。
+文档站入口：[设计系统 / Design System](/docs/knowledge/design-system)。
 
 ## 当前领域组件 / Domain Components
 

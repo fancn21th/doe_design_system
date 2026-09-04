@@ -1,0 +1,40 @@
+---
+title: measurement
+description: CP Data 与 Inline Data 共享的 Measurement 占位组件。
+---
+
+import { Measurement } from "@/components/domain/measurement"
+import { measurementScenarios } from "@/components/domain/measurement.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <Measurement input={measurementScenarios.normal.input} />
+</div>
+
+## Contract
+
+`Measurement` 是共享测量分布组件的占位边界。当前只固定 grouped measurement 的视觉模型，不实现最终交互。
+
+## Shadcn Components
+
+- `Card`
+- `Badge`
+
+## Schema
+
+```ts
+export const measurementInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  yAxisLabel: z.string().optional(),
+  groups: z.array(measurementGroupSchema).optional(),
+  referenceLines: z.array(measurementReferenceLineSchema).optional(),
+})
+```
+
+## Scenarios
+
+- `normal`
+- `empty`

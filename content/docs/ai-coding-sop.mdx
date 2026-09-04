@@ -1,0 +1,98 @@
+---
+title: AI Coding SOP
+description: 从当前项目提交历史中沉淀出的领域组件设计与创建流程。
+---
+
+## Purpose
+
+这页记录当前项目里设计、创建 DOE 领域组件的标准流程。它来自提交历史、上游输入记录、ADR、设计系统文档和现有组件结构，用作后续开发和 AI Coding 的参考。
+
+它不是单个业务需求，也不是原型截图的直接转写。真正新增组件时，必须先建立或更新对应 `docs/upstream/components/NNN-component-slug/` 记录，再进入 ADR、组件合同和实现。
+
+## History Pattern
+
+项目历史里可以看到一条逐步收敛的路径：
+
+1. `140d310` 先用 sample components 验证基础工程结构。
+2. `b37ad54` 删除 sample，建立真实 DOE Domain UI 体系：上游组件输入、ADR、`CONTEXT.md`、领域组件、schema 和文档。
+3. `907bfe2` 新增 `experiment`，形成典型简单组件文件包：upstream、component、schema、fixture、MDX、export。
+4. `e2bcb8f` 和 `2affe9c` 把 fixtures、scenarios、交互记录、density 和设计系统规则补齐。
+5. `b2ffa89` 固化业务表面尺寸实践。
+6. `98d2946` 新增 `wafer-map`，展示复杂组件需要额外拆 model、fixtures、scenarios 和 tests。
+
+## SOP
+
+1. 建立上游输入记录。
+
+   `docs/upstream/components/NNN-component-slug/` 是创建领域组件的起点规范。无论输入来自用户对话、截图、原型观察，还是 AI 生成的初步分析，都必须先落到这个目录结构里，再进入组件设计和实现。
+
+   目录至少包含 `README.md` 和源截图或来源说明。`README.md` 记录输入来源、用户原话、可见 UI 区域、候选领域边界、open questions。AI 可以辅助整理，但不能绕过这一步直接创建领域组件。
+
+2. 提炼组件边界。
+
+   从 upstream 中判断组件负责什么、不负责什么、哪些只是 candidate。截图和原型是证据，不是直接实现指令。
+
+3. 确认组件文件包。
+
+   当前已有业务组件全部属于 `实验 / Trial`，文件结构采用：
+
+   ```text
+   src/components/domain/<component>.tsx
+   src/components/domain/<component>.fixtures.ts
+   src/components/domain/<component>.scenarios.ts
+   src/schemas/domain-component-inputs.ts
+   content/docs/domain/trial/<component>.mdx
+   ```
+
+4. 定义 UI-facing schema。
+
+   schema 放在 `src/schemas/domain-component-inputs.ts`，导出 Zod schema 和 TypeScript type。它是 UI 入参契约，不是 backend、MES、Oracle 或 Gateway DTO。
+
+5. 准备 fixtures 和 scenarios。
+
+   demo/test 数据放进 fixtures 和 scenarios，不写死在组件渲染逻辑里。按组件需要覆盖 normal、empty、loading、partial、error、readonly、large-data 等状态。
+
+6. 实现领域组件。
+
+   组件通过 props 接收 schema-shaped input，通过 callback 暴露本地意图。组件可以拥有局部交互状态，但不能拥有应用 workflow。
+
+7. 拆分复杂模型。
+
+   当组件包含复杂布局、坐标、渲染、映射或策略逻辑时，拆出 `<component>-model.ts`，并让组件只负责组合和呈现。
+
+8. 编写 MDX 预览。
+
+   领域组件文档只保留 `预览 / Preview`、`Shadcn Components`、`Schema`。预览应导入组件和 scenarios，不在 MDX 中重写大段 mock 数据。
+
+9. 更新公共出口。
+
+   通过 `src/components/domain/index.ts` 暴露稳定组件 API。不要让应用项目依赖内部 helper、fixtures、scenarios 或 foundation UI wrapper。
+
+10. 验证。
+
+   先跑 targeted lint/typecheck 和相关测试。交互或布局变化需要浏览器验证关键路径。完成后跑一次 full build。
+
+## Development Constraints
+
+1. 这个仓库是 DOE Domain UI asset library，不是 DOE 应用。
+2. 领域组件不能直接调用 `fetch`、App Service、Gateway、MES、Oracle 或真实提交函数。
+3. 应用 workflow、页面路由、跨组件状态机、真实提交、重试和轮询属于应用工程。
+4. 领域组件只能拥有局部状态，例如展开、选择、过滤、表格编辑、局部校验。
+5. 基础 UI 必须组合 `src/components/ui` 的 shadcn primitive，不自建 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 替代体系。
+6. 业务尺寸走 `.domain-ui-typography`、`src/app/globals.css` 中的 DOE density tokens 和 `docs/practices/domain-ui-sizing.md`。
+7. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
+8. Planned Condition 不能展示成 Actual Condition。
+9. Observed Wafer Scope 不能默认解释成 planned、released、executed 或 completed wafer scope。
+10. Candidate Step Mapping 不能展示成 confirmed DOE Step mapping。
+11. Mock、derived、deterministic-template、source-provisional data 必须显式标记，不能伪装成 real production fact。
+12. Coverage Unknown 不能展示成 pass、no issue 或 defect-free。
+
+## Reference Files
+
+- `AGENTS.md`
+- `CONTEXT.md`
+- `DESIGN_SYSTEM.md`
+- `docs/adr/`
+- `docs/practices/domain-ui-sizing.md`
+- `docs/upstream/components/`
+- `content/docs/knowledge/coding-rules.mdx`

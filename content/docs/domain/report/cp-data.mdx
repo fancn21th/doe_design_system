@@ -1,0 +1,22 @@
+---
+title: cp-data
+description: DOE Report CP Data 业务组件。
+---
+
+import { ReportCpData } from "@/components/domain/report-cp-data"
+import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportCpData input={reportCpDataScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportCpData` 只负责 CP Data report tab 的外层组合。测量分布图必须组合 shared `Measurement`，当前不实现 Measurement 内部交互。
+
+## Scenarios
+
+- `normal`
+- `empty`

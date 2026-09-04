@@ -1,0 +1,22 @@
+---
+title: cp-inline
+description: DOE Report CP x Inline 业务组件。
+---
+
+import { ReportCpInline } from "@/components/domain/report-cp-inline"
+import { reportCpInlineScenarios } from "@/components/domain/report-cp-inline.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportCpInline input={reportCpInlineScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportCpInline` 展示 CP x Inline 的 condition aggregation 和 fit-readiness 证据。相关性、回归、因果判断不在当前占位版本内实现。
+
+## Scenarios
+
+- `normal`
+- `empty`

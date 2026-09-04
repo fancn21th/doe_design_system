@@ -1,0 +1,13 @@
+{
+  "title": "报告 / Report",
+  "pages": [
+    "overview",
+    "split-table",
+    "yield-analysis",
+    "wafer-map",
+    "parameter-median",
+    "cp-data",
+    "inline-data",
+    "cp-inline"
+  ]
+}

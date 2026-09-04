@@ -40,7 +40,7 @@ Read this file before changing domain component layout, dense business tables, e
 6. Keep scroll boundaries local to the business surface.
    Wide tables or wide inspection panels should scroll inside their module or lab preview, not expand the whole page.
 
-7. Record the token in `DESIGN_SYSTEM.md` and `content/docs/domain/design-system.mdx`.
+7. Record the token in `DESIGN_SYSTEM.md` and `content/docs/knowledge/design-system.mdx`.
 
 ## Acceptance Checks
 

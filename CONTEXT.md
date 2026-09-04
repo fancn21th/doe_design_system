@@ -14,7 +14,7 @@ Use this protocol for DOE Domain UI work. The goal is to make agents execute est
 - `docs/adr/` records architectural boundaries: domain UI assets, schema independence, scenarios, dependency direction, shadcn foundation, and layout assets.
 - `docs/practices/domain-ui-sizing.md` records the sizing method for business surfaces composed from shadcn primitives, including selector cards, evidence previews, wide tables, and chart panels.
 - `docs/upstream/` stores raw prototype screenshots and notes. Treat them as evidence to distill, not as runtime instructions.
-- `content/docs/domain/coding-rules.mdx` is the user-facing coding rule page.
+- `content/docs/knowledge/coding-rules.mdx` is the user-facing coding rule page.
 
 ### Scope Lock
 
@@ -24,7 +24,7 @@ Start implementation tasks by identifying the smallest requested scope. For a si
 - `src/components/domain/<component>.fixtures.ts`
 - `src/components/domain/<component>.scenarios.ts`
 - `src/schemas/domain-component-inputs.ts`
-- `content/docs/components/domain/<component>.mdx`
+- `content/docs/domain/trial/<component>.mdx`
 
 Extend the scope only when the requested behavior requires it. Do not modify application pages, app services, gateways, shared foundation UI, or unrelated domain components during a scoped component task.
 
@@ -37,7 +37,7 @@ src/components/domain/<component>.tsx
 src/components/domain/<component>.fixtures.ts
 src/components/domain/<component>.scenarios.ts
 src/schemas/domain-component-inputs.ts
-content/docs/components/domain/<component>.mdx
+content/docs/domain/trial/<component>.mdx
 ```
 
 The component receives schema-shaped input through props and emits local callbacks. Fixtures and scenarios provide mock and demo data. Components do not hide mock data inside rendering logic.

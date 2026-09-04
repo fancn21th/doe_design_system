@@ -8,6 +8,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## 通用实现规则
+
+- 在完成功能前提下，以精简并删除历史冗余代码为荣以堆砌重复实现为耻
+
 ## DOE Domain UI Agent Rules
 
 Before the first Domain UI change in a task or session, read `CONTEXT.md`. If context was compacted, lost, or inherited from another task, read it again. After that, reread only the relevant ADR, component pattern, fixture, scenario, or local primitive source.

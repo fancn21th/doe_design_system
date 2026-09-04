@@ -1,0 +1,22 @@
+---
+title: wafer-map
+description: DOE Report Wafer Map 业务组件。
+---
+
+import { ReportWaferMap } from "@/components/domain/report-wafer-map"
+import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportWaferMap input={reportWaferMapScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportWaferMap` 是 report tab 外层组件。每片 wafer 的可视化必须组合 shared `WaferMap`，当前不实现单片 wafer 内部交互。
+
+## Scenarios
+
+- `normal`
+- `empty`

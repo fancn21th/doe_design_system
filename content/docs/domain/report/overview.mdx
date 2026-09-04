@@ -1,0 +1,22 @@
+---
+title: overview
+description: DOE Report Overview 业务组件。
+---
+
+import { ReportOverview } from "@/components/domain/report-overview"
+import { reportOverviewScenarios } from "@/components/domain/report-overview.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportOverview input={reportOverviewScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportOverview` 展示 report round 的摘要、KPI、低良率、主要失效和参数异常入口。
+
+## Scenarios
+
+- `normal`
+- `empty`

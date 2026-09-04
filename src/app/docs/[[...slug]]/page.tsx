@@ -6,7 +6,7 @@ import {
   DocsPage,
   DocsTitle,
 } from "fumadocs-ui/page"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 interface PageProps {
   params: Promise<{
@@ -14,11 +14,93 @@ interface PageProps {
   }>
 }
 
+const trialComponentPages = new Set([
+  "experiment",
+  "lot",
+  "steps",
+  "runcard",
+  "wafer",
+  "wafer-defect",
+  "runcard-history",
+  "history",
+])
+
+const sharedComponentPages = new Set(["wafer-map"])
+
+const knowledgePages = new Set([
+  "business-loop",
+  "design-system",
+  "concepts",
+  "component-boundaries",
+  "open-questions",
+  "coding-rules",
+])
+
+function redirectLegacyDocsPath(slug?: string[]) {
+  if (!slug) return
+
+  const [first, second, third] = slug
+
+  if (
+    first === "domain" &&
+    second === "trial" &&
+    third &&
+    sharedComponentPages.has(third)
+  ) {
+    redirect(`/docs/domain/shared/${third}`)
+  }
+
+  if (
+    first === "domain" &&
+    second === "report" &&
+    third &&
+    sharedComponentPages.has(third)
+  ) {
+    redirect(`/docs/domain/shared/${third}`)
+  }
+
+  if (
+    first === "domain" &&
+    second === "report" &&
+    third &&
+    trialComponentPages.has(third)
+  ) {
+    redirect(`/docs/domain/trial/${third}`)
+  }
+
+  if (
+    first === "components" &&
+    second === "domain" &&
+    third &&
+    sharedComponentPages.has(third)
+  ) {
+    redirect(`/docs/domain/shared/${third}`)
+  }
+
+  if (
+    first === "components" &&
+    second === "domain" &&
+    third &&
+    trialComponentPages.has(third)
+  ) {
+    redirect(`/docs/domain/trial/${third}`)
+  }
+
+  if (first === "components" && second === "ui" && third) {
+    redirect(`/docs/ui/${third}`)
+  }
+
+  if (first === "domain" && second && knowledgePages.has(second)) {
+    redirect(`/docs/knowledge/${second}`)
+  }
+}
+
 export default async function Page(props: PageProps) {
   const params = await props.params
   const page = source.getPage(params.slug)
 
   if (!page) {
+    redirectLegacyDocsPath(params.slug)
     notFound()
   }
 
@@ -44,6 +126,7 @@ export async function generateMetadata(props: PageProps) {
   const page = source.getPage(params.slug)
 
   if (!page) {
+    redirectLegacyDocsPath(params.slug)
     notFound()
   }
 

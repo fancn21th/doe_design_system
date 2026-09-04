@@ -1,12 +1,11 @@
 {
-  "title": "领域组件 / Domain",
+  "title": "实验 / Trial",
   "pages": [
     "experiment",
     "lot",
     "steps",
     "runcard",
     "wafer",
-    "wafer-map",
     "wafer-defect",
     "runcard-history",
     "history"

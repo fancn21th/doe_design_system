@@ -1,0 +1,22 @@
+---
+title: yield-analysis
+description: DOE Report Yield Analysis 业务组件。
+---
+
+import { ReportYieldAnalysis } from "@/components/domain/report-yield-analysis"
+import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-analysis.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportYieldAnalysis input={reportYieldAnalysisScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportYieldAnalysis` 展示 wafer yield ranking 和 report detail 的一级入口，不给出根因结论。
+
+## Scenarios
+
+- `normal`
+- `empty`

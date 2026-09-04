@@ -174,6 +174,187 @@ export const waferDefectInputSchema = z.object({
   selectedWaferId: z.string().optional(),
   readonly: z.boolean().optional(),
 })
+
+export const reportToneSchema = z.enum(["good", "watch", "bad", "neutral"])
+export const reportMetricSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  detail: z.string().optional(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportListItemSchema = z.object({
+  label: z.string(),
+  value: z.string().optional(),
+  detail: z.string().optional(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const measurementReferenceLineSchema = z.object({
+  label: z.string(),
+  value: z.number(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const measurementGroupSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  subtitle: z.string().optional(),
+  values: z.array(z.number()).default([]),
+  mean: z.number(),
+  median: z.number(),
+  low: z.number(),
+  high: z.number(),
+  n: z.number().int().nonnegative(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const measurementInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  yAxisLabel: z.string().optional(),
+  groups: z.array(measurementGroupSchema).optional(),
+  referenceLines: z.array(measurementReferenceLineSchema).optional(),
+})
+export const reportOverviewInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  identity: z
+    .object({
+      product: z.string(),
+      lotId: z.string(),
+      stepCount: z.string(),
+      waferCount: z.string(),
+      summary: z.string(),
+    })
+    .optional(),
+  metrics: z.array(reportMetricSchema).optional(),
+  focusItems: z.array(reportListItemSchema).optional(),
+  failGroups: z.array(reportListItemSchema).optional(),
+  lowYieldWafers: z.array(reportListItemSchema).optional(),
+  parameterAlerts: z.array(reportListItemSchema).optional(),
+})
+export const reportSplitTableRowSchema = z.object({
+  waferId: z.string(),
+  role: z.string(),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  recipe: z.string(),
+  condition: z.string(),
+  yield: z.number(),
+  topFail: z.string(),
+  topFailCount: z.number().int().nonnegative(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportSplitTableInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  rows: z.array(reportSplitTableRowSchema).optional(),
+})
+export const reportYieldWaferSchema = z.object({
+  waferId: z.string(),
+  yield: z.number(),
+  role: z.string().optional(),
+  condition: z.string().optional(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportYieldAnalysisInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  wafers: z.array(reportYieldWaferSchema).optional(),
+  detailItems: z.array(reportListItemSchema).optional(),
+})
+export const reportWaferMapCardSchema = z.object({
+  waferId: z.string(),
+  role: z.string().optional(),
+  pass: z.number().int().nonnegative(),
+  fail: z.number().int().nonnegative(),
+  defect: z.number().int().nonnegative(),
+  tone: reportToneSchema.default("neutral"),
+  map: waferMapDataSchema,
+})
+export const reportWaferMapInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  mode: z.string().optional(),
+  layer: z.string().optional(),
+  wafers: z.array(reportWaferMapCardSchema).optional(),
+})
+export const reportParameterMedianCellSchema = z.object({
+  waferId: z.string(),
+  value: z.number(),
+  cpk: z.number(),
+  lowYield: z.boolean().default(false),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportParameterMedianRowSchema = z.object({
+  parameter: z.string(),
+  unit: z.string(),
+  lsl: z.number(),
+  usl: z.number(),
+  wafers: z.array(reportParameterMedianCellSchema),
+})
+export const reportParameterMedianInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  selectedParameterId: z.string().optional(),
+  showOosOnly: z.boolean().optional(),
+  rows: z.array(reportParameterMedianRowSchema).optional(),
+})
+export const reportCpDataInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  selectedParameterId: z.string().optional(),
+  parameterOptions: z.array(z.string()).optional(),
+  measurement: measurementInputSchema.optional(),
+})
+export const reportInlineDataInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  selectedParameterId: z.string().optional(),
+  parameterOptions: z.array(z.string()).optional(),
+  measurement: measurementInputSchema.optional(),
+})
+export const reportCpInlineRowSchema = z.object({
+  stage: z.string(),
+  condition: z.string(),
+  role: z.string(),
+  inlineWafers: z.string(),
+  cpWafers: z.string(),
+  meanInline: z.number(),
+  medianInline: z.number(),
+  meanCp: z.number(),
+  medianCp: z.number(),
+})
+export const reportCpInlineInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  step: z.string().optional(),
+  inlineParameter: z.string().optional(),
+  cpParameter: z.string().optional(),
+  baselineWafers: z.array(z.string()).optional(),
+  splitWafers: z.array(z.string()).optional(),
+  rows: z.array(reportCpInlineRowSchema).optional(),
+})
+export const layoutShellNavItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  active: z.boolean().default(false),
+})
+export const layoutShellInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sidebarTitle: z.string().optional(),
+  collapsed: z.boolean().optional(),
+  navItems: z.array(layoutShellNavItemSchema).optional(),
+  topLinks: z.array(layoutShellNavItemSchema).optional(),
+})
 export const historyInputSchema = z.object({})
 
 export type ExperimentInput = z.infer<typeof experimentInputSchema>
@@ -200,5 +381,37 @@ export type WaferDefectEvidence = z.infer<typeof waferDefectEvidenceSchema>
 export type WaferDefectPoint = z.infer<typeof waferDefectPointSchema>
 export type WaferDefectSummary = z.infer<typeof waferDefectSummarySchema>
 export type WaferDefectInput = z.infer<typeof waferDefectInputSchema>
+export type ReportTone = z.infer<typeof reportToneSchema>
+export type ReportMetric = z.infer<typeof reportMetricSchema>
+export type ReportListItem = z.infer<typeof reportListItemSchema>
+export type MeasurementReferenceLine = z.infer<
+  typeof measurementReferenceLineSchema
+>
+export type MeasurementGroup = z.infer<typeof measurementGroupSchema>
+export type MeasurementInput = z.infer<typeof measurementInputSchema>
+export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>
+export type ReportSplitTableRow = z.infer<typeof reportSplitTableRowSchema>
+export type ReportSplitTableInput = z.infer<typeof reportSplitTableInputSchema>
+export type ReportYieldWafer = z.infer<typeof reportYieldWaferSchema>
+export type ReportYieldAnalysisInput = z.infer<
+  typeof reportYieldAnalysisInputSchema
+>
+export type ReportWaferMapCard = z.infer<typeof reportWaferMapCardSchema>
+export type ReportWaferMapInput = z.infer<typeof reportWaferMapInputSchema>
+export type ReportParameterMedianCell = z.infer<
+  typeof reportParameterMedianCellSchema
+>
+export type ReportParameterMedianRow = z.infer<
+  typeof reportParameterMedianRowSchema
+>
+export type ReportParameterMedianInput = z.infer<
+  typeof reportParameterMedianInputSchema
+>
+export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
+export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
+export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
+export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
+export type LayoutShellNavItem = z.infer<typeof layoutShellNavItemSchema>
+export type LayoutShellInput = z.infer<typeof layoutShellInputSchema>
 export type RunCardHistoryInput = z.infer<typeof runCardHistoryInputSchema>
 export type HistoryInput = z.infer<typeof historyInputSchema>

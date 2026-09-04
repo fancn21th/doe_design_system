@@ -92,8 +92,8 @@ For architecture rationale, see:
 
 - `docs/adr/0008-use-shadcn-for-foundation-ui.md`
 - `docs/adr/0009-layout-components-are-domain-assets.md`
-- `content/docs/domain/design-system.mdx`
-- `content/docs/domain/coding-rules.mdx`
+- `content/docs/knowledge/design-system.mdx`
+- `content/docs/knowledge/coding-rules.mdx`
 
 ## Related Component Stack
 

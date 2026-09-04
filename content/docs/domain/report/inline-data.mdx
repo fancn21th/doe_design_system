@@ -1,0 +1,22 @@
+---
+title: inline-data
+description: DOE Report Inline Data 业务组件。
+---
+
+import { ReportInlineData } from "@/components/domain/report-inline-data"
+import { reportInlineDataScenarios } from "@/components/domain/report-inline-data.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportInlineData input={reportInlineDataScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportInlineData` 只负责 Inline Data report tab 的外层组合。测量分布图必须组合 shared `Measurement`，当前不实现 Measurement 内部交互。
+
+## Scenarios
+
+- `normal`
+- `empty`

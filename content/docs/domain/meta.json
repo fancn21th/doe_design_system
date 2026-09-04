@@ -1,11 +1,4 @@
 {
-  "title": "领域知识 / Domain",
-  "pages": [
-    "business-loop",
-    "design-system",
-    "concepts",
-    "component-boundaries",
-    "open-questions",
-    "coding-rules"
-  ]
+  "title": "领域组件 / Domain",
+  "pages": ["shared", "trial", "report"]
 }

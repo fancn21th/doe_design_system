@@ -1,0 +1,22 @@
+---
+title: split-table
+description: DOE Report Split Table 业务组件。
+---
+
+import { ReportSplitTable } from "@/components/domain/report-split-table"
+import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportSplitTable input={reportSplitTableScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
+
+## Scenarios
+
+- `normal`
+- `empty`

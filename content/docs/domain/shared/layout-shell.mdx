@@ -1,0 +1,46 @@
+---
+title: layout-shell
+description: layout 前缀的通用布局组件，左侧导航可收起，右侧顶部预留 nav link 区域。
+---
+
+import { LayoutShell } from "@/components/domain/layout-shell"
+import { layoutShellScenarios } from "@/components/domain/layout-shell.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <LayoutShell input={layoutShellScenarios.normal.input} />
+</div>
+
+## Collapsed
+
+<div className="domain-ui-preview-wide">
+  <LayoutShell input={layoutShellScenarios.collapsed.input} />
+</div>
+
+## Contract
+
+`LayoutShell` 是纯布局组件。它只固定整体左右布局、左侧 nav 可收起、右侧顶部 nav link 区域和内容骨架，不承载业务内容。
+
+## Shadcn Components
+
+- `Button`
+- `Skeleton`
+
+## Schema
+
+```ts
+export const layoutShellInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sidebarTitle: z.string().optional(),
+  collapsed: z.boolean().optional(),
+  navItems: z.array(layoutShellNavItemSchema).optional(),
+  topLinks: z.array(layoutShellNavItemSchema).optional(),
+})
+```
+
+## Scenarios
+
+- `normal`
+- `collapsed`

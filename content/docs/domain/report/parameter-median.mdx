@@ -1,0 +1,22 @@
+---
+title: parameter-median
+description: DOE Report Parameter Median 业务组件。
+---
+
+import { ReportParameterMedian } from "@/components/domain/report-parameter-median"
+import { reportParameterMedianScenarios } from "@/components/domain/report-parameter-median.scenarios"
+
+## 预览 / Preview
+
+<div className="domain-ui-preview-wide">
+  <ReportParameterMedian input={reportParameterMedianScenarios.normal.input} />
+</div>
+
+## Contract
+
+`ReportParameterMedian` 展示 CP parameter median 与 CPK matrix。Mock spec 字段仍按上游证据保留，不视为生产规格。
+
+## Scenarios
+
+- `normal`
+- `empty`
