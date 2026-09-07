@@ -9,6 +9,16 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 它不是单个业务需求，也不是原型截图的直接转写。真正新增组件时，必须先建立或更新对应 `docs/upstream/components/NNN-component-slug/` 记录，再进入 ADR、组件合同和实现。
 
+## Shared SOP Alignment
+
+本文件是 DOE 三工程统一 SOP 中 **UI Upstream / DOE Domain UI** 的角色细则。共同总纲在 DOE App 汇合工程：
+
+```text
+/Users/fantianze/Vibe/g-working/g-doe/doe-new-app/docs/refactor/three-upstream-development-sop.md
+```
+
+本工程只负责 Domain UI 侧的 contract 和 implementation：UI-facing schema、fixture、scenario、MDX preview、public export 和纯组件交互。BFF 对接状态由 DOE App HOC 展示；Domain UI 不内置 BFF 状态容器。
+
 ## History Pattern
 
 项目历史里可以看到一条逐步收敛的路径：

@@ -16,6 +16,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Before the first Domain UI change in a task or session, read `CONTEXT.md`. If context was compacted, lost, or inherited from another task, read it again. After that, reread only the relevant ADR, component pattern, fixture, scenario, or local primitive source.
 
+For work that spans DOE Domain UI, DOE Backend BFF, and DOE App, use the shared SOP at `/Users/fantianze/Vibe/g-working/g-doe/doe-new-app/docs/refactor/three-upstream-development-sop.md`; this repository owns only the UI Upstream role-specific part described in `content/docs/ai-coding-sop.mdx`.
+
 Hard rules:
 
 - Lock task scope before implementation; inspect only files needed for the requested scope.
