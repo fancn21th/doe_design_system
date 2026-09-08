@@ -6,34 +6,78 @@ description: 当前 Domain UI 资产库需要保留的 DOE 业务循环语义。
 DOE POC 应该被理解成一个业务循环，而不是单纯的页面树。
 
 ```text
-实验历史检索
-→ Lot / 实验上下文确认
-→ Step × Wafer split 配置
-→ RunCard 配置与下发准备
-→ MES 事件观察
-→ Wafer 过程能力 / 缺陷观察
-→ 回到下一轮实验配置
+Experiment intent
+→ Lot / Product / Wafer scope 确认
+→ Round 建立一轮实验边界
+→ Step 选择在哪道工艺做实验
+→ Factor / Planned Condition / Recipe 设计
+→ Split Table 分配 wafer 到条件和配方
+→ Frozen Split Version 锁定执行版本
+→ RunCard / MES Release 准备下发
+→ Fab 实际执行
+→ Inline / SPC / CP / Yield 观察
+→ Current Round Report
+→ Round Review
+→ 回到下一轮 Round 配置
 ```
 
 当前项目只沉淀这个循环里的业务 UI 资产。跨组件流程、页面状态机、真实后端提交、MES Gateway 和应用路由都属于 DOE Application。
+
+## Experiment Design Spine
+
+这套领域知识的核心链路是：
+
+```text
+Round
+一轮完整 DOE 实验
+  ↓
+Step
+在哪一道制造工序做实验
+  ↓
+Factor
+这道工序里要改变什么变量
+  ↓
+Planned Condition
+每个实验组计划把变量改成什么值
+  ↓
+Recipe
+产线 / MES 实际用什么配方执行
+
+同时：
+
+Wafer
+  ↓
+Split
+把不同 wafer 分配给 baseline 或 variant condition
+  ↓
+Split Table
+形成 wafer-to-step/condition/recipe assignment
+  ↓
+Frozen Split Version
+冻结可执行版本
+```
+
+Round 是最大的实验生命周期边界；Step 是 Round 内的工艺执行位置；Split Table 是把 `Wafer + Step + Factor + Planned Condition + Recipe + Baseline/Variant Role` 绑定成可执行实验方案的中心对象。
+
+不要把这条关系理解成 `Round → Step → Split → Condition → Recipe` 的简单父子树。更准确的表达是：Round 同时拥有实验设计、wafer scope、Step、Split Table、执行数据和分析边界；Split Table 则记录每片 wafer 在特定 Step 下应该执行哪个 planned condition 和 recipe。
 
 ## Component Surfaces
 
 ### History
 
-用于检索和选择历史实验 / Lot。它只表达历史实验列表、Lot ID、实验状态和本地筛选，不决定应用导航。
+用于检索和选择历史实验 / Lot / Round。它只表达历史实验列表、Lot ID、实验状态、当前轮次线索和本地筛选，不决定应用导航。
 
 ### Lot
 
-用于确认当前实验和 Lot 的基础上下文。它表达 Lot、Product、试验名称、试验描述、Step 数量和 Wafer 数量。
+用于确认当前实验和 Lot 的基础上下文。它表达 Lot、Product、试验名称、试验描述、Round 摘要、Step 数量和 Wafer 数量。
 
 ### Steps
 
-用于表达 Step × Wafer split assignment。它展示 Stage、Step / Seq、Baseline、Condition、Factor、Recipe 和 wafer assignment，不在组件内部保存 split plan。
+用于表达 Step × Wafer split assignment。它展示 Stage、Step / Seq、Factor、Baseline、Planned Condition、Recipe 和 wafer assignment，不在组件内部保存 split plan 或冻结 split version。
 
 ### RunCard
 
-用于把 Step 组织到 RunCard 并准备下发。它可以管理本地勾选、展开、RunCard 选择，但不能直接调用 MES submit。
+用于把 Step、Recipe 和 wafer scope 组织到 RunCard 并准备下发。它可以管理本地勾选、展开、RunCard 选择，但不能直接调用 MES submit。
 
 ### RunCard History
 
@@ -56,6 +100,12 @@ DOE Application 才知道“什么时候展示、流程怎么走、数据从哪�
 ## Cross-cutting Rules
 
 Planned Condition 不能展示成 Actual Condition。
+
+Condition 不能展示成 Recipe。Condition 是工程师眼里的实验条件；Recipe 是设备 / MES 眼里的可执行配方。
+
+Split 不能展示成单个 Condition。Split 是 wafer 分组和 assignment 方案，Condition 是分组所承载的实验条件。
+
+Frozen Split Version 之后的 execution 和 report 必须能追溯到冻结版本，不能被未冻结草稿覆盖。
 
 Observed Data 不能被组件转换成因果结论。
 

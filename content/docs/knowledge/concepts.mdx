@@ -9,14 +9,66 @@ description: 当前 Domain UI 资产库使用的 DOE 概念索引。
 
 | Concept | Domain Meaning | Current Component Surface |
 | --- | --- | --- |
-| Experiment / 试验 | 一次 DOE 工作对象，通常围绕 Lot、Product、Step、Wafer split 和执行观察展开。 | `history`, `lot` |
-| Lot / 批次 | 包含本次实验 wafer 的生产或实验批次。 | `lot`, `history` |
-| Step / 工艺步骤 | 可配置、下发、执行、观察和跟踪的工艺执行单元。 | `steps`, `runcard`, `runcard-history` |
+| Experiment / 试验 | 一次 DOE 工作对象，通常围绕 Lot、Product、Round、Step、Wafer split 和执行观察展开。 | `history`, `lot` |
+| Lot / 批次 | 包含本次实验 wafer 的生产或实验批次。Lot 是 wafer 的生产 / 实验容器，不等同于 Round。 | `lot`, `history` |
+| Round / 一轮 DOE 实验 | 一次 DOE iteration，拥有自己的 split design、execution、data 和 analysis boundary。 | `history`, `lot`, `steps`, report surfaces |
+| Step / 工艺步骤 | Round 中被选中做实验、可配置、下发、执行、观察和跟踪的工艺执行单元。 | `steps`, `runcard`, `runcard-history` |
 | Stage / 工艺阶段 | 用于组织 Step 或 source observation 的工艺上下文。Stage / Step / Sequence 的严格关系仍需确认。 | `steps`, `wafer`, `wafer-defect` |
-| Wafer / 晶圆 | Lot 内的一片晶圆，可被分配到 baseline / variant，并在 SPC / defect 中被观察。 | `steps`, `wafer`, `wafer-defect` |
-| RunCard | 下发执行前组织 Step 的生产执行载体。 | `runcard`, `runcard-history` |
+| Wafer / 晶圆 | Lot 内的一片晶圆，可通过 Split Table 被分配到 baseline / variant condition，并在 SPC / defect / CP 中被观察。 | `steps`, `wafer`, `wafer-defect` |
+| Factor / 实验因子 | Step 内本轮 DOE 想改变或比较的变量，例如 etch time、RF power、gas flow。 | `steps`, report surfaces |
+| Planned Condition / 计划条件 | 工程师计划给某个 split group 执行的实验条件，是 Factor 的具体取值或条件组合。 | `steps`, `runcard`, report surfaces |
+| Recipe / 配方 | MES 执行 Step 时实际使用的 process recipe。 | `steps`, `runcard`, `runcard-history` |
+| Split Table / 实验分配表 | 把 wafer 映射到 step、factor、planned condition、recipe 和 baseline / variant role 的 assignment table。 | `steps`, report surfaces |
+| RunCard | 下发执行前组织 Step、Recipe 和 wafer scope 的生产执行载体。 | `runcard`, `runcard-history` |
 | MES Event / MES 事件 | MES 或系统返回的执行事实记录。 | `runcard-history` |
 | Source-backed Observation / 有来源观察 | 来自 SPC、MES 或其他 source 的观察事实。它不是因果结论。 | `wafer`, `wafer-defect`, `runcard-history` |
+
+## Core Relationship
+
+最短的领域模型可以压缩成一句话：
+
+> Round 是一轮实验；Step 是在哪一道工艺做实验；Split 是怎么把 Wafer 分组；Condition 是每组具体改成什么；Recipe 是产线实际拿什么配方去执行。
+
+但在系统建模里不能只保留这五个词。完整链路还需要 Wafer、Factor、Baseline、Split Table 和 Split Version：
+
+```text
+Product
+  ↓
+Lot
+  ↓
+Round
+  │
+  ├── Step
+  │     └── Factor
+  │           ├── Baseline Condition
+  │           ├── Variant Condition A
+  │           └── Variant Condition B
+  │
+  └── Split Table
+        ├── W01 → Step A → Baseline → Recipe R001
+        ├── W02 → Step A → Condition A → Recipe R002
+        └── W03 → Step A → Condition B → Recipe R003
+              ↓
+        Frozen Split Version
+              ↓
+          MES Release
+```
+
+因此当前最核心的 assignment 记录应按这个形状理解：
+
+```text
+SplitAssignment {
+  round
+  wafer
+  step
+  factor
+  plannedCondition
+  recipe
+  role: baseline | variant
+}
+```
+
+Split Table 是一组 Split Assignment；Round 是这些 assignment 的实验生命周期边界。
 
 ## Core Experiment Concepts
 
@@ -27,36 +79,65 @@ description: 当前 Domain UI 资产库使用的 DOE 概念索引。
 包含本轮 DOE 使用 wafer 的生产或实验批次。
 
 **Wafer / 晶圆**  
-Lot 内的一片晶圆。DOE 会把 wafer 分配到 baseline 或 split condition，并按 wafer 分析结果。
+Lot 内的一片晶圆。DOE 会通过 Split Table 把 wafer 分配到 baseline 或 variant condition，并按 wafer 汇总 Inline、SPC、CP、Yield 或 defect 观察。
 
 **Round / 一轮 DOE 实验**  
-一次 DOE iteration，拥有自己的 split design、execution、data 和 current-round analysis boundary。
+一次完整 DOE iteration。一个 Round 通常拥有自己的实验设计、Step、Split Table、wafer 分配、planned condition、recipe、执行数据、Inline、CP / Yield 和 Round Report。Round 是这些概念里最大的实验边界。
 
 **Step / 工艺执行单元**  
-DOE Round 中可以配置、下发、执行、观察和跟踪的工艺执行单元。
+DOE Round 中可以配置、下发、执行、观察和跟踪的工艺执行单元。Step 回答“这一轮实验在哪一道工艺动手”。
+
+**Factor / 实验因子**  
+Step 内要研究或改变的变量。Step 决定在哪里实验；Factor 决定在这个 Step 里改什么。
 
 **Stage / 工艺观察阶段**  
 用于观察 source-backed Inline/SPC 数据的工艺观察框架。Stage / Step / Sequence 的准确关系仍需 RD/customer 确认。
 
 ## Design Concepts
 
+**Split / 分组设计**  
+把 Lot 内不同 wafer 分配给 baseline 或 variant condition 的实验分组思想。Split 本身不是单个 condition，也不是单片 wafer 的记录。
+
 **Split Table / 实验分配表**  
-把 wafer 映射到 factor、planned condition、step、recipe、baseline/split role 的 assignment table。
+把 wafer 映射到 step、factor、planned condition、recipe、baseline / variant role 的完整 assignment table。它是从实验设计进入 MES release 前最关键的执行方案表面。
+
+**Split Group / 实验分组**  
+共享同一组 planned condition / recipe / role 的 wafer group，例如 Baseline、Variant A、Variant B。
+
+**Split Item / Split Assignment / 单片分配记录**  
+Split Table 中某一片 wafer 的具体分配记录。它通常至少绑定 `wafer + step + factor + planned condition + recipe + role`。
 
 **Split Version / Split 版本**  
-冻结后的实验分配版本，用于执行和分析。
+实验分配方案的版本。冻结后的 Split Version 用于 execution 和 analysis；MES Release 和 Current Round Report 都应能追溯到冻结版本。
 
 **Baseline / 基线**  
-用于比较 split condition 的标准或参考条件。
+用于比较 variant condition 的标准或参考条件。Baseline 是比较基准，不是“没有实验”的同义词。
+
+**Variant / 变体**  
+相对 Baseline 做出的实验变化。Variant 可以是一个 planned condition，也可以在多因子场景里代表一组 condition combination。
 
 **Planned Condition / 计划条件**  
-Split Table 中计划的实验条件，不能替代实际量测值。
+Split Table 中计划执行的实验条件，是工程师眼里的实验语义，例如 `Etch Time = 33 sec`。它不能替代实际量测值。
 
 **Actual Condition / 实际条件**  
 从 Inline/SPC summary 或 raw measurement 中观察到的实际工艺表现。缺失实际值必须保持缺失。
 
 **Recipe / 配方**  
-MES 执行 step 时使用的 process recipe。
+MES 执行 Step 时使用的 process recipe。Recipe 是设备眼里的可执行配方，可能包含 time、power、pressure、gas flow、temperature 等完整机台参数。
+
+## Common Confusions
+
+| Confusion | Correct Boundary |
+| --- | --- |
+| Round vs Step | Round 是整轮实验；Step 是其中一个物理工艺位置。 |
+| Step vs Recipe | Step 是哪道工艺；Recipe 是这道工艺怎么跑。 |
+| Factor vs Condition | Factor 是改什么变量；Condition 是变量具体取值或取值组合。 |
+| Condition vs Recipe | Condition 是实验语义；Recipe 是机器 / MES 执行配置。不要默认二者是同一对象。 |
+| Split vs Condition | Condition 是实验条件；Split 是把 wafer 分配给不同条件。 |
+| Split vs Split Table | Split 是分组思想；Split Table 是完整分配方案。 |
+| Planned Condition vs Actual Condition | 前者是计划；后者是执行后从数据中观察到的实际表现。 |
+| Baseline vs Variant | Baseline 是比较基准；Variant 是相对基准的变化。 |
+| Round vs Split Version | Round 是实验生命周期；Split Version 是本轮实验设计的某个版本，冻结后进入执行和分析。 |
 
 ## Execution Concepts
 

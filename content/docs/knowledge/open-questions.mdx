@@ -7,7 +7,7 @@ description: 影响组件边界、数据契约和术语，但仍需 RD/customer 
 
 | ID | Relationship | Question | Working Position | Status |
 | --- | --- | --- | --- | --- |
-| OQ-001 | Lot / Round | `Lot与Round基础信息` 中的 Round 是独立对象，还是原型 section title 遗留？ | 当前 `Lot` 组件只表达实验 / Lot 基础信息，不新增 Round 子模型。 | Open |
+| OQ-001 | Lot / Round | Round 是否是独立业务对象，还是 `Lot与Round基础信息` 中的原型 section title 遗留？一个 Lot 是否允许多个 Round？ | 当前把 Round 作为“一轮 DOE 实验”的生命周期边界来描述；`Lot` 组件只表达实验 / Lot / Round 摘要，不新增持久化 Round 子模型。 | Open |
 | OQ-002 | Wafer count selector | `25片` 的 dropdown 应展示 wafer list、wafer scope，还是只是切换数量视图？ | 当前作为本地选择 affordance，不承诺跨组件 wafer scope。 | Open |
 | OQ-003 | Stage / Step / Sequence | 这些客户侧概念是层级、等价，还是只在部分上下文 loosely mapped？ | Stage 作为 observation frame；Step 作为 execution/detail/candidate context。 | Open |
 | OQ-004 | Split assignment state | `B`、`V`、`↔`、`E` 是否覆盖全部 wafer assignment state？ | 当前只按原型表达四类 UI state，schema 待补。 | Open |
@@ -17,6 +17,11 @@ description: 影响组件边界、数据契约和术语，但仍需 RD/customer 
 | OQ-008 | Observed Wafer Scope / planned / executed scope | SPC 里观察到 wafer 是否意味着 planned、released、executed、completed，还是 only measured？ | Observed scope 只是 source-observed，不默认等于 MES scope。 | Open |
 | OQ-009 | Defect source boundary | 缺陷点位、坐标、类型、缺陷图分别来自哪些真实 source？ | 缺陷数量和采样时间可标 source-backed；原型示意必须明确标记。 | Open |
 | OQ-010 | Actual Condition / Planned Condition | 哪些 Inline/SPC 参数能代表 planned DOE condition 的 actual process condition？ | Planned 和 Actual 分开；missing actuals 保持 missing。 | Open |
+| OQ-011 | Condition / Recipe cardinality | 一个 Planned Condition 是否总是对应一个 Recipe？Recipe 是否可能复用于多个 condition，或一个 condition 需要多个 recipe 才能落地？ | 文档只表达 Condition 是实验语义、Recipe 是执行配方；暂不把二者写死成严格 1:1。 | Open |
+| OQ-012 | Split Table grain | Split Table 的最小业务粒度是否就是 `wafer + step + factor + planned condition + recipe + role`？多 Step / 多 Factor DOE 是否需要更细的 assignment grain？ | 当前以 Split Assignment 作为核心理解模型，但 schema cardinality 待客户确认。 | Open |
+| OQ-013 | Split Version freeze boundary | Frozen Split Version 冻结后，哪些字段允许修正？修正是否必须产生新 version？ | 当前假设 execution 和 report 使用冻结版本；未冻结 draft 不能覆盖已 release 的执行事实。 | Open |
+| OQ-014 | Baseline / Variant role | Baseline 和 Variant 是 Split Group 的 role、Condition 的 role，还是 wafer assignment 的 role？ | 当前把 role 放在 Split Assignment 上展示，便于解释 wafer 被分到基线或变体。 | Open |
+| OQ-015 | Multi-factor DOE | 多 Factor 或 condition combination 场景中，Variant A/B 是单个条件、条件组合，还是实验臂名称？ | 当前允许 Variant 表示 condition combination，不限制为单 factor 单值。 | Open |
 
 ## First RD / Customer Agenda
 
@@ -26,3 +31,6 @@ description: 影响组件边界、数据契约和术语，但仍需 RD/customer 
 4. RunCard 与 Step 的真实关系和 MES 下发粒度是什么？
 5. SPC observed wafer coverage 是否意味着 execution coverage？
 6. Defect source 中哪些字段是真实生产事实，哪些仍是原型示意？
+7. Condition 与 Recipe 是否存在严格一对一关系？
+8. Split Table / Split Assignment 的最小粒度和版本冻结规则是什么？
+9. Baseline / Variant role 应挂在 group、condition，还是 wafer assignment 上？
