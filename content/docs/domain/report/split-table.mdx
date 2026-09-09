@@ -15,6 +15,10 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 ## Contract
 
 `ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
+组件由两部分组成：过滤区域和 Split Table。过滤区域使用多选 Combobox
+按 `stageOptions` / `stepOptions` 过滤；空选中表示 `全部`。表格基于 shadcn
+Table，第一列按 Stage 分组，第二列按 Step / Seq 分组，最后一列 `Top Fail`
+展示该 wafer 中 fail die 数量最多的指标及数量。
 
 ## Scenarios
 

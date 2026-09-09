@@ -18,9 +18,94 @@ import { layoutShellScenarios } from "@/components/domain/layout-shell.scenarios
   <LayoutShell input={layoutShellScenarios.collapsed.input} />
 </div>
 
+## Composed
+
+<div className="domain-ui-preview-wide">
+  <LayoutShell
+    input={{
+      ...layoutShellScenarios.normal.input,
+      title: "Report Center",
+      subtitle: "Inline, CP, wafer map and yield report workspace.",
+      sidebarTitle: "Reports",
+    }}
+    navItems={[
+      { id: "overview", label: "Overview", href: "#overview", active: true },
+      { id: "wafer-map", label: "Wafer Map", href: "#wafer-map" },
+      { id: "cp-data", label: "CP Data", href: "#cp-data" },
+    ]}
+    topLinks={[
+      { id: "trial", label: "Trial", href: "/docs/domain/trial/history" },
+      {
+        id: "report",
+        label: "Report",
+        href: "/docs/domain/report/overview",
+        active: true,
+      },
+    ]}
+    sidebarContent={
+      <div className="grid gap-3 p-3">
+        <div className="rounded-md border bg-background p-3">
+          <span className="block text-xs text-muted-foreground">Source</span>
+          <b className="mt-1 block truncate text-sm">DOE-2026-W36 / Split A</b>
+        </div>
+        <div className="grid gap-1">
+          <a
+            className="flex h-9 items-center rounded-md bg-sky-50 px-3 text-sm font-medium text-sky-700"
+            href="#overview"
+          >
+            Overview
+          </a>
+          <a
+            className="flex h-9 items-center rounded-md px-3 text-sm text-muted-foreground"
+            href="#wafer-map"
+          >
+            Wafer Map
+          </a>
+          <a
+            className="flex h-9 items-center rounded-md px-3 text-sm text-muted-foreground"
+            href="#cp-data"
+          >
+            CP Data
+          </a>
+        </div>
+      </div>
+    }
+    headerActions={
+      <button type="button" className="h-8 rounded-md border px-3 text-sm">
+        Export
+      </button>
+    }
+  >
+    <section id="overview" className="rounded-lg border bg-background p-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <span className="block text-xs text-muted-foreground">Baseline wafers</span>
+          <b className="mt-1 block font-mono text-lg">12</b>
+        </div>
+        <div>
+          <span className="block text-xs text-muted-foreground">Split wafers</span>
+          <b className="mt-1 block font-mono text-lg">18</b>
+        </div>
+        <div>
+          <span className="block text-xs text-muted-foreground">BFF status</span>
+          <b className="mt-1 block text-lg">Ready</b>
+        </div>
+      </div>
+    </section>
+    <section id="wafer-map" className="grid gap-3 rounded-lg border bg-background p-4">
+      <b className="text-sm">Business content slot</b>
+      <p className="text-sm text-muted-foreground">
+        下游页面可以在这里渲染 ReportOverview、ReportWaferMap、loading/error state 或 XState 驱动的 tab content。
+      </p>
+    </section>
+  </LayoutShell>
+</div>
+
 ## Contract
 
-`LayoutShell` 是纯布局组件。它只固定整体左右布局、左侧 nav 可收起、右侧顶部 nav link 区域和内容骨架，不承载业务内容。
+`LayoutShell` 是可组合布局组件。它固定整体左右布局、左侧 nav 可收起、右侧顶部 nav link 区域；未传 `children` 时显示默认内容骨架，传入 `children` 后由下游页面承载真实业务内容。
+
+下游页面可以用 `sidebarContent` 替换左侧默认 nav 区域，用 `headerContent` 替换标题区，用 `headerActions` 注入右上角操作区。`navItems` 和 `topLinks` 支持 `href`，也支持通过组件 props 上的 `onNavSelect` / `onTopLinkSelect` 接收选择事件。`collapsed` / `onCollapsedChange` 用于受控模式，`defaultCollapsed` 用于非受控初始状态。
 
 ## Shadcn Components
 
@@ -30,6 +115,14 @@ import { layoutShellScenarios } from "@/components/domain/layout-shell.scenarios
 ## Schema
 
 ```ts
+export const layoutShellNavItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  active: z.boolean().default(false),
+  href: z.string().optional(),
+  disabled: z.boolean().optional(),
+})
+
 export const layoutShellInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),

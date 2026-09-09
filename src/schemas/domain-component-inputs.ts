@@ -249,21 +249,86 @@ export const reportSplitTableInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  stageOptions: z.array(z.string()).optional(),
+  stepOptions: z.array(z.string()).optional(),
+  selectedStages: z.array(z.string()).optional(),
+  selectedSteps: z.array(z.string()).optional(),
   rows: z.array(reportSplitTableRowSchema).optional(),
 })
 export const reportYieldWaferSchema = z.object({
   waferId: z.string(),
+  stage: z.string().optional(),
+  step: z.string().optional(),
+  seq: z.string().optional(),
   yield: z.number(),
   role: z.string().optional(),
   condition: z.string().optional(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportYieldThresholdsSchema = z.object({
+  good: z.number().default(99.5),
+  watch: z.number().default(90),
+})
+export const reportYieldDetailModeSchema = z.enum([
+  "wafer-cp-matrix",
+  "loss-yield",
+  "condition-yield-comparison",
+])
+export const reportYieldDetailModeOptionSchema = z.object({
+  id: reportYieldDetailModeSchema,
+  label: z.string(),
+})
+export const reportYieldMatrixRowSchema = z.object({
+  waferId: z.string(),
+  role: z.string().optional(),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  condition: z.string(),
+  yield: z.number(),
+  passDies: z.number().int().nonnegative(),
+  testedDies: z.number().int().nonnegative(),
+  failCounts: z.record(z.string(), z.number().int().nonnegative()).default({}),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportYieldLossRowSchema = z.object({
+  rank: z.number().int().positive(),
+  parameter: z.string(),
+  failedDieCount: z.number().int().nonnegative(),
+  pareto: z.number(),
+  yieldLoss: z.number(),
+  cumulativeYieldLoss: z.number(),
+  tone: reportToneSchema.default("neutral"),
+})
+export const reportYieldConditionRowSchema = z.object({
+  waferIds: z.array(z.string()),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  condition: z.string(),
+  weightedYield: z.number(),
+  medianYield: z.number(),
+  averageYield: z.number(),
+  minYield: z.number(),
+  maxYield: z.number(),
   tone: reportToneSchema.default("neutral"),
 })
 export const reportYieldAnalysisInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  stageOptions: z.array(z.string()).optional(),
+  stepOptions: z.array(z.string()).optional(),
+  selectedStages: z.array(z.string()).optional(),
+  selectedSteps: z.array(z.string()).optional(),
+  thresholds: reportYieldThresholdsSchema.optional(),
   wafers: z.array(reportYieldWaferSchema).optional(),
-  detailItems: z.array(reportListItemSchema).optional(),
+  detailModeOptions: z.array(reportYieldDetailModeOptionSchema).optional(),
+  selectedDetailMode: reportYieldDetailModeSchema.optional(),
+  matrixColumns: z.array(z.string()).optional(),
+  matrixRows: z.array(reportYieldMatrixRowSchema).optional(),
+  lossYieldRows: z.array(reportYieldLossRowSchema).optional(),
+  conditionYieldRows: z.array(reportYieldConditionRowSchema).optional(),
 })
 export const reportWaferMapCardSchema = z.object({
   waferId: z.string(),
@@ -346,6 +411,8 @@ export const layoutShellNavItemSchema = z.object({
   id: z.string(),
   label: z.string(),
   active: z.boolean().default(false),
+  href: z.string().optional(),
+  disabled: z.boolean().optional(),
 })
 export const layoutShellInputSchema = z.object({
   title: z.string().optional(),
@@ -393,6 +460,20 @@ export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>
 export type ReportSplitTableRow = z.infer<typeof reportSplitTableRowSchema>
 export type ReportSplitTableInput = z.infer<typeof reportSplitTableInputSchema>
 export type ReportYieldWafer = z.infer<typeof reportYieldWaferSchema>
+export type ReportYieldThresholds = z.infer<
+  typeof reportYieldThresholdsSchema
+>
+export type ReportYieldDetailMode = z.infer<
+  typeof reportYieldDetailModeSchema
+>
+export type ReportYieldDetailModeOption = z.infer<
+  typeof reportYieldDetailModeOptionSchema
+>
+export type ReportYieldMatrixRow = z.infer<typeof reportYieldMatrixRowSchema>
+export type ReportYieldLossRow = z.infer<typeof reportYieldLossRowSchema>
+export type ReportYieldConditionRow = z.infer<
+  typeof reportYieldConditionRowSchema
+>
 export type ReportYieldAnalysisInput = z.infer<
   typeof reportYieldAnalysisInputSchema
 >

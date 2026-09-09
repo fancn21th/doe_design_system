@@ -14,7 +14,13 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 
 ## Contract
 
-`ReportYieldAnalysis` 展示 wafer yield ranking 和 report detail 的一级入口，不给出根因结论。
+`ReportYieldAnalysis` 展示 Yield Analysis tab 的三段式结构：
+
+- 过滤区域使用 shadcn/base multiple combobox，Stage / Step 选择值通过 `onStageFilterChange`、`onStepFilterChange` 抛给外部业务状态。
+- Wafer Yield Ranking 使用 Observable Plot 渲染柱状图，组件按注入的 `wafers` 展示，不在内部做过滤。
+- Yield Detail Analysis 使用 shadcn/base tabs 切换 `Wafer x CP Matrix`、`Loss Yield`、`Condition Yield Comparison` 三张表。
+
+组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
 ## Scenarios
 
