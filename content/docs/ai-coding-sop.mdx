@@ -7,7 +7,7 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 这页记录当前项目里设计、创建 DOE 领域组件的标准流程。它来自提交历史、上游输入记录、ADR、设计系统文档和现有组件结构，用作后续开发和 AI Coding 的参考。
 
-它不是单个业务需求，也不是原型截图的直接转写。真正新增组件时，必须先建立或更新对应 `docs/upstream/components/NNN-component-slug/` 记录，再进入 ADR、组件合同和实现。
+它不是单个业务需求，也不是原型截图的直接转写。真正新增组件时，必须先建立或更新对应 `docs/upstream/components/NNN-component-slug/` 记录，再进入 ADR、组件合同和实现；重构已有组件时，应先阅读对应 upstream 记录，并在实现后同步组件合同或 post-intake notes。
 
 ## Shared SOP Alignment
 
@@ -44,14 +44,14 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 3. 确认组件文件包。
 
-   当前已有业务组件全部属于 `实验 / Trial`，文件结构采用：
+   组件按 docs 分类放置在 `trial`、`shared`、`report` 等目录下，文件结构采用：
 
    ```text
    src/components/domain/<component>.tsx
    src/components/domain/<component>.fixtures.ts
    src/components/domain/<component>.scenarios.ts
    src/schemas/domain-component-inputs.ts
-   content/docs/domain/trial/<component>.mdx
+   content/docs/domain/<category>/<component>.mdx
    ```
 
 4. 定义 UI-facing schema。
@@ -60,11 +60,11 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 5. 准备 fixtures 和 scenarios。
 
-   demo/test 数据放进 fixtures 和 scenarios，不写死在组件渲染逻辑里。按组件需要覆盖 normal、empty、loading、partial、error、readonly、large-data 等状态。
+   demo/test 数据放进 fixtures 和 scenarios，不写死在组件渲染逻辑里。按组件需要覆盖 normal、empty、loading、partial、error、readonly、large-data 等状态。来自原型的真实转录数据应标记为 prototype-backed；不要把它描述成生产系统真相源。
 
 6. 实现领域组件。
 
-   组件通过 props 接收 schema-shaped input，通过 callback 暴露本地意图。组件可以拥有局部交互状态，但不能拥有应用 workflow。
+   组件通过 props 接收 schema-shaped input，通过 callback 暴露交互意图。组件可以拥有局部展示状态，但不能拥有应用 workflow；会改变业务数据集或跨组件联动的过滤/选择应由外部业务状态持有。
 
 7. 拆分复杂模型。
 
@@ -72,7 +72,7 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 8. 编写 MDX 预览。
 
-   领域组件文档只保留 `预览 / Preview`、`Shadcn Components`、`Schema`。预览应导入组件和 scenarios，不在 MDX 中重写大段 mock 数据。
+   领域组件文档至少保留 `预览 / Preview` 和 `Contract`。`Shadcn Components`、`Schema`、`Scenarios` 可按组件复杂度补充。预览应导入组件和 scenarios，不在 MDX 中重写大段 mock 数据。
 
 9. 更新公共出口。
 
@@ -87,7 +87,7 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 1. 这个仓库是 DOE Domain UI asset library，不是 DOE 应用。
 2. 领域组件不能直接调用 `fetch`、App Service、Gateway、MES、Oracle 或真实提交函数。
 3. 应用 workflow、页面路由、跨组件状态机、真实提交、重试和轮询属于应用工程。
-4. 领域组件只能拥有局部状态，例如展开、选择、过滤、表格编辑、局部校验。
+4. 领域组件只能拥有局部展示状态，例如展开、展示模式、表格局部排序、局部校验。过滤或选择若会改变注入数据集、触发跨组件联动或请求 backend，则属于外部业务状态。
 5. 基础 UI 必须组合 `src/components/ui` 的 shadcn primitive，不自建 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 替代体系。
 6. 业务尺寸走 `.domain-ui-typography`、`src/app/globals.css` 中的 DOE density tokens 和 `docs/practices/domain-ui-sizing.md`。
 7. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。

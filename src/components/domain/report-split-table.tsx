@@ -37,6 +37,7 @@ import {
 type ReportSplitTableProps = {
   input?: ReportSplitTableInput
   className?: string
+  onTopFailSelect?: (row: ReportSplitTableRow) => void
 }
 
 type ComboboxOption = {
@@ -204,6 +205,7 @@ function MultiFilterCombobox({
 export function ReportSplitTable({
   input = reportSplitTableScenarios.normal.input,
   className,
+  onTopFailSelect,
 }: ReportSplitTableProps) {
   const scenarioInput = reportSplitTableScenarios.normal.input
   const parsedInput = reportSplitTableInputSchema.parse(input)
@@ -371,9 +373,19 @@ export function ReportSplitTable({
                           </ReportBadge>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono text-xs font-medium text-sky-700">
-                            {row.topFail}
-                          </span>
+                          {onTopFailSelect && row.topFail !== "N/A" ? (
+                            <button
+                              type="button"
+                              className="font-mono text-xs font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              onClick={() => onTopFailSelect(row)}
+                            >
+                              {row.topFail}
+                            </button>
+                          ) : (
+                            <span className="font-mono text-xs font-medium text-sky-700">
+                              {row.topFail}
+                            </span>
+                          )}
                           <span className="ml-1 text-xs text-muted-foreground">
                             · {row.topFailCount.toLocaleString()}
                           </span>

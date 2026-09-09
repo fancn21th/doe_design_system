@@ -92,3 +92,14 @@ Out of scope during intake:
 - Should table rows be sortable by wafer, yield, stage, or top fail?
 - Which drilldown target owns a click on `Top Fail`: CP Data, Parameter Median,
   Wafer Map, or a separate fail detail component?
+
+## Post-intake Implementation Notes
+
+- Current implementation treats this as a report-specific snapshot, not the
+  editable trial split-table data model.
+- Stage / Step filtering is local to `ReportSplitTable` in the current
+  Component Lab preview.
+- `Top Fail` is display data by default; drilldown can be exposed as callback
+  intent, but the component does not own the target workflow.
+- Yield severity follows the report convention used by current fixtures:
+  `< 90%` bad, `90%-99.5%` watch, `>= 99.5%` good.

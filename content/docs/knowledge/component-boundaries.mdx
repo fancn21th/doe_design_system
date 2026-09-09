@@ -1,6 +1,6 @@
 ---
 title: 组件边界 / Component Boundaries
-description: 当前 7 个领域组件的业务边界、命名和上游输入映射。
+description: 领域组件的业务边界、命名和上游输入映射。
 ---
 
 ## Naming Rule
@@ -16,6 +16,10 @@ description: 当前 7 个领域组件的业务边界、命名和上游输入映�
 | `实验/lot/step/steps/stage/wafer-defect` | `wafer-defect` | `WaferDefect` |
 | `实验/lot/step/steps/runcard/history` | `runcard-history` | `RunCardHistory` |
 | `实验/history` | `history` | `History` |
+| `报告/split-table` | `report-split-table` | `ReportSplitTable` |
+| `报告/yield-analysis` | `report-yield-analysis` | `ReportYieldAnalysis` |
+| `报告/parameter-median` | `report-parameter-median` | `ReportParameterMedian` |
+| `通用/wafer-map` | `wafer-map` | `WaferMap` |
 
 `history` 有两个来源：实验级 history 和 RunCard 下的 history。代码里保留 `History` 给实验历史列表，使用 `RunCardHistory` 表达 MES 事件记录，避免语义碰撞。
 
@@ -30,6 +34,10 @@ description: 当前 7 个领域组件的业务边界、命名和上游输入映�
 | `WaferDefect` | wafer-level defect observation。 | wafer selection、defect point selection、defect image paging。 | 宣称 defect-free、把原型示意图当真实 DMS 证据。 |
 | `RunCardHistory` | RunCard / MES event log。 | collapse、table sorting/filtering if needed。 | 轮询 MES、重试请求、修正事件事实。 |
 | `History` | 实验历史列表。 | search filter、selected item、scroll position。 | 应用导航、远程查询、实验状态 mutation。 |
+| `ReportSplitTable` | report snapshot 中的 wafer split assignment 与 observed yield。 | 当前组件内 Stage / Step 表格筛选、分组渲染。 | 编辑 split / recipe、MES release、从 raw die data 重算 yield/top fail。 |
+| `ReportYieldAnalysis` | report snapshot 中的 yield ranking、CP loss、condition comparison。 | detail tabs 展示模式、chart/table 呈现。 | 内部执行业务过滤、跨 report tab 联动、重算 CP fail 或根因判断。 |
+| `ReportParameterMedian` | report snapshot 中的 CP parameter median 与 CPK matrix。 | sticky matrix presentation、控件显示状态。 | 内部执行业务过滤、重算 median/CPK/OOS、把 Mock SPEC 当生产规格。 |
+| `WaferMap` | wafer die map visualization。 | map view presentation、die hover/selection if provided by contract。 | 拉取 DMS/SPC、断言缺陷根因、替代 report tab workflow。 |
 
 ## Implementation Boundary
 
@@ -41,10 +49,9 @@ description: 当前 7 个领域组件的业务边界、命名和上游输入映�
 
 ## Documentation Boundary
 
-每个领域组件文档只保留三类信息：
+每个领域组件文档至少保留：
 
 1. `预览 / Preview`
-2. `Shadcn Components`
-3. `Schema`
+2. `Contract`
 
-Schema 作为运行时入参契约先保留空对象，后续再由真实业务模型补齐。
+`Shadcn Components`、`Schema`、`Scenarios` 可按组件复杂度补充。Schema 作为运行时入参契约，允许在业务模型未确认时先保留空对象；一旦接入真实或 prototype-backed fixture，就要补齐。

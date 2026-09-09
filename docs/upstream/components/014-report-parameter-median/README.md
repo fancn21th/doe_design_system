@@ -89,3 +89,17 @@ Out of scope during intake:
 - What is the expected behavior for hundreds of parameters or wafers?
 - Should low-yield wafer context be supplied from Yield Analysis or duplicated
   in this component's data?
+
+## Post-intake Implementation Notes
+
+- Current implementation keeps `Mock LSL` and `Mock USL` as prototype-backed
+  report fields and does not treat them as production specifications.
+- `CP Parameter` is implemented as a shadcn/base Input form control, not a
+  combobox. Its value is emitted as callback intent for the business layer.
+- `仅显示 OOS` is implemented as a checkbox callback intent. The component does
+  not filter rows internally; filtered data is expected to be injected back into
+  the component.
+- The matrix supports sticky header and sticky first column for wide report
+  inspection.
+- OOS flags, CPK values, and median values are supplied by schema-shaped data;
+  the component does not recompute median, CPK, or final engineering judgment.

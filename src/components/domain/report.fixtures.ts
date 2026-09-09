@@ -734,37 +734,203 @@ export const reportWaferMapFixture: ReportWaferMapInput = {
   ],
 }
 
+const reportParameterMedianWaferIds = Array.from(
+  { length: 25 },
+  (_, index) => `W${String(index + 1).padStart(2, "0")}`
+)
+
+function parameterMedianTone(cpk: number | null, oos = false) {
+  if (oos) return "bad" as const
+  if (cpk === null) return "neutral" as const
+  if (cpk < 1.33) return "bad" as const
+  if (cpk < 1.67) return "watch" as const
+  return "good" as const
+}
+
+function parameterMedianCells(
+  values: [number, number | null, boolean?][]
+) {
+  return values.map(([value, cpk, oos], index) => ({
+    waferId: reportParameterMedianWaferIds[index],
+    value,
+    cpk,
+    oos: Boolean(oos),
+    lowYield: ["W03", "W10", "W12", "W25"].includes(
+      reportParameterMedianWaferIds[index]
+    ),
+    tone: parameterMedianTone(cpk, oos),
+  }))
+}
+
 export const reportParameterMedianFixture: ReportParameterMedianInput = {
   title: "Parameter Median",
-  subtitle: "CP parameter median and CPK matrix by wafer.",
+  subtitle: "Prototype-backed CP parameter median and CPK matrix by wafer.",
   sourceLabel: "REPORT SNAPSHOT",
-  selectedParameterId: "IGSSN1",
+  parameterOptions: [
+    "IGSSN1",
+    "IGSSN2",
+    "IGSSNSC",
+    "IGSSP1",
+    "IGSSP2",
+    "IGSSPSC",
+    "pre_IGSSN1",
+    "pre_IGSSP1",
+    "QG_GBr",
+    "QG_QGD",
+    "QG_QGS",
+    "Qg_test",
+    "BVDSS",
+    "IDSS",
+    "VTH",
+    "RDS(on)",
+  ],
+  parameterQuery: "",
+  selectedParameterId: "",
+  showOosOnly: false,
+  oosResultCount: 42,
+  waferIds: reportParameterMedianWaferIds,
+  stickyHeader: true,
+  stickyFirstColumn: true,
   rows: [
     {
       parameter: "IGSSN1",
       unit: "A",
       lsl: -1.71378e-7,
       usl: 1.8671e-7,
-      wafers: [
-        { waferId: "W01", value: 7.69277e-9, cpk: 2.49, lowYield: false, tone: "good" },
-        { waferId: "W02", value: 7.41614e-9, cpk: 2.49, lowYield: false, tone: "good" },
-        { waferId: "W03", value: 7.45975e-9, cpk: 1.21, lowYield: true, tone: "bad" },
-        { waferId: "W10", value: 8.2242e-9, cpk: 1.44, lowYield: false, tone: "watch" },
-        { waferId: "W12", value: 7.9921e-9, cpk: 1.18, lowYield: true, tone: "bad" },
-      ],
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [7.69277e-9, 3.1], [7.41614e-9, 4.05], [7.45975e-9, 3.24],
+        [7.25928e-9, 7.48], [7.1586e-9, 3.24], [7.27856e-9, 5.34],
+        [7.16539e-9, 3.8], [7.15306e-9, 3.1], [7.30821e-9, 4.79],
+        [7.47845e-9, 0.39], [7.08056e-9, 3.4],
+        [3.60637e-7, -0.18, true], [7.40695e-9, 3.8],
+        [8.29571e-9, 3.09], [7.42372e-9, 3.59],
+        [7.13266e-9, 3.8], [6.98232e-9, 3.25],
+        [5.24958e-9, 4.32], [5.50619e-9, 2.86],
+        [6.19544e-9, 4.76], [7.78216e-9, 3.8],
+        [1.07712e-8, 2.75], [8.82434e-9, 3.56],
+        [7.83232e-9, 2.6], [7.66615e-9, 1.01],
+      ]),
     },
     {
-      parameter: "BVDSS",
-      unit: "V",
-      lsl: 52.41,
-      usl: 127.67,
-      wafers: [
-        { waferId: "W01", value: 89.59, cpk: 2.37, lowYield: false, tone: "good" },
-        { waferId: "W02", value: 91.06, cpk: 2.58, lowYield: false, tone: "good" },
-        { waferId: "W03", value: 87.76, cpk: 1.02, lowYield: true, tone: "bad" },
-        { waferId: "W10", value: 93.26, cpk: 0.44, lowYield: false, tone: "bad" },
-        { waferId: "W12", value: 90.03, cpk: 1.39, lowYield: true, tone: "watch" },
-      ],
+      parameter: "IGSSN2",
+      unit: "A",
+      lsl: -1.03105e-7,
+      usl: 1.15196e-7,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [6.32535e-9, 6.29], [6.02861e-9, 6.31], [6.06975e-9, 4.55],
+        [5.87442e-9, 24.12], [5.84606e-9, 2.45], [5.90425e-9, 3.75],
+        [5.85416e-9, 24.3], [5.75023e-9, 6.32], [5.89461e-9, 6.32],
+        [5.8801e-9, 24.9], [5.73434e-9, 6.32],
+        [3.60642e-7, -0.35, true], [6.06006e-9, 3.73],
+        [6.89798e-9, 23.5], [6.16477e-9, 6.31],
+        [5.84108e-9, 2.9], [5.70281e-9, 6.33],
+        [4.48628e-9, 24.69], [4.61151e-9, 2.87],
+        [5.14703e-9, 24.08], [6.30571e-9, 6.35],
+        [8.30497e-9, 4.47], [6.97528e-9, 24.07],
+        [6.37159e-9, 6.33], [6.0457e-9, 0.95],
+      ]),
+    },
+    {
+      parameter: "IGSSNSC",
+      unit: "A",
+      lsl: -0.000120844,
+      usl: 0.000120903,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [2.8e-8, 8.58], [2.93e-8, 4.95], [2.71e-8, 4.95],
+        [2.78e-8, 6.07], [2.76e-8, 2.37], [2.87e-8, 6.07],
+        [2.89e-8, 3.83], [2.89e-8, 3.5], [2.87e-8, 6.07],
+        [3.14e-8, 3.02], [2.93e-8, 4.29],
+        [0.000299996, -0.28, true], [3e-8, 3.83],
+        [3.17e-8, 3.23], [3.21e-8, 3.83], [2.86e-8, 3.24],
+        [2.99e-8, 3.83], [2.47e-8, 4.29], [2.53e-8, 2.7],
+        [2.69e-8, 6.07], [3.17e-8, 4.29], [3.9e-8, 2.85],
+        [3.42e-8, 3.24], [2.8e-8, 2.85], [3.26e-8, 0.95],
+      ]),
+    },
+    {
+      parameter: "IGSSP1",
+      unit: "A",
+      lsl: -1.76534e-7,
+      usl: 1.83716e-7,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [3.92652e-9, 3.09], [3.47131e-9, 4.05], [3.74348e-9, 3.23],
+        [3.58477e-9, 7.52], [3.42311e-9, 3.24], [3.50951e-9, 5.34],
+        [3.45403e-9, 3.79], [3.40174e-9, 3.1], [3.47632e-9, 4.79],
+        [3.72665e-9, 0.39], [3.30669e-9, 3.4],
+        [3.58879e-7, -0.17, true], [3.65276e-9, 3.79],
+        [4.48927e-9, 3.09], [3.82715e-9, 3.58],
+        [3.5102e-9, 3.79], [3.35899e-9, 3.24],
+        [2.74667e-9, 4.37], [2.88492e-9, 2.88],
+        [3.04499e-9, 4.8], [3.72234e-9, 3.8],
+        [4.92287e-9, 2.76], [4.01701e-9, 3.57],
+        [3.6473e-9, 2.6], [3.59091e-9, 1.01],
+      ]),
+    },
+    {
+      parameter: "QG_GBr",
+      unit: "—",
+      lsl: -3.8541,
+      usl: 4.1041,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [0.128023, 8.56], [0.154165, 4.93], [0.0610659, 4.86],
+        [0.122089, 6.07], [0.124088, 2.28], [0.127653, 4.95],
+        [0.134974, 3.83], [0.121306, 3.5], [0.129389, 6.06],
+        [0.10587, 3.03], [0.125, 4.28], [10, -0.22, true],
+        [0.143532, 3.82], [0.120163, 3.24], [0.121594, 3.83],
+        [0.133877, 3.49], [0.113667, 3.84], [0.130501, 4.28],
+        [0.123812, 2.7], [0.121183, 6.07], [0.124893, 4.29],
+        [0.116864, 2.85], [0.122606, 3.24], [0.13206, 2.85],
+        [0.123856, 0.95],
+      ]),
+    },
+    {
+      parameter: "QG_QGD",
+      unit: "nC",
+      lsl: 9.28657e-9,
+      usl: 1.38987e-8,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [1.15927e-8, 1.64], [1.09297e-8, 2.11],
+        [1.45266e-8, -0.2, true], [1.19595e-8, 1.37],
+        [1.1758e-8, 1.53], [1.2014e-8, 1.26],
+        [1.17467e-8, 1.56], [1.17355e-8, 1.7],
+        [1.05344e-8, 1.38], [1.34346e-8, 0.27],
+        [1.17153e-8, 1.57], [1.07988e-8, -0.01],
+        [1.21596e-8, 1.45], [1.15621e-8, 1.56],
+        [1.13595e-8, 1.62], [1.30407e-8, 0.75],
+        [1.0396e-8, 1.12], [1.17354e-8, 1.43],
+        [1.16351e-8, 1.74], [1.19206e-8, 1.41],
+        [1.14037e-8, 1.66], [1.19311e-8, 1.49],
+        [1.17241e-8, 1.95], [1.1748e-8, 1.41],
+        [1.15804e-8, 1.72],
+      ]),
+    },
+    {
+      parameter: "Qg_test",
+      unit: "—",
+      lsl: -0.61281,
+      usl: 0.61281,
+      specKind: "MOCK SPEC · Baseline-derived",
+      oosCount: 1,
+      wafers: parameterMedianCells([
+        [0, 6.52], [0, 6.53], [0, 4.61], [0, null], [0, 2.45],
+        [0, 3.76], [0, null], [0, 6.52], [0, 6.53], [0, null],
+        [0, 6.53], [2, -0.29, true], [0, 3.76], [0, null],
+        [0, 6.53], [0, 3.26], [0, 6.53], [0, null], [0, 2.91],
+        [0, null], [0, 6.53], [0, 4.61], [0, null], [0, 6.52],
+        [0, 0.95],
+      ]),
     },
   ],
 }

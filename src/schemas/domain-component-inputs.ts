@@ -350,7 +350,8 @@ export const reportWaferMapInputSchema = z.object({
 export const reportParameterMedianCellSchema = z.object({
   waferId: z.string(),
   value: z.number(),
-  cpk: z.number(),
+  cpk: z.number().nullable().optional(),
+  oos: z.boolean().default(false),
   lowYield: z.boolean().default(false),
   tone: reportToneSchema.default("neutral"),
 })
@@ -359,14 +360,22 @@ export const reportParameterMedianRowSchema = z.object({
   unit: z.string(),
   lsl: z.number(),
   usl: z.number(),
+  specKind: z.string().optional(),
+  oosCount: z.number().int().nonnegative().optional(),
   wafers: z.array(reportParameterMedianCellSchema),
 })
 export const reportParameterMedianInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  parameterOptions: z.array(z.string()).optional(),
+  parameterQuery: z.string().optional(),
   selectedParameterId: z.string().optional(),
   showOosOnly: z.boolean().optional(),
+  oosResultCount: z.number().int().nonnegative().optional(),
+  waferIds: z.array(z.string()).optional(),
+  stickyHeader: z.boolean().default(true).optional(),
+  stickyFirstColumn: z.boolean().default(true).optional(),
   rows: z.array(reportParameterMedianRowSchema).optional(),
 })
 export const reportCpDataInputSchema = z.object({

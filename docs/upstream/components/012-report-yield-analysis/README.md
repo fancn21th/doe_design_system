@@ -82,3 +82,15 @@ Out of scope during intake:
 - What is the exact threshold contract for yellow and red yield states?
 - Should the chart sort by yield ascending, wafer order, or selected grouping?
 - How should selected wafers coordinate with Wafer Map and CP Data report tabs?
+
+## Post-intake Implementation Notes
+
+- `Loss Yield` and `Condition Yield Comparison` are included in
+  `ReportYieldAnalysis` V1 as tabbed detail tables.
+- Yield severity follows `< 90%` bad, `90%-99.5%` watch, `>= 99.5%` good.
+- Wafer Yield Ranking sorts by yield ascending and uses Observable Plot.
+- Stage / Step filters are external business state for this component. The
+  component receives filtered business data through schema-shaped input and
+  only emits filter callback intents.
+- Cross-tab wafer coordination remains an external callback intent; the
+  component does not navigate to Wafer Map or CP Data by itself.

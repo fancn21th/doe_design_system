@@ -14,7 +14,13 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 
 ## Contract
 
-`ReportParameterMedian` 展示 CP parameter median 与 CPK matrix。Mock spec 字段仍按上游证据保留，不视为生产规格。
+`ReportParameterMedian` 展示 CP parameter median 与 CPK matrix。
+
+- 过滤区域使用 shadcn/base Input form pattern 和 Checkbox。`CP Parameter` 输入值通过 `onParameterQueryChange` 抛给外部业务状态；`仅显示 OOS` 通过 `onOosOnlyChange` 抛给外部业务状态。
+- 组件不在内部过滤 `rows`，只渲染注入后的业务数据。docs 预览里的输入状态只用于保持控件可操作。
+- Matrix 使用 shadcn/base Table，支持 sticky header 和 sticky first column，以保留宽表横向与纵向检查能力。
+- `Mock LSL` / `Mock USL` 按原型字段展示，不视为生产规格。
+- `OOS`、`CPK`、median value 均来自 fixture/schema，不在组件内部重算。
 
 ## Scenarios
 
