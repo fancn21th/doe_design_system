@@ -16,7 +16,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Before the first Domain UI change in a task or session, read `CONTEXT.md`. If context was compacted, lost, or inherited from another task, read it again. After that, reread only the relevant ADR, component pattern, fixture, scenario, or local primitive source.
 
-For work that spans DOE Domain UI, DOE Backend BFF, and DOE App, use the shared SOP at `/Users/fantianze/Vibe/g-working/g-doe/doe-new-app/docs/refactor/three-upstream-development-sop.md`; this repository owns only the UI Upstream role-specific part described in `content/docs/ai-coding-sop.mdx`.
+For work that spans DOE Domain UI, DOE Backend BFF, and DOE App, use the shared SOP at `/Users/fantianze/Vibe/g-working/g-doe/doe-new-app/docs/refactor/three-upstream-development-sop.md`; this repository owns only the UI Upstream role-specific part described in `content/docs/sop/ai-coding.mdx`. For component updates based on `/Users/fantianze/Vibe/g-working/g-doe/ui`, follow `content/docs/sop/ui-reference-refactor.mdx`.
 
 Hard rules:
 
@@ -26,6 +26,7 @@ Hard rules:
 - Demo and test data belong in fixtures and scenarios, not inline inside domain component rendering logic.
 - Existing scenarios are the source of truth for known prototype behavior; reopen the prototype only when the user explicitly asks or no scenario/contract exists.
 - Compose foundation UI from `src/components/ui` shadcn primitives; check existing local usage before using `Select`, `DropdownMenu`, or other Base UI style primitives in a new way.
+- For UI sourced from `/Users/fantianze/Vibe/g-working/g-doe/ui`, follow the source-of-truth and fidelity rules in `content/docs/sop/ui-reference-refactor.mdx`. When the user says “照办” or asks for a named shadcn block, bring in the complete local upstream block without manual redesign, renaming, pruning, or composition changes. Ask for approval before any deviation.
 - Validate incrementally: targeted typecheck, targeted lint, relevant tests, then browser verification only for changed interactions.
 - Run full build once after implementation is complete; do not restart the full validation ladder after every small edit.
 

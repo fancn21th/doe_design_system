@@ -1,0 +1,40 @@
+---
+title: SOP
+description: DOE Domain UI 的标准工作流程入口。
+---
+
+## Purpose
+
+这里集中管理当前项目的 SOP。后续不论是从业务原型抽取组件、重构已有组件，还是基于 `/Users/fantianze/Vibe/g-working/g-doe/ui` 的参考实现改造组件，都应先落到这里形成可复用流程。
+
+SOP 用来约束工作方式，不替代组件 contract。组件本身的行为、入参、状态归属和 out of scope 仍以对应 MDX、schema、fixture、scenario 和 upstream 记录为准。
+
+## SOP Index
+
+- [AI Coding SOP](/docs/sop/ai-coding)：从 upstream 输入创建 DOE 领域组件的通用流程。
+- [Component Refactor SOP](/docs/sop/component-refactor)：面向已有组件重构的启动清单和执行流程。
+- [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor)：基于 `/Users/fantianze/Vibe/g-working/g-doe/ui` 参考实现改造当前组件的流程。
+
+## Placement Rule
+
+新增 SOP 放在 `content/docs/sop/` 下，并同步更新本目录的 `meta.json`。
+
+如果 SOP 只服务一个组件，先写进对应组件文档的 `Contract` 或 `Implementation Notes`；当同一方法会复用到两个以上组件时，再提升为独立 SOP。
+
+## Working Order
+
+1. 先确定任务类型：新建组件、重构组件、参考项目改造、跨工程协作或验证发布。
+2. 打开对应 SOP，只读取当前任务所需的上下文。
+3. 定位目标 docs 路由、组件源码、schema、fixture、scenario、MDX 和 upstream 记录。
+4. 执行改造后，把可复用的新规则补回 SOP，把单组件事实补回组件 contract。
+5. 验证通过后，再更新首页、导航或索引链接。
+
+## Current Reference Set
+
+- `AGENTS.md`
+- `CONTEXT.md`
+- `DESIGN_SYSTEM.md`
+- `docs/adr/`
+- `docs/practices/domain-ui-sizing.md`
+- `docs/upstream/`
+- `content/docs/knowledge/`

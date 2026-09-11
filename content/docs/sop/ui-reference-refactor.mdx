@@ -1,0 +1,119 @@
+---
+title: UI Reference Refactor SOP
+description: 基于 /Users/fantianze/Vibe/g-working/g-doe/ui 参考实现改造 DOE Domain UI 组件的流程。
+---
+
+## Purpose
+
+这页用于把 `/Users/fantianze/Vibe/g-working/g-doe/ui` 项目中的参考实现，按当前 DOE Domain UI 的组件合同、schema、fixture、scenario 和 MDX 文档体系落地。
+
+`ui` 是本项目 shadcn 设计语言的本地上游：布局组合、primitive 用法、字体层级、间距、尺寸、圆角、色彩 token 和响应式节奏都以它为优先参考。业务示例中的文案、图表数据、账户和产品概念只用于理解页面结构，不是 DOE 业务事实。
+
+当用户说“照办”、指定某个 shadcn block，或要求完整引入模板时，`ui` 中同名 block 是唯一上游：完整引入其目录和必要依赖，不做手工设计改造、重命名、裁剪或混合其他 block。任何偏离原模板的调整都必须先向用户确认。
+
+对于大量组件或 block 的引入，直接从本地 `ui` 仓库同步，不逐个运行 `npx shadcn@latest add`。后者使用远程 registry，可能与本地上游版本不一致，并会反复触发 foundation primitive 覆盖。包管理器只用于安装同步后缺少的依赖。
+
+## Start Prompt
+
+```text
+请按 UI Reference Refactor SOP 改造一个组件。
+
+1. 目标 docs 路由：
+2. 当前组件名：
+3. 参考项目路径或关键词：
+4. 必须对齐的参考行为：
+5. 不需要迁入的参考行为：
+6. 是否新增或补齐 src/components/ui primitive：
+```
+
+## Location Flow
+
+1. 从目标 docs 路由定位当前页面。
+
+   例如 `/docs/domain/shared/layout-shell` 对应：
+
+   ```text
+   content/docs/domain/shared/layout-shell.mdx
+   src/components/domain/layout-shell.tsx
+   src/components/domain/layout-shell.fixtures.ts
+   src/components/domain/layout-shell.scenarios.ts
+   src/schemas/domain-component-inputs.ts
+   ```
+
+2. 在当前项目内确认组件 contract。
+
+   先读 MDX 的 `Contract`、对应 upstream 记录、schema、fixtures 和 scenarios。若 contract 与参考代码冲突，先记录冲突，不直接改实现。
+
+3. 在 ui 项目中定位参考实现。
+
+   优先使用 `rg` 搜索组件名、primitive 名、示例名和可见文案。参考项目常见路径：
+
+   ```text
+   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/ui/
+   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/internal/
+   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/blocks/
+   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/content/docs/components/
+   ```
+
+4. 收窄参考来源。
+
+   每次改造只选一个主参考实现和必要的辅助说明。不要同时混用多个 block 的行为，除非用户明确要求。
+
+## Mapping Rule
+
+1. 先判定引入模式。
+
+   - **完整 block / 用户要求“照办”**：从本地 `ui` 的 block 目录完整同步；同步前记录上游路径和 commit，保留目录结构、源码、数据文件与必要子组件。
+   - **foundation primitive**：从本地 `ui` 的 primitive 源码同步到 `src/components/ui/`，并保持该 primitive 的 token、slot 和交互实现一致。
+   - **单一交互或布局模式**：只在用户明确允许适配时，才把必要模式组合进 DOE Domain UI 组件。
+
+2. `ui/*/ui/<primitive>.tsx` 是 foundation UI 的实现源。
+
+   如果当前项目缺少对应 primitive，应先从本地上游同步到 `src/components/ui/`，再由领域组件组合使用。不要以手写近似版本替代。
+
+3. `ui/*/internal/<example>.tsx` 和 `ui/*/blocks/<block>/` 是 layout、composition 和 visual-language source。
+
+   完整 block 同步时可以保留结构和 placeholder data 以保证视觉 fidelity；替换业务文案、数据、路由或交互属于后续 DOE 适配，必须获得用户确认。
+
+4. 领域组件继续通过 `input`、slots 和 callbacks 暴露能力。
+
+   参考实现里的内部状态只有在它属于局部展示行为时才迁入组件。会改变业务数据集、触发请求、跳转应用页面或跨组件联动的行为，必须外置为 props/callback intent。
+
+5. 视觉一致性优先于示例业务内容。
+
+   对齐顺序为：shadcn primitive 与 token -> block 的布局与间距 -> 当前项目的 `.domain-ui-typography` 和 DOE density token。不要为单个页面发明独立字体、间距、颜色、圆角或控件尺寸体系。
+
+## Layout Shell Reference
+
+`LayoutShell` 是本 SOP 的第一个参考改造对象。
+
+- 目标路由：`/docs/domain/shared/layout-shell`
+- 当前组件：`src/components/domain/layout-shell.tsx`
+- 当前 upstream：`docs/upstream/components/019-layout-shell/README.md`
+- 主参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/ui/sidebar.tsx`
+- 辅助参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/content/docs/components/base/sidebar.mdx`
+- 示例参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/internal/sidebar-*.tsx`
+
+改造目标是吸收 sidebar 体系中可复用的布局、可折叠状态、trigger、inset 和 menu 组合方式，同时保持 `LayoutShell` 是 DOE 的 layout-only domain asset。
+
+## Execution Flow
+
+1. 检查当前项目和参考项目的 `git status --short`。
+2. 读取目标组件文件包和 upstream 记录。
+3. 读取主参考实现，不凭记忆描述 shadcn 行为。
+4. 记录上游路径、commit、同步文件和缺失依赖；完整 block 先原样同步。
+5. 仅在用户允许后，列出并执行 reference-to-current mapping：可迁入、需适配、明确不迁入。
+6. 必要时补齐 `src/components/ui` primitive；领域组件只组合它，不复制一套基础控件。
+7. 更新领域组件、fixture、scenario 和 MDX preview。
+8. 更新 MDX `Contract`，记录参考来源、同步状态和任何获准的偏离。
+9. 若沉淀出可复用流程，补回本 SOP；若只是单组件事实，补回组件文档。
+10. 运行 lint、typecheck、相关测试和浏览器验证。
+
+## Verification Checklist
+
+- 目标 docs 路由可以正常打开。
+- 当前组件仍从 scenario/fixture 获取示例数据。
+- schema 只表达 UI-facing input。
+- 参考项目中的 app-level behavior 没有混入领域组件。
+- 左右布局、收起/展开、header/top link/content slot 在正常和收起状态都可用。
+- MDX contract 明确说明参考来源和组件边界。

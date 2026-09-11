@@ -1,296 +1,164 @@
 "use client"
 
-import { type MouseEvent, type ReactNode, useState } from "react"
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import type { ComponentProps, CSSProperties, HTMLAttributes } from "react"
 
-import { layoutShellScenarios } from "@/components/domain/layout-shell.scenarios"
-import { ReportBadge } from "@/components/domain/report-parts"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import {
-  layoutShellInputSchema,
-  type LayoutShellInput,
-  type LayoutShellNavItem,
-} from "@/schemas/domain-component-inputs"
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/registry/new-york-v4/ui/sidebar"
 
-export type LayoutShellItem = LayoutShellNavItem & {
-  href?: string
-  disabled?: boolean
+/**
+ * The root state container for an application layout.
+ *
+ * Downstream usage: put `LayoutShell.Sidebar` and `LayoutShell.Main` directly
+ * inside this component. Use `open` + `onOpenChange` when the application owns
+ * the sidebar state; otherwise `defaultOpen` is sufficient.
+ */
+export type LayoutShellProps = ComponentProps<typeof SidebarProvider> & {
+  /** CSS width, e.g. "18rem". Keep navigation width owned by the shell. */
+  sidebarWidth?: string
+  /** CSS height, e.g. "3rem". Header content should not set its own height. */
+  headerHeight?: string
 }
 
-export type LayoutShellProps = {
-  input?: LayoutShellInput
-  children?: ReactNode
-  sidebarContent?: ReactNode
-  headerContent?: ReactNode
-  headerActions?: ReactNode
-  navItems?: LayoutShellItem[]
-  topLinks?: LayoutShellItem[]
-  collapsed?: boolean
-  defaultCollapsed?: boolean
-  onCollapsedChange?: (collapsed: boolean) => void
-  onNavSelect?: (item: LayoutShellItem) => void
-  onTopLinkSelect?: (item: LayoutShellItem) => void
-  className?: string
-  sidebarClassName?: string
-  headerClassName?: string
-  contentClassName?: string
-}
-
-export function LayoutShell({
-  input = layoutShellScenarios.normal.input,
+function LayoutShellRoot({
+  sidebarWidth = "18rem",
+  headerHeight = "3rem",
+  style,
   children,
-  sidebarContent,
-  headerContent,
-  headerActions,
-  navItems: navItemsProp,
-  topLinks: topLinksProp,
-  collapsed: collapsedProp,
-  defaultCollapsed,
-  onCollapsedChange,
-  onNavSelect,
-  onTopLinkSelect,
-  className,
-  sidebarClassName,
-  headerClassName,
-  contentClassName,
+  ...props
 }: LayoutShellProps) {
-  const scenarioInput = layoutShellScenarios.normal.input
-  const parsedInput = layoutShellInputSchema.parse(input)
-  const [uncontrolledCollapsed, setUncontrolledCollapsed] = useState(
-    defaultCollapsed ?? parsedInput.collapsed ?? scenarioInput.collapsed ?? false
-  )
-  const collapsed = collapsedProp ?? uncontrolledCollapsed
-  const navItems = navItemsProp ?? parsedInput.navItems ?? scenarioInput.navItems ?? []
-  const topLinks = topLinksProp ?? parsedInput.topLinks ?? scenarioInput.topLinks ?? []
-
-  function setCollapsed(nextCollapsed: boolean) {
-    if (collapsedProp === undefined) setUncontrolledCollapsed(nextCollapsed)
-    onCollapsedChange?.(nextCollapsed)
-  }
-
-  function toggleCollapsed() {
-    setCollapsed(!collapsed)
-  }
-
   return (
-    <div className={cn("not-prose domain-ui-typography", className)}>
-      <section
-        className={cn(
-          "grid min-h-[42rem] overflow-hidden rounded-lg border bg-background",
-          collapsed
-            ? "grid-cols-[3.5rem_minmax(0,1fr)]"
-            : "grid-cols-[17rem_minmax(0,1fr)]"
-        )}
-      >
-        <aside className={cn("min-w-0 border-r bg-muted/25", sidebarClassName)}>
-          <div className="flex h-14 items-center justify-between gap-2 border-b px-3">
-            {!collapsed && (
-              <div className="min-w-0">
-                <b className="block truncate text-sm">
-                  {parsedInput.sidebarTitle ?? scenarioInput.sidebarTitle}
-                </b>
-                <span className="text-xs text-muted-foreground">Navigation</span>
-              </div>
-            )}
-            <Button
-              aria-label={collapsed ? "展开左侧导航" : "收起左侧导航"}
-              title={collapsed ? "展开左侧导航" : "收起左侧导航"}
-              variant="ghost"
-              size="icon-sm"
-              onClick={toggleCollapsed}
-            >
-              {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-            </Button>
-          </div>
-          <div className="min-h-0">
-            {sidebarContent ?? (
-              <nav className="grid gap-1 p-3" aria-label="Layout shell sidebar">
-                {navItems.map((item) => (
-                  <LayoutShellNavButton
-                    key={item.id}
-                    item={item}
-                    collapsed={collapsed}
-                    onSelect={onNavSelect}
-                  />
-                ))}
-              </nav>
-            )}
-          </div>
-        </aside>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": sidebarWidth,
+          "--header-height": headerHeight,
+          ...style,
+        } as CSSProperties
+      }
+      {...props}
+    >
+      {children}
+    </SidebarProvider>
+  )
+}
 
-        <main className="min-w-0">
-          <header
-            className={cn(
-              "flex min-h-14 items-center justify-between gap-4 border-b px-4",
-              headerClassName
-            )}
-          >
-            {headerContent ?? (
-              <div className="min-w-0">
-                <b className="block truncate text-sm">
-                  {parsedInput.title ?? scenarioInput.title}
-                </b>
-                {(parsedInput.subtitle ?? scenarioInput.subtitle) && (
-                  <span className="text-xs text-muted-foreground">
-                    {parsedInput.subtitle ?? scenarioInput.subtitle}
-                  </span>
-                )}
-              </div>
-            )}
-            <div className="flex shrink-0 items-center gap-2">
-              <nav
-                className="flex shrink-0 gap-2"
-                aria-label="Layout shell top links"
-              >
-                {topLinks.map((link) => (
-                  <LayoutShellTopLink
-                    key={link.id}
-                    item={link}
-                    onSelect={onTopLinkSelect}
-                  />
-                ))}
-              </nav>
-              {headerActions}
-            </div>
-          </header>
+/**
+ * The navigation region. Its children are supplied by the app: menu hierarchy,
+ * permissions, routes, and user identity are business concerns, not layout API.
+ */
+function LayoutShellSidebar({ children, ...props }: ComponentProps<typeof Sidebar>) {
+  return <Sidebar {...props}>{children}</Sidebar>
+}
 
-          <div className={cn("grid gap-4 p-4", contentClassName)}>
-            {children ?? <LayoutShellSkeleton />}
-          </div>
-        </main>
-      </section>
+/** Place brand/workspace controls here. */
+function LayoutShellSidebarHeader({ children, ...props }: ComponentProps<typeof SidebarHeader>) {
+  return <SidebarHeader {...props}>{children}</SidebarHeader>
+}
+
+/** Place navigation groups, search, and other scrolling sidebar content here. */
+function LayoutShellSidebarContent({ children, ...props }: ComponentProps<typeof SidebarContent>) {
+  return <SidebarContent {...props}>{children}</SidebarContent>
+}
+
+/** Place account actions or persistent secondary navigation here. */
+function LayoutShellSidebarFooter({ children, ...props }: ComponentProps<typeof SidebarFooter>) {
+  return <SidebarFooter {...props}>{children}</SidebarFooter>
+}
+
+/**
+ * The application canvas next to the sidebar. It must contain the header and
+ * content regions so spacing and responsive sidebar behavior stay consistent.
+ */
+function LayoutShellMain({ children, ...props }: ComponentProps<typeof SidebarInset>) {
+  return <SidebarInset {...props}>{children}</SidebarInset>
+}
+
+/** Put `LayoutShell.Trigger` at the start so mobile users can open navigation. */
+function LayoutShellHeader({ className, children, ...props }: HTMLAttributes<HTMLElement>) {
+  return (
+    <header
+      className={cn(
+        "flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear lg:px-6",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </header>
+  )
+}
+
+/** The state-aware sidebar toggle. Do not reimplement this with local state. */
+function LayoutShellTrigger(props: ComponentProps<typeof SidebarTrigger>) {
+  return <SidebarTrigger {...props} />
+}
+
+/** Use for right-aligned header actions such as filters, export, or create. */
+function LayoutShellHeaderActions({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("ml-auto flex items-center gap-2", className)} {...props}>
+      {children}
     </div>
   )
 }
 
-function LayoutShellNavButton({
-  item,
-  collapsed,
-  onSelect,
-}: {
-  item: LayoutShellItem
-  collapsed: boolean
-  onSelect?: (item: LayoutShellItem) => void
-}) {
-  const className = cn(
-    "flex h-9 items-center rounded-md px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50",
-    item.active && "bg-sky-50 font-medium text-sky-700 hover:bg-sky-50",
-    collapsed && "justify-center px-0 text-center"
-  )
-
-  function handleClick(event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) {
-    if (item.disabled) {
-      event.preventDefault()
-      return
-    }
-
-    onSelect?.(item)
-  }
-
-  if (item.href) {
-    return (
-      <a
-        href={item.href}
-        aria-current={item.active ? "page" : undefined}
-        aria-disabled={item.disabled || undefined}
-        className={className}
-        onClick={handleClick}
-        title={item.label}
-      >
-        {collapsed ? item.label.slice(0, 1) : item.label}
-      </a>
-    )
-  }
-
+/**
+ * The scrolling page body. Downstream pages own all business UI inside it:
+ * tables, charts, forms, and loading/error states belong to the consuming app.
+ */
+function LayoutShellContent({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <button
-      type="button"
-      aria-current={item.active ? "page" : undefined}
-      className={className}
-      disabled={item.disabled}
-      onClick={handleClick}
-      title={item.label}
-    >
-      {collapsed ? item.label.slice(0, 1) : item.label}
-    </button>
+    <div className={cn("@container/main flex flex-1 flex-col", className)} {...props}>
+      {children}
+    </div>
   )
 }
 
-function LayoutShellTopLink({
-  item,
-  onSelect,
-}: {
-  item: LayoutShellItem
-  onSelect?: (item: LayoutShellItem) => void
-}) {
-  const className =
-    "inline-flex disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
-
-  function handleClick(event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) {
-    if (item.disabled) {
-      event.preventDefault()
-      return
-    }
-
-    onSelect?.(item)
-  }
-
-  if (item.href) {
-    return (
-      <a
-        href={item.href}
-        aria-current={item.active ? "page" : undefined}
-        aria-disabled={item.disabled || undefined}
-        className={className}
-        onClick={handleClick}
-        title={item.label}
-      >
-        <ReportBadge tone={item.active ? "good" : "neutral"}>{item.label}</ReportBadge>
-      </a>
-    )
-  }
-
+/** A default content stack matching the dashboard reference rhythm. */
+function LayoutShellContentStack({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <button
-      type="button"
-      aria-current={item.active ? "page" : undefined}
-      className={className}
-      disabled={item.disabled}
-      onClick={handleClick}
-      title={item.label}
-    >
-      <ReportBadge tone={item.active ? "good" : "neutral"}>{item.label}</ReportBadge>
-    </button>
+    <div className={cn("flex flex-1 flex-col gap-4 py-4 md:gap-6 md:py-6", className)} {...props}>
+      {children}
+    </div>
   )
 }
 
-function LayoutShellSkeleton() {
-  return (
-    <>
-      <Skeleton className="h-24" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
-        <section className="grid gap-3 rounded-lg border p-4">
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-64" />
-        </section>
-        <aside className="grid content-start gap-3 rounded-lg border p-4">
-          <Skeleton className="h-5 w-36" />
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-        </aside>
-      </div>
-      <section className="grid gap-3 rounded-lg border p-4">
-        <Skeleton className="h-5 w-40" />
-        <div className="grid gap-2">
-          <Skeleton className="h-9" />
-          <Skeleton className="h-9" />
-          <Skeleton className="h-9" />
-        </div>
-      </section>
-    </>
-  )
-}
+/**
+ * A compound layout API based on shadcn's dashboard-01 structure.
+ *
+ * @example
+ * <LayoutShell defaultOpen>
+ *   <LayoutShell.Sidebar variant="inset">
+ *     <LayoutShell.SidebarHeader><Brand /></LayoutShell.SidebarHeader>
+ *     <LayoutShell.SidebarContent><Navigation /></LayoutShell.SidebarContent>
+ *   </LayoutShell.Sidebar>
+ *   <LayoutShell.Main>
+ *     <LayoutShell.Header>
+ *       <LayoutShell.Trigger />
+ *       <Breadcrumbs />
+ *       <LayoutShell.HeaderActions><Actions /></LayoutShell.HeaderActions>
+ *     </LayoutShell.Header>
+ *     <LayoutShell.Content><Page /></LayoutShell.Content>
+ *   </LayoutShell.Main>
+ * </LayoutShell>
+ */
+export const LayoutShell = Object.assign(LayoutShellRoot, {
+  Sidebar: LayoutShellSidebar,
+  SidebarHeader: LayoutShellSidebarHeader,
+  SidebarContent: LayoutShellSidebarContent,
+  SidebarFooter: LayoutShellSidebarFooter,
+  Main: LayoutShellMain,
+  Header: LayoutShellHeader,
+  Trigger: LayoutShellTrigger,
+  HeaderActions: LayoutShellHeaderActions,
+  Content: LayoutShellContent,
+  ContentStack: LayoutShellContentStack,
+})

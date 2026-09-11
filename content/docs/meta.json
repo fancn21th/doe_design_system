@@ -1,4 +1,4 @@
 {
   "title": "DOE UI",
-  "pages": ["index", "ai-coding-sop", "component-refactor-sop", "domain", "ui", "knowledge"]
+  "pages": ["index", "sop", "domain", "ui", "knowledge"]
 }

@@ -431,6 +431,30 @@ export const layoutShellInputSchema = z.object({
   navItems: z.array(layoutShellNavItemSchema).optional(),
   topLinks: z.array(layoutShellNavItemSchema).optional(),
 })
+export const layoutSidebarShellNavGroupSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  items: z.array(layoutShellNavItemSchema),
+})
+export const layoutSidebarShellBreadcrumbSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  href: z.string().optional(),
+  current: z.boolean().default(false),
+})
+export const layoutSidebarShellInputSchema = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sidebarTitle: z.string().optional(),
+  sidebarSubtitle: z.string().optional(),
+  searchPlaceholder: z.string().optional(),
+  collapsed: z.boolean().optional(),
+  versions: z.array(z.string()).optional(),
+  selectedVersion: z.string().optional(),
+  navGroups: z.array(layoutSidebarShellNavGroupSchema).optional(),
+  breadcrumbs: z.array(layoutSidebarShellBreadcrumbSchema).optional(),
+  topLinks: z.array(layoutShellNavItemSchema).optional(),
+})
 export const historyInputSchema = z.object({})
 
 export type ExperimentInput = z.infer<typeof experimentInputSchema>
@@ -503,5 +527,14 @@ export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
 export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
 export type LayoutShellNavItem = z.infer<typeof layoutShellNavItemSchema>
 export type LayoutShellInput = z.infer<typeof layoutShellInputSchema>
+export type LayoutSidebarShellNavGroup = z.infer<
+  typeof layoutSidebarShellNavGroupSchema
+>
+export type LayoutSidebarShellBreadcrumb = z.infer<
+  typeof layoutSidebarShellBreadcrumbSchema
+>
+export type LayoutSidebarShellInput = z.infer<
+  typeof layoutSidebarShellInputSchema
+>
 export type RunCardHistoryInput = z.infer<typeof runCardHistoryInputSchema>
 export type HistoryInput = z.infer<typeof historyInputSchema>

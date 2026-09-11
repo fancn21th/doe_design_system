@@ -5,6 +5,12 @@ description: DOE Domain UI 的 shadcn 基础层、密度 token 与应用接入�
 
 DOE Domain UI 不是自建基础设计系统。基础控件来自 shadcn，本项目只在业务组件范围内增加 DOE 工作台密度 token。
 
+## 设计语言优先级
+
+本项目对 shadcn 的关注重点是完整的设计语言，而不只是单个组件：布局组合、字体层级、间距、控件尺寸、圆角、语义色、响应式节奏和交互状态都应保持一致。
+
+本地上游 `/Users/fantianze/Vibe/g-working/g-doe/ui` 是该设计语言的 source of truth。引入 block 时先忠实同步其 layout 与 component composition；其中的业务文案、样例数据、账号和页面功能不是 DOE 设计事实，只有在用户确认适配时才替换。完整规则见 [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor)。
+
 ## 应用接入入口
 
 应用工程使用这套业务组件时，先读根目录：
