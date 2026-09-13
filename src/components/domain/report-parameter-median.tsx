@@ -25,7 +25,6 @@ import {
   type ReportParameterMedianCell,
   type ReportParameterMedianInput,
   type ReportParameterMedianRow,
-  type ReportTone,
 } from "@/schemas/domain-component-inputs"
 
 type ReportParameterMedianProps = {
@@ -47,12 +46,10 @@ function unique(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)))
 }
 
-function getCpkTone(cell: ReportParameterMedianCell): ReportTone {
+function getCellTone(cell: ReportParameterMedianCell) {
   if (cell.oos) return "bad"
-  if (cell.cpk === null || cell.cpk === undefined) return "neutral"
-  if (cell.cpk < 1.33) return "bad"
-  if (cell.cpk < 1.67) return "watch"
-  return "good"
+  if (cell.failLinked) return "watch"
+  return "neutral"
 }
 
 function getOosCount(row: ReportParameterMedianRow) {
@@ -74,11 +71,6 @@ function formatParameterValue(value: number | null | undefined) {
   }
 
   return value.toPrecision(6).replace(/0+$/, "").replace(/\.$/, "")
-}
-
-function formatCpk(cpk: number | null | undefined) {
-  if (cpk === null || cpk === undefined || !Number.isFinite(cpk)) return "-"
-  return cpk.toFixed(2)
 }
 
 function useDisplayValue<T>(
@@ -164,9 +156,9 @@ function ParameterMedianFilterBar({
         </Field>
 
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          <ReportBadge tone="bad">CPK &lt; 1.33</ReportBadge>
-          <ReportBadge tone="watch">1.33 &lt;= CPK &lt; 1.67</ReportBadge>
-          <ReportBadge tone="good">CPK &gt;= 1.67</ReportBadge>
+          <ReportBadge tone="bad">Mock-SPEC OOS</ReportBadge>
+          <ReportBadge tone="watch">Low Yield context</ReportBadge>
+          <ReportBadge tone="good">Within Mock SPEC</ReportBadge>
         </div>
       </div>
     </FieldGroup>
@@ -197,7 +189,7 @@ function ParameterCell({
             OOS
           </span>
         )}
-        <span>CPK={formatCpk(cell.cpk)}</span>
+        {cell.failLinked && <span>YIELD context</span>}
       </span>
     </div>
   )
@@ -267,6 +259,9 @@ function ParameterMedianMatrix({
             <TableHead className={cn("w-28 min-w-28", headerClass)}>
               Mock USL
             </TableHead>
+            <TableHead className={cn("w-28 min-w-28", headerClass)}>
+              Mock Spec
+            </TableHead>
             {waferIds.map((waferId) => (
               <TableHead
                 key={waferId}
@@ -313,9 +308,14 @@ function ParameterMedianMatrix({
                 <TableCell className="w-28 min-w-28 font-mono text-xs">
                   {formatParameterValue(row.usl)}
                 </TableCell>
+                <TableCell className="w-28 min-w-28">
+                  <ReportBadge tone={row.specKind === "UNAVAILABLE" ? "neutral" : "good"}>
+                    {row.specKind ?? "UNAVAILABLE"}
+                  </ReportBadge>
+                </TableCell>
                 {waferIds.map((waferId) => {
                   const cell = cellsByWafer.get(waferId)
-                  const tone = cell ? getCpkTone(cell) : "neutral"
+                  const tone = cell ? getCellTone(cell) : "neutral"
 
                   return (
                     <TableCell

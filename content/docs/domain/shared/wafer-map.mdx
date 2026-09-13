@@ -1,28 +1,42 @@
 ---
 title: wafer-map
-description: 单片 Wafer 的 Canvas Die Geometry Rendering 组件。
+description: 25 片总览与单片 Canvas Die 渲染的 Wafer Map 业务组件。
 ---
 
-import { WaferMap } from "@/components/domain/wafer-map"
-import { waferMapScenarios } from "@/components/domain/wafer-map.scenarios"
+import { WaferMap, WaferMapGallery } from "@/components/domain/wafer-map"
+import { waferMapGalleryScenarios, waferMapScenarios } from "@/components/domain/wafer-map.scenarios"
 
 ## 预览 / Preview
 
-### W01 Real Geometry · 4,099 Dies
+### CP Final Bin · 25 wafers
 
-<WaferMap data={waferMapScenarios.w01RealGeometry.data} width={640} height={640} />
+<WaferMapGallery input={waferMapGalleryScenarios.finalBinOverview.input} />
 
-### Small Size
+### CP Parameter Gradient
 
-<WaferMap data={waferMapScenarios.base.data} width={240} height={240} />
+<WaferMapGallery input={waferMapGalleryScenarios.parameterOverview.input} />
 
-### Empty
+### Defect Map
 
-<WaferMap data={waferMapScenarios.empty.data} width={240} height={240} />
+<WaferMapGallery input={waferMapGalleryScenarios.defectOverview.input} />
+
+### Data Pending
+
+<WaferMapGallery input={waferMapGalleryScenarios.pending.input} />
+
+### Legacy geometry preview
+
+<WaferMap data={waferMapScenarios.w01RealGeometry.data} width={240} height={240} />
 
 ## Contract
 
-`WaferMap` consumes only `id`, `dies`, and precomputed `bounds`. Each die has an `id`, `x`, and `y`; Final Bin, parameter, defect, selection, and hover data are intentionally outside V1.
+`WaferMapGallery` is the business entry point. It accepts one discriminated input: `cp-final-bin`, `cp-parameter`, or `defect`. Every wafer carries its own geometry and its own data payload; no fixture or component assumes that 25 wafers share values.
+
+`WaferMapCore` owns three stacked Canvas layers: an immediate base layer for all legal dies, a data layer for Final Bin / parameter / defect color, and an interaction layer. The shallow grey circular boundary is presentation only; the supplied legal-die coordinates define the actual footprint.
+
+CP geometry (`CP_DIE_GRID_V1`) and defect geometry (`DEFECT_INDEX_V1`) are independent coordinate contracts. This component deliberately does not infer an overlay between them.
+
+Hover uses Canvas hit testing and one document portal tooltip, so a 4,099-die wafer never creates 4,099 React nodes. The tooltip currently shows wafer, DIE_X, DIE_Y, Final Bin and, where relevant, parameter value/validity or defect count.
 
 ## Schema
 
@@ -47,8 +61,14 @@ export const waferMapDataSchema = z.object({
 })
 ```
 
+The gallery input extends this geometry with rendering-specific die metadata. The component owns no data fetch, parameter percentile calculation, defect aggregation, routing, or detail view; those belong to the consuming app/BFF.
+
 ## Scenarios
 
 - `base`
 - `w01-real-geometry`
 - `empty`
+- `finalBinOverview`
+- `parameterOverview`
+- `defectOverview`
+- `pending`

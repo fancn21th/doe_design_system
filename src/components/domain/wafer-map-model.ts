@@ -195,3 +195,103 @@ export function createDieVisualStates(
     }
   })
 }
+
+export const DEFAULT_FINAL_BIN_PALETTE: Readonly<Record<string, string>> = {
+  "1": "#16a34a",
+  "9": "#0891b2",
+  "10": "#ef4444",
+  "11": "#84cc16",
+  "12": "#f97316",
+  "13": "#facc15",
+  "17": "#14b8a6",
+  "18": "#ec4899",
+  "19": "#8b5cf6",
+  "20": "#a16207",
+  "22": "#4f46e5",
+  "31": "#111827",
+}
+
+export type WaferCanvasLayout = {
+  width: number
+  height: number
+  centerX: number
+  centerY: number
+  radius: number
+  cellWidth: number
+  cellHeight: number
+  dieById: ReadonlyMap<DieId, DieGeometry>
+}
+
+export function createWaferCanvasLayout(
+  wafer: WaferMapData,
+  size: number,
+  padding = 8
+): WaferCanvasLayout {
+  const { bounds } = wafer
+  const diameter = Math.max(1, size - padding * 2)
+  const spanX = Math.max(1, bounds.maxX - bounds.minX + 1)
+  const spanY = Math.max(1, bounds.maxY - bounds.minY + 1)
+  const unitX = diameter / spanX
+  const unitY = diameter / spanY
+  const cellWidth = Math.max(0.8, unitX * 0.9)
+  const cellHeight = Math.max(0.8, unitY * 0.9)
+  const centerX = size / 2
+  const centerY = size / 2
+  const midX = (bounds.minX + bounds.maxX) / 2
+  const midY = (bounds.minY + bounds.maxY) / 2
+
+  // Canvas has a visual 12-inch circle. CP coordinate spans are not guaranteed
+  // to have the same count on X/Y, so normalize each axis only in this visual
+  // adapter. The original coordinate data remains untouched for hit testing.
+  const dies = wafer.dies.map((die) => ({
+    id: die.id,
+    x: centerX + (die.x - midX) * unitX - cellWidth / 2,
+    y: centerY - (die.y - midY) * unitY - cellHeight / 2,
+    width: cellWidth,
+    height: cellHeight,
+  }))
+
+  return {
+    width: size,
+    height: size,
+    centerX,
+    centerY,
+    radius: Math.max(0, size / 2 - padding),
+    cellWidth,
+    cellHeight,
+    dieById: new Map(dies.map((die) => [die.id, die])),
+  }
+}
+
+export function finalBinColor(
+  finalBin: string,
+  palette: Readonly<Record<string, string>> = DEFAULT_FINAL_BIN_PALETTE
+): string {
+  const normalized = finalBin.replace(/^BIN\s*/i, "").trim()
+  if (palette[normalized]) {
+    return palette[normalized]
+  }
+
+  let hash = 0
+  for (const character of normalized || "unknown") {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0
+  }
+  return `hsl(${hash % 360} 65% 43%)`
+}
+
+export function parameterColor(value: number, low: number, high: number): string {
+  const range = high - low || 1
+  const amount = Math.max(0, Math.min(1, (value - low) / range))
+  const hue = 265 - amount * 205
+  const lightness = 34 + amount * 18
+  return `hsl(${hue} 65% ${lightness}%)`
+}
+
+export function defectColor(typeId: string): string {
+  const colors = ["#d76855", "#e3a33a", "#5a8f88", "#6978b8", "#9270aa", "#c4779a"]
+  let hash = 0
+  for (const character of typeId) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0
+  }
+  return colors[hash % colors.length]
+}

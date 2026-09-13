@@ -119,6 +119,93 @@ export const waferMapDataSchema = z.object({
   dies: z.array(waferMapDieSchema),
   bounds: waferMapBoundsSchema,
 })
+export const waferMapStatusSchema = z.enum(["pending", "ready", "unavailable"])
+export const waferMapCoordinateSystemSchema = z.enum([
+  "CP_DIE_GRID_V1",
+  "DEFECT_INDEX_V1",
+])
+export const waferMapGeometrySchema = z.object({
+  coordinateSystem: waferMapCoordinateSystemSchema,
+  dies: z.array(waferMapDieSchema),
+  bounds: waferMapBoundsSchema,
+})
+export const waferMapFinalBinDieSchema = waferMapDieSchema.extend({
+  finalBin: z.string(),
+  pass: z.boolean(),
+})
+export const waferMapParameterDieSchema = waferMapFinalBinDieSchema.extend({
+  value: z.number().finite().nullable(),
+  status: z.enum(["VALID", "MISSING", "NON_FINITE", "FAIL_SATURATION"]),
+  clipped: z.enum(["low", "high"]).optional(),
+})
+export const waferMapDefectSchema = z.object({
+  id: z.string(),
+  layerId: z.string(),
+  typeId: z.string(),
+  typeLabel: z.string(),
+})
+export const waferMapDefectDieSchema = waferMapDieSchema.extend({
+  defects: z.array(waferMapDefectSchema),
+})
+export const waferMapSummarySchema = z.object({
+  pass: z.number().int().nonnegative(),
+  fail: z.number().int().nonnegative(),
+})
+export const waferMapFinalBinWaferSchema = z.object({
+  waferId: z.string(),
+  geometry: waferMapGeometrySchema,
+  dies: z.array(waferMapFinalBinDieSchema),
+  summary: waferMapSummarySchema,
+})
+export const waferMapParameterContextSchema = z.object({
+  parameterCode: z.string(),
+  label: z.string(),
+  unit: z.string().nullable().optional(),
+  scale: z.object({
+    domainMin: z.number().finite(),
+    median: z.number().finite(),
+    domainMax: z.number().finite(),
+  }),
+})
+export const waferMapParameterWaferSchema = z.object({
+  waferId: z.string(),
+  geometry: waferMapGeometrySchema,
+  dies: z.array(waferMapParameterDieSchema),
+  summary: waferMapSummarySchema,
+})
+export const waferMapDefectWaferSchema = z.object({
+  waferId: z.string(),
+  geometry: waferMapGeometrySchema,
+  dies: z.array(waferMapDefectDieSchema),
+  summary: waferMapSummarySchema,
+})
+export const waferMapFilterOptionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+})
+export const waferMapGalleryInputSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("cp-final-bin"),
+    status: waferMapStatusSchema,
+    wafers: z.array(waferMapFinalBinWaferSchema),
+    palette: z.record(z.string(), z.string()).optional(),
+  }),
+  z.object({
+    kind: z.literal("cp-parameter"),
+    status: waferMapStatusSchema,
+    parameter: waferMapParameterContextSchema,
+    wafers: z.array(waferMapParameterWaferSchema),
+  }),
+  z.object({
+    kind: z.literal("defect"),
+    status: waferMapStatusSchema,
+    layers: z.array(waferMapFilterOptionSchema),
+    selectedLayerId: z.string(),
+    defectTypes: z.array(waferMapFilterOptionSchema),
+    selectedDefectTypeIds: z.array(z.string()),
+    wafers: z.array(waferMapDefectWaferSchema),
+  }),
+])
 export const waferDefectSourceKindSchema = z.enum([
   "spc",
   "dms",
@@ -351,15 +438,16 @@ export const reportParameterMedianCellSchema = z.object({
   waferId: z.string(),
   value: z.number(),
   cpk: z.number().nullable().optional(),
-  oos: z.boolean().default(false),
-  lowYield: z.boolean().default(false),
+  oos: z.boolean().optional(),
+  lowYield: z.boolean().optional(),
+  failLinked: z.boolean().optional(),
   tone: reportToneSchema.default("neutral"),
 })
 export const reportParameterMedianRowSchema = z.object({
   parameter: z.string(),
-  unit: z.string(),
-  lsl: z.number(),
-  usl: z.number(),
+  unit: z.string().nullable().optional(),
+  lsl: z.number().nullable(),
+  usl: z.number().nullable(),
   specKind: z.string().optional(),
   oosCount: z.number().int().nonnegative().optional(),
   wafers: z.array(reportParameterMedianCellSchema),
@@ -476,6 +564,21 @@ export type WaferCapabilityParameter = z.infer<
 >
 export type WaferInput = z.infer<typeof waferInputSchema>
 export type WaferMapInput = z.infer<typeof waferMapDataSchema>
+export type WaferMapStatus = z.infer<typeof waferMapStatusSchema>
+export type WaferMapGeometryInput = z.infer<typeof waferMapGeometrySchema>
+export type WaferMapFinalBinWaferInput = z.infer<
+  typeof waferMapFinalBinWaferSchema
+>
+export type WaferMapParameterContext = z.infer<
+  typeof waferMapParameterContextSchema
+>
+export type WaferMapParameterWaferInput = z.infer<
+  typeof waferMapParameterWaferSchema
+>
+export type WaferMapDefectWaferInput = z.infer<
+  typeof waferMapDefectWaferSchema
+>
+export type WaferMapGalleryInput = z.infer<typeof waferMapGalleryInputSchema>
 export type WaferDefectSourceKind = z.infer<typeof waferDefectSourceKindSchema>
 export type WaferDefectEvidence = z.infer<typeof waferDefectEvidenceSchema>
 export type WaferDefectPoint = z.infer<typeof waferDefectPointSchema>
