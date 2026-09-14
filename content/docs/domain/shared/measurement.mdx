@@ -1,6 +1,6 @@
 ---
 title: measurement
-description: CP Data 与 Inline Data 共享的 Measurement 占位组件。
+description: CP Data 与 Inline Data 共享的全量 die measurement 分布组件。
 ---
 
 import { Measurement } from "@/components/domain/measurement"
@@ -14,7 +14,9 @@ import { measurementScenarios } from "@/components/domain/measurement.scenarios"
 
 ## Contract
 
-`Measurement` 是共享测量分布组件的占位边界。当前只固定 grouped measurement 的视觉模型，不实现最终交互。
+`Measurement` 是渲染边界：Canvas 分层绘制全量 die 点云、箱体统计量、规格线、整列选择与单 die 检视浮层。它不请求数据，也不解释 CP/Inline 的业务工作流。
+
+5173 report application is a read-only data upstream. The consuming app owns an adapter from its upstream DTO to this schema; this package neither imports nor modifies that application.
 
 ## Shadcn Components
 
@@ -25,16 +27,36 @@ import { measurementScenarios } from "@/components/domain/measurement.scenarios"
 
 ```ts
 export const measurementInputSchema = z.object({
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  sourceLabel: z.string().optional(),
-  yAxisLabel: z.string().optional(),
-  groups: z.array(measurementGroupSchema).optional(),
-  referenceLines: z.array(measurementReferenceLineSchema).optional(),
+  status: z.enum(["ready", "pending", "unavailable"]),
+  metric: z.object({ id: z.string(), label: z.string(), unit: z.string().nullable().optional() }),
+  groups: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    comparison: z.object({
+      cohortId: z.string(),
+      role: z.enum(["baseline", "variant"]),
+    }).optional(),
+    summary: measurementSummarySchema,
+    points: z.array(measurementPointSchema),
+  })),
+  referenceLines: z.array(measurementReferenceLineSchema).default([]),
 })
 ```
+
+Every group supplies its complete physical point cloud. `summary.count` must equal `points.length`; the component does not sample points. Keep Oracle/CP DTO details behind an application-owned adapter.
+
+`comparison` is rendering metadata from that adapter: every group that should highlight together shares a `cohortId`; exactly one group in a cohort should use `role: "baseline"`, with the others using `"variant"`.
+
+## Interaction contract
+
+- `onGroupSelect(groupId)` reports a whole wafer-column click without changing its visual state.
+- Hovering a group with `comparison` facts highlights its whole cohort: `comparison.role: "baseline"` in blue and `"variant"` in teal.
+- Hovering a die shows the die facts plus its group context and capability facts.
 
 ## Scenarios
 
 - `normal`
+- `compact`
 - `empty`
+- `pending`
+- `unavailable`

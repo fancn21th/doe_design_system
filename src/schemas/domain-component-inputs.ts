@@ -275,30 +275,87 @@ export const reportListItemSchema = z.object({
   detail: z.string().optional(),
   tone: reportToneSchema.default("neutral"),
 })
-export const measurementReferenceLineSchema = z.object({
-  label: z.string(),
-  value: z.number(),
-  tone: reportToneSchema.default("neutral"),
+export const measurementPointStatusSchema = z.enum([
+  "PHYSICAL_VALID",
+  "FAIL_SATURATION",
+  "MISSING",
+  "UNKNOWN",
+])
+export const measurementPointSchema = z.object({
+  id: z.string(),
+  x: z.number().finite(),
+  y: z.number().finite(),
+  value: z.number().finite(),
+  sourceStatus: measurementPointStatusSchema.default("PHYSICAL_VALID"),
+  finalBin: z.string().nullable().optional(),
+  result: z.enum(["PASS", "FAIL", "UNKNOWN"]).optional(),
+})
+export const measurementSummarySchema = z.object({
+  count: z.number().int().nonnegative(),
+  min: z.number().finite().nullable(),
+  q1: z.number().finite().nullable(),
+  median: z.number().finite().nullable(),
+  q3: z.number().finite().nullable(),
+  max: z.number().finite().nullable(),
+  whiskerLow: z.number().finite().nullable(),
+  whiskerHigh: z.number().finite().nullable(),
+  mean: z.number().finite().nullable(),
+  sampleSigma: z.number().finite().nullable(),
 })
 export const measurementGroupSchema = z.object({
   id: z.string(),
   label: z.string(),
-  subtitle: z.string().optional(),
-  values: z.array(z.number()).default([]),
-  mean: z.number(),
-  median: z.number(),
-  low: z.number(),
-  high: z.number(),
-  n: z.number().int().nonnegative(),
-  tone: reportToneSchema.default("neutral"),
+  role: z.enum(["baseline", "experiment", "neutral"]).default("neutral"),
+  comparison: z.object({
+    /** Groups in the same cohort highlight together while any one of them is hovered. */
+    cohortId: z.string(),
+    role: z.enum(["baseline", "variant"]),
+  }).optional(),
+  context: z.object({
+    stage: z.string().nullable().optional(),
+    step: z.string().nullable().optional(),
+    sequence: z.string().nullable().optional(),
+    condition: z.string().nullable().optional(),
+  }).optional(),
+  capability: z.object({
+    cpk: z.number().finite().nullable(),
+    cpu: z.number().finite().nullable(),
+    cpl: z.number().finite().nullable(),
+  }).optional(),
+  summary: measurementSummarySchema,
+  points: z.array(measurementPointSchema),
+}).superRefine((group, context) => {
+  if (group.summary.count !== group.points.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Measurement summary.count must equal the full point-cloud length.",
+      path: ["summary", "count"],
+    })
+  }
+})
+export const measurementReferenceLineSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.number().finite(),
+  kind: z.enum(["formal-spec", "mock-spec", "target", "guide"]),
 })
 export const measurementInputSchema = z.object({
+  status: z.enum(["ready", "pending", "unavailable"]),
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
-  yAxisLabel: z.string().optional(),
-  groups: z.array(measurementGroupSchema).optional(),
-  referenceLines: z.array(measurementReferenceLineSchema).optional(),
+  metric: z.object({
+    id: z.string(),
+    label: z.string(),
+    unit: z.string().nullable().optional(),
+  }),
+  groups: z.array(measurementGroupSchema),
+  referenceLines: z.array(measurementReferenceLineSchema).default([]),
+  scale: z.object({
+    mode: z.enum(["data-and-references", "fixed"]).default("data-and-references"),
+    min: z.number().finite().optional(),
+    max: z.number().finite().optional(),
+  }).optional(),
 })
 export const reportOverviewInputSchema = z.object({
   title: z.string().optional(),
@@ -590,6 +647,8 @@ export type ReportListItem = z.infer<typeof reportListItemSchema>
 export type MeasurementReferenceLine = z.infer<
   typeof measurementReferenceLineSchema
 >
+export type MeasurementPoint = z.infer<typeof measurementPointSchema>
+export type MeasurementSummary = z.infer<typeof measurementSummarySchema>
 export type MeasurementGroup = z.infer<typeof measurementGroupSchema>
 export type MeasurementInput = z.infer<typeof measurementInputSchema>
 export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>

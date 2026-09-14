@@ -944,7 +944,7 @@ export const reportCpDataFixture: ReportCpDataInput = {
   measurement: {
     ...measurementFixture,
     title: "Die Measurement Distribution",
-    subtitle: "Measurement placeholder composed by Report CP Data.",
+    subtitle: "Measurement distribution composed by Report CP Data.",
     sourceLabel: "MEASUREMENT",
   },
 }
@@ -963,21 +963,15 @@ export const reportInlineDataFixture: ReportInlineDataInput = {
   measurement: {
     ...measurementFixture,
     title: "Wafer x Inline Parameter",
-    subtitle: "Measurement placeholder composed by Report Inline Data.",
+    subtitle: "Measurement distribution composed by Report Inline Data.",
     sourceLabel: "MEASUREMENT",
-    yAxisLabel: "Inline Parameter Value",
     referenceLines: [
-      { label: "USL", value: 0.9, tone: "watch" },
-      { label: "Target", value: 0.8, tone: "neutral" },
-      { label: "LSL", value: 0.6, tone: "watch" },
+      { id: "inline-usl", label: "USL", value: 127.67, kind: "formal-spec" },
+      { id: "inline-target", label: "Target", value: 95, kind: "target" },
+      { id: "inline-lsl", label: "LSL", value: 52.41, kind: "formal-spec" },
     ],
-    groups: (measurementFixture.groups ?? []).slice(0, 5).map((group, index) => ({
+    groups: measurementFixture.groups.slice(0, 5).map((group, index) => ({
       ...group,
-      values: group.values.map((value) => value / 100),
-      mean: group.mean / 100,
-      median: group.median / 100,
-      low: group.low / 100,
-      high: group.high / 100,
       label: ["W01", "W02", "W11", "W18", "W24"][index] ?? group.label,
     })),
   },

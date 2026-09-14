@@ -63,6 +63,12 @@ Out of scope during intake:
   contract.
 - No wafer map, die geometry, or spatial rendering behavior.
 
+## Confirmed Upstream Boundary
+
+`/Users/fantianze/Vibe/g-working/g-doe/doe-copilot-hackathon` (the 5173 report application) is a read-only data upstream for this component. This repository must not modify that application's code or bind `Measurement` directly to its API DTOs.
+
+The consuming application owns an adapter from upstream CP or Inline responses into the independent `Measurement` UI-facing schema. If the upstream must expose richer plot metadata (for example die coordinates, final bin, status, or per-wafer capability facts), that change belongs to the upstream owner and is not implemented here.
+
 ## Shared Usage Constraint
 
 ```text
