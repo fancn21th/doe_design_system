@@ -3,13 +3,13 @@ title: layout-shell
 description: 可供下游组合侧栏、页头与业务内容的应用布局壳。
 ---
 
-import { LayoutShellDashboardPreview } from "@/components/domain/layout-shell.preview"
+import { LayoutShellDoePreview } from "@/components/domain/layout-shell.preview"
 
 ## 预览 / Preview
 
 <div className="not-prose overflow-hidden rounded-xl border">
   <div className="pointer-events-none origin-top-left scale-[0.72]" style={{ width: "138.89%", height: "34rem" }}>
-    <LayoutShellDashboardPreview />
+    <LayoutShellDoePreview />
   </div>
 </div>
 
@@ -21,4 +21,4 @@ import { LayoutShellDashboardPreview } from "@/components/domain/layout-shell.pr
 
 使用组合式 API，把 `Sidebar` 和 `Main` 放在根组件下；在 `Main` 内依次组合 `Header` 与 `Content`。需要由应用统一控制侧栏时，传入 `open` 与 `onOpenChange`；否则使用 `defaultOpen`。
 
-Dashboard 内容仅是 fixture，用来验证布局能还原上游 `dashboard-01` 的视觉与行为，不属于 `LayoutShell` 的公开业务合同。
+预览固定包含 DOE Sidebar，并以 `sidebar-01` 的右侧 Skeleton 占位验证布局关系。Sidebar 不再作为独立 shared component 暴露。

@@ -27,7 +27,7 @@ description: 面向 AI 的 DOE Domain UI 编码与文案规则。
 ## Rules
 
 1. 领域组件必须来自 `docs/upstream/components` 中确认过的业务切分；不要恢复旧的 `DataState`、`RoundContext` 或页面级组件。
-2. 组件命名取上游路径最后一级或 report tab slug：`experiment`、`lot`、`steps`、`runcard`、`wafer`、`wafer-map`、`wafer-defect`、`runcard-history`、`history`、`report-*`。
+2. 组件命名取上游路径最后一级或 report tab slug：`experiment`、`lot`、`steps`、`runcard`、`layout-shell`、`wafer`、`wafer-map`、`wafer-defect`、`runcard-history`、`report-*`。
 3. 领域组件放在 `src/components/domain`；只通过稳定公共 API export。
 4. 领域组件文档放在 `content/docs/domain/<category>`，例如 `trial`、`shared`、`report`。
 5. 基础 UI 文档放在 `content/docs/ui`，暂时只做一级导航迁移，不新增维护范围。
@@ -42,7 +42,7 @@ description: 面向 AI 的 DOE Domain UI 编码与文案规则。
 14. 当 shadcn primitive 表现为业务卡片、tab、tile、证据图触发器、宽表或图表面板时，先读 `docs/practices/domain-ui-sizing.md`；使用语义 DOE token 和 utility 覆盖 slot 尺寸，不要写随机局部尺寸。
 15. 领域组件不能直接调用 `fetch`、App Service、Gateway、Oracle/MES API 或任何真实提交函数。
 16. `RunCard` 可以暴露 `onConfirm`、`onCancel`、`onChange` 等回调，但不能在内部执行 MES 下发。
-17. `History` 可以本地过滤和选中实验，但不能决定应用路由。
+17. `LayoutShell` 可以本地过滤和选中试验，但不能决定应用路由。
 18. 过滤控件的归属必须在组件合同里明确：纯本地展示筛选可以在组件内；会改变注入数据、跨 tab 联动或触发查询的过滤属于外部业务状态。
 19. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
 20. Planned Condition 不能展示成 Actual Condition。

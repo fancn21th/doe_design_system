@@ -600,7 +600,6 @@ export const layoutSidebarShellInputSchema = z.object({
   breadcrumbs: z.array(layoutSidebarShellBreadcrumbSchema).optional(),
   topLinks: z.array(layoutShellNavItemSchema).optional(),
 })
-export const historyInputSchema = z.object({})
 
 export type ExperimentInput = z.infer<typeof experimentInputSchema>
 export type LotInput = z.infer<typeof lotInputSchema>
@@ -699,4 +698,3 @@ export type LayoutSidebarShellInput = z.infer<
   typeof layoutSidebarShellInputSchema
 >
 export type RunCardHistoryInput = z.infer<typeof runCardHistoryInputSchema>
-export type HistoryInput = z.infer<typeof historyInputSchema>

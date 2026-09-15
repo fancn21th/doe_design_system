@@ -22,10 +22,9 @@ const trialComponentPages = new Set([
   "wafer",
   "wafer-defect",
   "runcard-history",
-  "history",
 ])
 
-const sharedComponentPages = new Set(["wafer-map"])
+const sharedComponentPages = new Set(["sidebar", "wafer-map"])
 
 const knowledgePages = new Set([
   "business-loop",

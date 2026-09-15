@@ -42,10 +42,3 @@ export const defectWafersFixture = [
   ["W24", "7 defects"],
   ["W25", "9 defects"],
 ]
-
-export const historyFixture = [
-  ["刻蚀功率窗口确认试验", "AF01112", "进行中"],
-  ["清洗时间参数优化试验", "AF01113", "已暂停"],
-  ["光刻胶厚度基线试验", "AF01098", "已完成"],
-  ["离子注入剂量探索试验", "AF01076", "已终止"],
-]

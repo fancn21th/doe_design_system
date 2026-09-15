@@ -7,7 +7,6 @@
     "runcard",
     "wafer",
     "wafer-defect",
-    "runcard-history",
-    "history"
+    "runcard-history"
   ]
 }

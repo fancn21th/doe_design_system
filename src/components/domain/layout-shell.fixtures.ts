@@ -23,3 +23,14 @@ export const layoutShellCollapsedFixture: LayoutShellInput = {
   ...layoutShellFixture,
   collapsed: true,
 }
+
+export const layoutShellSidebarFixture = {
+  title: "DOE试验设计",
+  searchPlaceholder: "搜索试验名称或Lot ID",
+  trials: [
+    { id: "AF01112", name: "刻蚀功率窗口确认试验", lotId: "AF01112", status: "进行中", active: true },
+    { id: "AF01113", name: "清洗时间参数优化试验", lotId: "AF01113", status: "已暂停", active: false },
+    { id: "AF01098", name: "光刻胶厚度基线试验", lotId: "AF01098", status: "已完成", active: false },
+    { id: "AF01076", name: "离子注入剂量探索试验", lotId: "AF01076", status: "已终止", active: false },
+  ],
+} as const
