@@ -34,3 +34,19 @@ export const layoutShellSidebarFixture = {
     { id: "AF01076", name: "离子注入剂量探索试验", lotId: "AF01076", status: "已终止", active: false },
   ],
 } as const
+
+export const layoutShellReportFixture = {
+  trialName: "刻蚀功率窗口确认试验",
+  reportName: "实验报告",
+  lastSyncedAt: "10:42:15",
+  tabs: [
+    { id: "overview", label: "Overview" },
+    { id: "split-table", label: "Split Table" },
+    { id: "yield-analysis", label: "Yield Analysis" },
+    { id: "wafer-map", label: "Wafer Map" },
+    { id: "parameter-median", label: "Parameter Median" },
+    { id: "cp-data", label: "CP Data" },
+    { id: "inline-data", label: "Inline Data" },
+    { id: "cp-inline", label: "CP × Inline" },
+  ],
+} as const
