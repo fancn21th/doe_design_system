@@ -531,6 +531,25 @@ export const reportCpDataInputSchema = z.object({
   parameterOptions: z.array(z.string()).optional(),
   measurement: measurementInputSchema.optional(),
 })
+export const reportBoxCpkInputSchema = z.object({
+  status: z.enum(["ready", "pending", "unavailable"]).default("ready"),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  sourceLabel: z.string().optional(),
+  selectedParameterId: z.string(),
+  unit: z.string().nullable().optional(),
+  baseline: z.object({
+    coverageLabel: z.string().optional(),
+    mean: z.number().finite().nullable(),
+    sampleSigma: z.number().finite().nullable(),
+    cpk: z.number().finite().nullable(),
+    mockSpecLabel: z.string().nullable().optional(),
+  }),
+  measurement: measurementInputSchema.optional(),
+  abnormalities: z.array(z.object({ waferId: z.string(), status: z.string(), reasons: z.array(z.string()).default([]) })).default([]),
+  yieldImpacts: z.array(z.object({ waferId: z.string(), impactType: z.string(), limitation: z.string().nullable().optional() })).default([]),
+  narrative: z.object({ text: z.string().nullable(), limitation: z.string().nullable().optional() }).optional(),
+})
 export const reportInlineDataInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
@@ -683,6 +702,7 @@ export type ReportParameterMedianInput = z.infer<
   typeof reportParameterMedianInputSchema
 >
 export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
+export type ReportBoxCpkInput = z.infer<typeof reportBoxCpkInputSchema>
 export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
 export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
 export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
