@@ -950,6 +950,7 @@ export const reportCpDataFixture: ReportCpDataInput = {
 }
 
 export const reportInlineDataFixture: ReportInlineDataInput = {
+  status: "partial",
   title: "Inline Data",
   subtitle: "Parent report tab that adapts inline/SPC data into Measurement.",
   sourceLabel: "INLINE REPORT",
@@ -960,6 +961,12 @@ export const reportInlineDataFixture: ReportInlineDataInput = {
     "AMC-SN080724-PICM-OX-GOF-69",
     "AMC-SN080724-FOX-DEF-BOW-43",
   ],
+  summary: { parameterCount: 4, sampleRowCount: 5, rawRowCount: 65, cpkEvaluableCount: 5, limitation: "CPK · SOURCE PROVISIONAL · STEP MAPPING UNAVAILABLE" },
+  coverage: ["W01", "W02", "W11", "W18", "W24"].map((waferId) => ({ waferId, measured: true })),
+  matrix: [
+    { parameterId: "AMC-SN080724-HDP-NCMP-GOF-69", coverageLabel: "5/5 wafers", cells: ["W01", "W02", "W11", "W18", "W24"].map((waferId, index) => ({ waferId, median: 0.9916 + index / 10000, sampleSize: 13, cpk: 8.19 + index, status: "IN_SPEC" })) },
+  ],
+  rawDetail: { parameterId: "AMC-SN080724-HDP-NCMP-GOF-69", rawPointCount: 65, sampleIds: ["19295376", "19300659"], status: "partial", reason: "Raw coverage is retained from the immutable Snapshot." },
   measurement: {
     ...measurementFixture,
     title: "Wafer x Inline Parameter",

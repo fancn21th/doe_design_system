@@ -96,3 +96,11 @@ Code-observed interaction evidence:
 - Are LSL, target, and USL required for every inline parameter?
 - Should the parameter list support search, grouping, or virtualization?
 - How should this component coordinate selected parameters with CP x Inline?
+
+## Post-intake contract decision — 2026-09-15
+
+The component owns the presentation of parameter/wafer selection intents,
+coverage, matrix rows, raw-detail status and explicit source-provisional
+limitations. It still composes shared `Measurement` for the distribution; it
+does not calculate Cpk or infer a DOE Step from Inline data. Snapshot selection,
+lazy detail requests and retry remain DOE App workflow responsibilities.

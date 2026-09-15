@@ -14,7 +14,9 @@ import { reportInlineDataScenarios } from "@/components/domain/report-inline-dat
 
 ## Contract
 
-`ReportInlineData` 只负责 Inline Data report tab 的外层组合。测量分布图必须组合 shared `Measurement`，当前不实现 Measurement 内部交互。
+`ReportInlineData` 负责 Inline Data report tab 的展示组合：参数选择意图、共享
+`Measurement`、wafer coverage、matrix、raw-detail 状态和 source-provisional 限制。
+它通过 callback 暴露参数/wafer 选择；请求、Snapshot 切换和重试属于 DOE App。
 
 ## Scenarios
 

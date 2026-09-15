@@ -531,32 +531,34 @@ export const reportCpDataInputSchema = z.object({
   parameterOptions: z.array(z.string()).optional(),
   measurement: measurementInputSchema.optional(),
 })
-export const reportBoxCpkInputSchema = z.object({
-  status: z.enum(["ready", "pending", "unavailable"]).default("ready"),
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  sourceLabel: z.string().optional(),
-  selectedParameterId: z.string(),
-  unit: z.string().nullable().optional(),
-  baseline: z.object({
-    coverageLabel: z.string().optional(),
-    mean: z.number().finite().nullable(),
-    sampleSigma: z.number().finite().nullable(),
-    cpk: z.number().finite().nullable(),
-    mockSpecLabel: z.string().nullable().optional(),
-  }),
-  measurement: measurementInputSchema.optional(),
-  abnormalities: z.array(z.object({ waferId: z.string(), status: z.string(), reasons: z.array(z.string()).default([]) })).default([]),
-  yieldImpacts: z.array(z.object({ waferId: z.string(), impactType: z.string(), limitation: z.string().nullable().optional() })).default([]),
-  narrative: z.object({ text: z.string().nullable(), limitation: z.string().nullable().optional() }).optional(),
-})
 export const reportInlineDataInputSchema = z.object({
+  status: z.enum(["ready", "partial", "no-data", "unavailable"]).default("ready"),
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
   selectedParameterId: z.string().optional(),
   parameterOptions: z.array(z.string()).optional(),
   measurement: measurementInputSchema.optional(),
+  summary: z.object({
+    parameterCount: z.number().int().nonnegative().optional(),
+    sampleRowCount: z.number().int().nonnegative().optional(),
+    rawRowCount: z.number().int().nonnegative().optional(),
+    cpkEvaluableCount: z.number().int().nonnegative().optional(),
+    limitation: z.string().nullable().optional(),
+  }).optional(),
+  coverage: z.array(z.object({ waferId: z.string(), measured: z.boolean() })).default([]),
+  matrix: z.array(z.object({
+    parameterId: z.string(),
+    coverageLabel: z.string().optional(),
+    cells: z.array(z.object({ waferId: z.string(), median: z.number().finite().nullable(), sampleSize: z.number().int().nonnegative().nullable(), cpk: z.number().finite().nullable(), status: z.string().nullable().optional() })).default([]),
+  })).default([]),
+  rawDetail: z.object({
+    parameterId: z.string(),
+    rawPointCount: z.number().int().nonnegative(),
+    sampleIds: z.array(z.string()).default([]),
+    status: z.enum(["ready", "partial", "unavailable"]),
+    reason: z.string().nullable().optional(),
+  }).optional(),
 })
 export const reportCpInlineRowSchema = z.object({
   stage: z.string(),
@@ -702,7 +704,6 @@ export type ReportParameterMedianInput = z.infer<
   typeof reportParameterMedianInputSchema
 >
 export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
-export type ReportBoxCpkInput = z.infer<typeof reportBoxCpkInputSchema>
 export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
 export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
 export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
