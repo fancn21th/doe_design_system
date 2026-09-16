@@ -375,6 +375,15 @@ export const reportOverviewInputSchema = z.object({
   failGroups: z.array(reportListItemSchema).optional(),
   lowYieldWafers: z.array(reportListItemSchema).optional(),
   parameterAlerts: z.array(reportListItemSchema).optional(),
+  anomalyRows: z.array(z.object({
+    splitGroup: z.string(),
+    variant: z.string().optional(),
+    waferId: z.string(),
+    yield: z.number().finite(),
+    baselineDelta: z.string().optional(),
+    cpSummary: z.string().optional(),
+    tone: reportToneSchema.default("neutral"),
+  })).optional(),
 })
 export const reportSplitTableRowSchema = z.object({
   waferId: z.string(),

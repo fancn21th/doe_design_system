@@ -49,6 +49,11 @@ export const reportOverviewFixture: ReportOverviewInput = {
     { label: "BVDSS", value: "LSL hit", detail: "source provisional", tone: "watch" },
     { label: "IDSS", value: "watch", detail: "distribution changed", tone: "watch" },
   ],
+  anomalyRows: [
+    { splitGroup: "TR CD", variant: "0.83um", waferId: "W03", yield: 7.78, cpSummary: "VGSTX1 · 3,769 dies", tone: "bad" },
+    { splitGroup: "LOX", variant: "4200A", waferId: "W10", yield: 62.43, cpSummary: "VGSTX1 · 1,005 dies", tone: "bad" },
+    { splitGroup: "SG1 ET Depth", variant: "1.08um", waferId: "W12", yield: 85.12, cpSummary: "Default · 610 dies", tone: "watch" },
+  ],
 }
 
 export const reportSplitTableFixture: ReportSplitTableInput = {

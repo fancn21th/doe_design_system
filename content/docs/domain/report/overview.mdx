@@ -14,7 +14,13 @@ import { reportOverviewScenarios } from "@/components/domain/report-overview.sce
 
 ## Contract
 
-`ReportOverview` 展示 report round 的摘要、KPI、低良率、主要失效和参数异常入口。
+`ReportOverview` 展示 report round 的摘要、KPI、异常晶圆明细、低良率、主要失效和参数异常入口。
+
+## Layout roles
+
+- 实验概览 KPI 整组使用 Layout Shell 的渐变指标卡，方便横向比较且可作为未来 Masonry 的独立单元；同组内不混用渐变与普通卡。
+- 分析和摘要使用宽内容卡，承载具有上下文的业务信息。
+- 明细表保持为直接的圆角表格面，不再嵌入第二层卡片，以保留多列内容的有效宽度。
 
 ## Scenarios
 
