@@ -5,5 +5,6 @@ type ReportYieldAnalysisScenario = { name: string; input: ReportYieldAnalysisInp
 
 export const reportYieldAnalysisScenarios = {
   normal: { name: "normal", input: reportYieldAnalysisFixture },
+  dense: { name: "dense", input: reportYieldAnalysisFixture },
   empty: { name: "empty", input: { wafers: [] } },
 } satisfies Record<string, ReportYieldAnalysisScenario>

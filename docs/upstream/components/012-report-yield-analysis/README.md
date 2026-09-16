@@ -94,3 +94,6 @@ Out of scope during intake:
   only emits filter callback intents.
 - Cross-tab wafer coordination remains an external callback intent; the
   component does not navigate to Wafer Map or CP Data by itself.
+- Snapshot-specific long wafer ids render as compact `W##` ranking-axis labels
+  to preserve the prototype density; the full id stays in the bar tooltip and
+  callback payload.

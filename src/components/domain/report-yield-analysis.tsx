@@ -114,6 +114,11 @@ function formatCount(value: number) {
   return value.toLocaleString()
 }
 
+function compactWaferLabel(waferId: string) {
+  const snapshotSuffix = waferId.match(/_(\d{1,3})$/)?.[1]
+  return snapshotSuffix ? `W${snapshotSuffix.padStart(2, "0")}` : waferId
+}
+
 function useDisplayFilterValues(
   values: string[] | undefined,
   options: ComboboxOption[],
@@ -240,6 +245,10 @@ function WaferYieldRanking({
         domain: sortedWafers.map((wafer) => wafer.waferId),
         label: null,
         tickSize: 0,
+        // Snapshot ids are deliberately kept in bar tooltips and callbacks.
+        // The axis uses the prototype's compact wafer label so dense rankings
+        // remain legible without document-level overflow.
+        tickFormat: (waferId) => compactWaferLabel(String(waferId)),
       },
       y: {
         label: "Yield (%)",
@@ -348,7 +357,7 @@ function MatrixTable({
   }
 
   return (
-    <div className="overflow-auto rounded-lg border">
+    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
       <Table className="min-w-[180rem]">
         <TableHeader>
           <TableRow>
@@ -416,7 +425,7 @@ function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
   if (rows.length === 0) return <EmptyState>暂无 Loss Yield 数据</EmptyState>
 
   return (
-    <div className="overflow-auto rounded-lg border">
+    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
       <Table className="min-w-[48rem]">
         <TableHeader>
           <TableRow>
@@ -465,7 +474,7 @@ function ConditionYieldTable({
   }
 
   return (
-    <div className="overflow-auto rounded-lg border">
+    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
       <Table className="min-w-[78rem]">
         <TableHeader>
           <TableRow>
@@ -638,7 +647,7 @@ export function ReportYieldAnalysis({
             <Tabs
               value={selectedDetailMode}
               onValueChange={handleDetailModeChange}
-              className="gap-3"
+              className="min-w-0 max-w-full gap-3"
             >
               <TabsList className="flex-wrap">
                 {detailModeOptions.map((option) => (
@@ -652,17 +661,17 @@ export function ReportYieldAnalysis({
                   </TabsTrigger>
                 ))}
               </TabsList>
-              <TabsContent value="wafer-cp-matrix">
+              <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
                 <MatrixTable
                   rows={matrixRows}
                   matrixColumns={matrixColumns}
                   thresholds={thresholds}
                 />
               </TabsContent>
-              <TabsContent value="loss-yield">
+              <TabsContent value="loss-yield" className="min-w-0 max-w-full">
                 <LossYieldTable rows={lossYieldRows} />
               </TabsContent>
-              <TabsContent value="condition-yield-comparison">
+              <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
                 <ConditionYieldTable rows={conditionYieldRows} />
               </TabsContent>
             </Tabs>
