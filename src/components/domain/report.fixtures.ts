@@ -949,27 +949,63 @@ export const reportCpDataFixture: ReportCpDataInput = {
   },
 }
 
+const inlineMatrixWaferIds = Array.from({ length: 25 }, (_, index) =>
+  `W${String(index + 1).padStart(2, "0")}`
+)
+
+const inlineMatrixParameterIds = [
+  "AMC-SN080T24-HDP-NCMP-GOF-69",
+  "AMC-SN080T24-HDP-NCMP-THK-69",
+  "AMC-SN080T24-P1CMP-OX-GOF-69",
+  "AMC-SN080T24-P1CMP-OX-THK-69",
+  "AMC-SN080T24-P2CMP-OX-GOF-69",
+  "AMC-SN080T24-P2CMP-OX-THK-69",
+  "AMC-SN080T24-SICMP-OX-GOF-69",
+  "AMC-SN080T24-SICMP-OX-THK-69",
+]
+
+function inlineMatrixCells(parameterIndex: number) {
+  const measuredIndexes = parameterIndex === 0
+    ? [0, 8]
+    : Array.from({ length: Math.min(parameterIndex + 2, 8) }, (_, index) => index)
+
+  return inlineMatrixWaferIds.map((waferId, waferIndex) => {
+    if (!measuredIndexes.includes(waferIndex)) {
+      return { waferId, median: null, sampleSize: null, cpk: null, status: "MISSING" }
+    }
+
+    const isThickness = parameterIndex % 2 === 1
+    return {
+      waferId,
+      median: isThickness
+        ? 5867.2 - parameterIndex * 284.1 + waferIndex * 39.8
+        : 0.992 + parameterIndex / 1000 + waferIndex / 10000,
+      sampleSize: 13,
+      cpk: Number((8.19 + parameterIndex * 2.31 + waferIndex * 1.27).toFixed(2)),
+      status: "IN_SPEC",
+    }
+  })
+}
+
 export const reportInlineDataFixture: ReportInlineDataInput = {
   status: "partial",
+  defaultViewMode: "distribution",
   title: "Inline Data",
   subtitle: "Parent report tab that adapts inline/SPC data into Measurement.",
   sourceLabel: "INLINE REPORT",
-  selectedParameterId: "AMC-SN080724-HDP-NCMP-GOF-69",
-  parameterOptions: [
-    "AMC-SN080724-HDP-NCMP-GOF-69",
-    "AMC-SN080724-HDP-NCMP-TNK-69",
-    "AMC-SN080724-PICM-OX-GOF-69",
-    "AMC-SN080724-FOX-DEF-BOW-43",
-  ],
-  summary: { parameterCount: 4, sampleRowCount: 5, rawRowCount: 65, cpkEvaluableCount: 5, limitation: "CPK · SOURCE PROVISIONAL · STEP MAPPING UNAVAILABLE" },
-  coverage: ["W01", "W02", "W11", "W18", "W24"].map((waferId) => ({ waferId, measured: true })),
-  matrix: [
-    { parameterId: "AMC-SN080724-HDP-NCMP-GOF-69", coverageLabel: "5/5 wafers", cells: ["W01", "W02", "W11", "W18", "W24"].map((waferId, index) => ({ waferId, median: 0.9916 + index / 10000, sampleSize: 13, cpk: 8.19 + index, status: "IN_SPEC" })) },
-  ],
-  rawDetail: { parameterId: "AMC-SN080724-HDP-NCMP-GOF-69", rawPointCount: 65, sampleIds: ["19295376", "19300659"], status: "partial", reason: "Raw coverage is retained from the immutable Snapshot." },
+  selectedParameterId: inlineMatrixParameterIds[0],
+  parameterOptions: inlineMatrixParameterIds,
+  summary: { parameterCount: 86, sampleRowCount: 65, rawRowCount: 65, cpkEvaluableCount: 13, limitation: "CPK · SOURCE PROVISIONAL · STEP MAPPING UNAVAILABLE" },
+  coverage: inlineMatrixWaferIds.map((waferId, index) => ({ waferId, measured: index < 8 || index === 8 })),
+  matrix: inlineMatrixParameterIds.map((parameterId, index) => ({
+    parameterId,
+    coverageLabel: "SOURCE PROVISIONAL",
+    cells: inlineMatrixCells(index),
+  })),
+  rawDetail: { parameterId: inlineMatrixParameterIds[0], rawPointCount: 65, sampleIds: ["19295376", "19300659"], status: "partial", reason: "Raw coverage is retained from the immutable Snapshot." },
   measurement: {
     ...measurementFixture,
-    title: "Wafer x Inline Parameter",
+    title: "Wafer × Inline Parameter",
     subtitle: "Measurement distribution composed by Report Inline Data.",
     sourceLabel: "MEASUREMENT",
     referenceLines: [

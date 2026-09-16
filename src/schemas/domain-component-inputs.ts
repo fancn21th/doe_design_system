@@ -533,10 +533,12 @@ export const reportCpDataInputSchema = z.object({
 })
 export const reportInlineDataInputSchema = z.object({
   status: z.enum(["ready", "partial", "no-data", "unavailable"]).default("ready"),
+  defaultViewMode: z.enum(["distribution", "matrix"]).optional(),
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
   selectedParameterId: z.string().optional(),
+  selectedWaferId: z.string().optional(),
   parameterOptions: z.array(z.string()).optional(),
   measurement: measurementInputSchema.optional(),
   summary: z.object({
@@ -547,6 +549,8 @@ export const reportInlineDataInputSchema = z.object({
     limitation: z.string().nullable().optional(),
   }).optional(),
   coverage: z.array(z.object({ waferId: z.string(), measured: z.boolean() })).default([]),
+  stickyMatrixHeader: z.boolean().default(true).optional(),
+  stickyMatrixFirstColumn: z.boolean().default(true).optional(),
   matrix: z.array(z.object({
     parameterId: z.string(),
     coverageLabel: z.string().optional(),

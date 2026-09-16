@@ -58,6 +58,8 @@ Token 源头在 `src/app/globals.css`。
 | `--doe-related-component-gap` | `16px` | 主组件与关联结果组件之间的间距 |
 | `--doe-split-table-min-width` | `1776px` | Step x Wafer 宽表的最小可读宽度 |
 | `--doe-split-table-*-column` | varies | Stage、Step、Condition、Recipe、操作、Wafer 等语义列宽 |
+| `--doe-inline-matrix-min-width` | `1680px` | Inline Parameter × Wafer 矩阵的最小可读宽度 |
+| `--doe-inline-matrix-*-column` | varies | Inline 矩阵 parameter 与 wafer 的语义列宽 |
 | `--doe-release-modal-width` | `780px` | RunCard 下发弹窗宽度 |
 | `--doe-release-modal-max-height` | `760px / viewport-safe` | 下发弹窗最大高度 |
 | `--doe-release-tree-min-width` | `672px` | RunCard 树结构最小可读宽度 |
@@ -117,6 +119,8 @@ Step x Wafer 这类表格天然比普通应用容器更宽。页面不应该被�
 ```
 
 列宽由 `--doe-split-table-*-column` 系列 token 控制；组件可以用 `colgroup` 消费这些 token，避免在单元格上写一次性的宽度值。
+
+Inline Parameter × Wafer 矩阵同样把滚动限制在 `domain-ui-inline-matrix-shell` 内，并使用 `domain-ui-inline-matrix-*-column` 控制列宽。
 
 ## 业务表面尺寸
 

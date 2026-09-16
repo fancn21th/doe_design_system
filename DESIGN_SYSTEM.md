@@ -63,6 +63,8 @@ Current DOE workstation density:
 | `--doe-related-component-gap` | `16px` | Gap between a source component and its related result component |
 | `--doe-split-table-min-width` | `1776px` | Minimum readable width for Step x Wafer assignment tables |
 | `--doe-split-table-*-column` | varies | Semantic column widths for stage, step, condition, recipe, action, and wafer cells |
+| `--doe-inline-matrix-min-width` | `1680px` | Minimum readable width for Inline Parameter × Wafer matrix |
+| `--doe-inline-matrix-*-column` | varies | Semantic parameter and wafer column widths for Inline matrix |
 | `--doe-release-modal-width` | `780px` | RunCard release modal width |
 | `--doe-release-modal-max-height` | `760px / viewport-safe` | Release modal height cap |
 | `--doe-release-tree-min-width` | `672px` | Release tree readable minimum |
@@ -132,6 +134,10 @@ Column rhythm is controlled by:
 - `--doe-split-table-recipe-column`
 - `--doe-split-table-action-column`
 - `--doe-split-table-wafer-column`
+
+Inline Parameter × Wafer matrices follow the same local-scroll rule, using
+`domain-ui-inline-matrix-shell` and `domain-ui-inline-matrix`; their column
+widths are controlled by `--doe-inline-matrix-*-column`.
 
 ## Business Surface Sizing
 
