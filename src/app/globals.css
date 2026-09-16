@@ -355,8 +355,26 @@
   }
 
   .domain-ui-split-table {
+    table-layout: auto;
+  }
+
+  .domain-ui-split-table-authoritative {
     min-width: var(--doe-split-table-min-width);
-    table-layout: fixed;
+  }
+
+  .domain-ui-typography .domain-ui-split-table[data-slot="table"] {
+    font-size: 0.875rem;
+  }
+
+  .domain-ui-typography .domain-ui-split-table [data-slot="table-head"] {
+    height: 2.5rem;
+    padding: 0 0.5rem;
+    background: transparent;
+  }
+
+  .domain-ui-typography .domain-ui-split-table [data-slot="table-cell"] {
+    height: auto;
+    padding: 0.5rem;
   }
 
   .domain-ui-inline-matrix-shell {

@@ -270,8 +270,6 @@ export function ReportSplitTable({
   return (
     <ReportCard
       title={parsedInput.title ?? scenarioInput.title ?? "Wafer Split Table"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
       className={className}
     >
       {rows.length === 0 ? (
@@ -294,26 +292,15 @@ export function ReportSplitTable({
               onValueChange={setSelectedStepOptions}
             />
           </div>
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <ReportBadge tone="neutral">
-              Stage: {selectedStageOptions.length || "全部"}
-            </ReportBadge>
-            <ReportBadge tone="neutral">
-              Step: {selectedStepOptions.length || "全部"}
-            </ReportBadge>
-            <span>
-              Showing {filteredRows.length} / {rows.length} wafer split rows
-            </span>
-          </div>
           {filteredRows.length === 0 ? (
             <EmptyState>当前筛选条件下暂无 Wafer Split Table 数据</EmptyState>
           ) : (
-            <div className="overflow-hidden rounded-lg border">
-              <Table className="min-w-[68rem]">
+            <div className="domain-ui-split-table-shell">
+              <Table className="domain-ui-split-table">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-36 bg-muted/30">Stage</TableHead>
-                    <TableHead className="w-44 bg-muted/30">
+                    <TableHead className="w-36">Stage</TableHead>
+                    <TableHead className="w-44">
                       Step / Seq
                     </TableHead>
                     <TableHead>Wafer ID</TableHead>

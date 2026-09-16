@@ -103,3 +103,6 @@ Out of scope during intake:
   intent, but the component does not own the target workflow.
 - Yield severity follows the report convention used by current fixtures:
   `< 90%` bad, `90%-99.5%` watch, `>= 99.5%` good.
+- The table uses the Layout Shell comfortable base-Table presentation (14px
+  text, 40px transparent header, 8px cells). Wide report projections retain a
+  local horizontal scroll container rather than changing page width.

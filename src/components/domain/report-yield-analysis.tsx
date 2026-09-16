@@ -592,8 +592,6 @@ export function ReportYieldAnalysis({
   return (
     <ReportCard
       title={parsedInput.title ?? scenarioInput.title ?? "Yield Analysis"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
       className={className}
     >
       {wafers.length === 0 ? (
@@ -617,18 +615,6 @@ export function ReportYieldAnalysis({
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <ReportBadge tone="neutral">
-              Stage: {selectedStageOptions.length || "全部"}
-            </ReportBadge>
-            <ReportBadge tone="neutral">
-              Step: {selectedStepOptions.length || "全部"}
-            </ReportBadge>
-            <span>
-              Rendering {wafers.length} wafer rows from injected business data
-            </span>
-          </div>
-
           <WaferYieldRanking
             wafers={wafers}
             thresholds={thresholds}
@@ -637,12 +623,7 @@ export function ReportYieldAnalysis({
 
           <section className="grid gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold">Yield Detail Analysis</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Detail tables switch local presentation mode only.
-                </p>
-              </div>
+              <h3 className="text-sm font-semibold">Yield Detail Analysis</h3>
             </div>
             <Tabs
               value={selectedDetailMode}
