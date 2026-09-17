@@ -5,7 +5,6 @@ import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.sc
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
   reportToneClass,
 } from "@/components/domain/report-parts"
 import { cn } from "@/lib/utils"
@@ -28,12 +27,7 @@ export function ReportWaferMap({
   const wafers = parsedInput.wafers ?? scenarioInput.wafers ?? []
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "Wafer Map"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
-      className={className}
-    >
+    <div className={className}>
       {wafers.length === 0 ? (
         <EmptyState>暂无 Report Wafer Map 数据</EmptyState>
       ) : (
@@ -80,6 +74,6 @@ export function ReportWaferMap({
           </div>
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }

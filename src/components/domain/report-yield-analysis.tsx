@@ -12,7 +12,6 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
   formatPercent,
 } from "@/components/domain/report-parts"
 import {
@@ -590,10 +589,7 @@ export function ReportYieldAnalysis({
   }
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "Yield Analysis"}
-      className={className}
-    >
+    <div className={className}>
       {wafers.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
@@ -659,6 +655,6 @@ export function ReportYieldAnalysis({
           </section>
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }

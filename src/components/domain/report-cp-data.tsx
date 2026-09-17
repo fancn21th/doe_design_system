@@ -5,7 +5,6 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
 } from "@/components/domain/report-parts"
 import {
   reportCpDataInputSchema,
@@ -28,12 +27,7 @@ export function ReportCpData({
   const measurement = parsedInput.measurement ?? scenarioInput.measurement
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "CP Data"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
-      className={className}
-    >
+    <div className={className}>
       {parameterOptions.length === 0 || !measurement ? (
         <EmptyState>暂无 CP Data 数据</EmptyState>
       ) : (
@@ -47,6 +41,6 @@ export function ReportCpData({
           <Measurement input={measurement} />
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }

@@ -9,7 +9,10 @@ import { reportOverviewScenarios } from "@/components/domain/report-overview.sce
 ## 预览 / Preview
 
 <div className="domain-ui-preview-wide">
-  <ReportOverview input={reportOverviewScenarios.normal.input} />
+  <div className="not-prose overflow-hidden rounded-xl border">
+    <div className="border-b px-4 py-3 text-sm font-medium">Overview</div>
+    <ReportOverview input={reportOverviewScenarios.normal.input} />
+  </div>
 </div>
 
 ## Contract

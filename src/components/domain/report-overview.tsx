@@ -4,7 +4,6 @@ import { reportOverviewScenarios } from "@/components/domain/report-overview.sce
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
 } from "@/components/domain/report-parts"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -32,15 +31,11 @@ export function ReportOverview({
 }: ReportOverviewProps) {
   const scenarioInput = reportOverviewScenarios.normal.input
   const parsedInput = reportOverviewInputSchema.parse(input)
-  const title = parsedInput.title ?? scenarioInput.title ?? "Overview"
   const identity = parsedInput.identity ?? scenarioInput.identity
   const metrics = parsedInput.metrics ?? scenarioInput.metrics ?? []
 
   return (
-    <ReportCard
-      title={title}
-      className={className}
-    >
+    <div className={className}>
       {!identity && metrics.length === 0 ? (
         <EmptyState>暂无 Report Overview 数据</EmptyState>
       ) : (
@@ -97,7 +92,7 @@ export function ReportOverview({
           </div>
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }
 

@@ -9,7 +9,10 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 ## 预览 / Preview
 
 <div className="domain-ui-preview-wide">
-  <ReportYieldAnalysis input={reportYieldAnalysisScenarios.normal.input} />
+  <div className="not-prose overflow-hidden rounded-xl border">
+    <div className="border-b px-4 py-3 text-sm font-medium">Yield Analysis</div>
+    <ReportYieldAnalysis input={reportYieldAnalysisScenarios.normal.input} />
+  </div>
 </div>
 
 ## Contract

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { LayoutShell } from "@/components/domain/layout-shell"
+import { ReportWorkspaceLayout } from "@/components/domain/report-workspace-layout"
 import {
   layoutShellReportFixture,
   layoutShellSidebarFixture,
@@ -23,7 +24,6 @@ import { SectionCards } from "@/registry/new-york-v4/blocks/dashboard-01/compone
 import data from "@/registry/new-york-v4/blocks/dashboard-01/data.json"
 import { Button } from "@/registry/new-york-v4/ui/button"
 import { Input } from "@/registry/new-york-v4/ui/input"
-import { Separator } from "@/registry/new-york-v4/ui/separator"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -55,8 +55,9 @@ export function LayoutShellDoePreview() {
   )
 
   return (
-    <LayoutShell defaultOpen sidebarWidth="18rem">
-      <LayoutShell.Sidebar variant="inset">
+    <ReportWorkspaceLayout
+      sidebar={(
+        <LayoutShell.Sidebar variant="inset">
         <LayoutShell.SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -138,15 +139,10 @@ export function LayoutShellDoePreview() {
         </LayoutShell.SidebarContent>
         <LayoutShell.SidebarFooter />
         <SidebarRail />
-      </LayoutShell.Sidebar>
-      <LayoutShell.Main>
-        <LayoutShell.Header>
-          <LayoutShell.Trigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mx-2 data-[orientation=vertical]:h-4"
-          />
-          <nav aria-label="当前位置" className="min-w-0">
+        </LayoutShell.Sidebar>
+      )}
+      breadcrumbs={(
+        <nav aria-label="当前位置" className="min-w-0">
             <ol className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
               <li className="hidden truncate md:block">DOE试验设计</li>
               <li aria-hidden="true" className="hidden text-muted-foreground/60 md:block">
@@ -160,55 +156,55 @@ export function LayoutShellDoePreview() {
                 {layoutShellReportFixture.reportName}
               </li>
             </ol>
-          </nav>
-          <LayoutShell.HeaderActions>
-            <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-              <Share2 />
-              分享
-            </Button>
-            <Button size="sm">导出报告</Button>
-          </LayoutShell.HeaderActions>
-        </LayoutShell.Header>
-        <LayoutShell.Content>
-          <div className="flex min-h-12 shrink-0 items-center gap-3 border-b px-4 lg:px-6">
-            <Tabs defaultValue="overview" className="min-w-0 flex-1">
-              <TabsList
-                variant="line"
-                aria-label="实验报告栏目"
-                className="h-12 w-full justify-start overflow-x-auto rounded-none p-0"
+        </nav>
+      )}
+      headerActions={(
+        <>
+          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+            <Share2 />
+            分享
+          </Button>
+          <Button size="sm">导出报告</Button>
+        </>
+      )}
+      tabs={(
+        <Tabs defaultValue="overview" className="min-w-0 w-full">
+          <TabsList
+            variant="line"
+            aria-label="实验报告栏目"
+            className="h-12 w-full justify-start overflow-x-auto rounded-none p-0"
+          >
+            {layoutShellReportFixture.tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="h-full flex-none px-3 text-sm after:bottom-0!"
               >
-                {layoutShellReportFixture.tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className="h-full flex-none px-3 text-sm after:bottom-0!"
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-            <div className="hidden shrink-0 items-center gap-3 text-sm text-muted-foreground xl:flex">
-              <span>最后同步时间：{layoutShellReportFixture.lastSyncedAt}</span>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label="刷新报告数据"
-                title="刷新报告数据"
-              >
-                <RefreshCw />
-              </Button>
-            </div>
-          </div>
-          <LayoutShell.ContentStack>
-            <SectionCards />
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive />
-            </div>
-            <DataTable data={data} />
-          </LayoutShell.ContentStack>
-        </LayoutShell.Content>
-      </LayoutShell.Main>
-    </LayoutShell>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+      syncStatus={(
+        <div className="hidden shrink-0 items-center gap-3 text-sm text-muted-foreground xl:flex">
+          <span>最后同步时间：{layoutShellReportFixture.lastSyncedAt}</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="刷新报告数据"
+            title="刷新报告数据"
+          >
+            <RefreshCw />
+          </Button>
+        </div>
+      )}
+    >
+      <SectionCards />
+      <div className="px-4 lg:px-6">
+        <ChartAreaInteractive />
+      </div>
+      <DataTable data={data} />
+    </ReportWorkspaceLayout>
   )
 }

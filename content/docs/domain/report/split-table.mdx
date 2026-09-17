@@ -9,7 +9,10 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 ## 预览 / Preview
 
 <div className="domain-ui-preview-wide">
-  <ReportSplitTable input={reportSplitTableScenarios.normal.input} />
+  <div className="not-prose overflow-hidden rounded-xl border">
+    <div className="border-b px-4 py-3 text-sm font-medium">Wafer Split Table</div>
+    <ReportSplitTable input={reportSplitTableScenarios.normal.input} />
+  </div>
 </div>
 
 ## Contract
@@ -22,7 +25,7 @@ Table，第一列按 Stage 分组，第二列按 Step / Seq 分组，最后一�
 
 表格沿用 Layout Shell 的舒展基础 Table 度量：14px 文本、40px 透明表头与
 8px 单元格间距。较宽的业务投影通过组件自身的单层横向滚动容器展示，不能撑破
-Report Card。
+MDX 预览壳。
 
 ## Scenarios
 

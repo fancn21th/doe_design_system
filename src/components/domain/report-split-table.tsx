@@ -6,7 +6,6 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
   formatPercent,
 } from "@/components/domain/report-parts"
 import {
@@ -268,10 +267,7 @@ export function ReportSplitTable({
   )
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "Wafer Split Table"}
-      className={className}
-    >
+    <div className={className}>
       {rows.length === 0 ? (
         <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
       ) : (
@@ -386,6 +382,6 @@ export function ReportSplitTable({
           )}
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }

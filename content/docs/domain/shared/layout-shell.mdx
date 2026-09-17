@@ -21,4 +21,7 @@ import { LayoutShellDoePreview } from "@/components/domain/layout-shell.preview"
 
 使用组合式 API，把 `Sidebar` 和 `Main` 放在根组件下；在 `Main` 内依次组合 `Header` 与 `Content`。需要由应用统一控制侧栏时，传入 `open` 与 `onOpenChange`；否则使用 `defaultOpen`。
 
-预览固定包含 DOE Sidebar，并以 `sidebar-01` 的右侧 Skeleton 占位验证布局关系。Sidebar 不再作为独立 shared component 暴露。
+`ReportWorkspaceLayout` 是此预览抽出的报告工作区组合：它直接复用
+`LayoutShell`，固定 Sidebar、Header、报告 tab 栏与 Content Stack 的阅读顺序，
+并通过 slots 接收应用的 Source 导航、面包屑、操作、tab 交互和内容。它不接收
+fixture 作为生产数据，也不拥有应用路由或 BFF workflow。

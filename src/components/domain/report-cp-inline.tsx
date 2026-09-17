@@ -4,7 +4,6 @@ import { reportCpInlineScenarios } from "@/components/domain/report-cp-inline.sc
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
   formatCompactNumber,
 } from "@/components/domain/report-parts"
 import {
@@ -34,12 +33,7 @@ export function ReportCpInline({
   const rows = parsedInput.rows ?? scenarioInput.rows ?? []
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "CP x Inline"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
-      className={className}
-    >
+    <div className={className}>
       {rows.length === 0 ? (
         <EmptyState>暂无 CP x Inline 数据</EmptyState>
       ) : (
@@ -101,7 +95,7 @@ export function ReportCpInline({
           </div>
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }
 

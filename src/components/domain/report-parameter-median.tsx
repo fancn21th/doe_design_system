@@ -6,7 +6,6 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 import {
   EmptyState,
   ReportBadge,
-  ReportCard,
 } from "@/components/domain/report-parts"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -377,12 +376,7 @@ export function ReportParameterMedian({
   const stickyFirstColumn = parsedInput.stickyFirstColumn ?? true
 
   return (
-    <ReportCard
-      title={parsedInput.title ?? scenarioInput.title ?? "Parameter Median"}
-      subtitle={parsedInput.subtitle ?? scenarioInput.subtitle}
-      sourceLabel={parsedInput.sourceLabel ?? scenarioInput.sourceLabel}
-      className={className}
-    >
+    <div className={className}>
       {rows.length === 0 ? (
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
@@ -416,6 +410,6 @@ export function ReportParameterMedian({
           />
         </div>
       )}
-    </ReportCard>
+    </div>
   )
 }

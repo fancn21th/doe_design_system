@@ -9,7 +9,10 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 ## 预览 / Preview
 
 <div className="domain-ui-preview-wide">
-  <ReportParameterMedian input={reportParameterMedianScenarios.normal.input} />
+  <div className="not-prose overflow-hidden rounded-xl border">
+    <div className="border-b px-4 py-3 text-sm font-medium">Parameter Median</div>
+    <ReportParameterMedian input={reportParameterMedianScenarios.normal.input} />
+  </div>
 </div>
 
 ## Contract
