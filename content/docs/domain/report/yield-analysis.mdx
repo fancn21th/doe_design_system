@@ -20,10 +20,10 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 `ReportYieldAnalysis` 展示 Yield Analysis tab 的三段式结构：
 
 - 过滤区域使用 shadcn/base multiple combobox，Stage / Step 选择值通过 `onStageFilterChange`、`onStepFilterChange` 抛给外部业务状态。
-- Wafer Yield Ranking 使用 Observable Plot 渲染柱状图，组件按注入的 `wafers` 展示，不在内部做过滤。高密度 Snapshot wafer id 在 x 轴显示为原型一致的紧凑 `W##` 标签；完整 id 保留在 tooltip 和选择回调中。
+- Wafer Yield Ranking 使用 Observable Plot 渲染柱状图，组件按注入的 `wafers` 展示，不在内部做过滤。高密度 Snapshot wafer id 在 x 轴显示为原型一致的紧凑 `W##` 标签；完整 id 保留在 tooltip 和选择回调中。Wafer 的颜色和表格 assessment 仅使用输入提供的 `tone`，组件不会从 yield 数值推断状态。
 - Yield Detail Analysis 使用 shadcn/base tabs 切换 `Wafer x CP Matrix`、`Loss Yield`、`Condition Yield Comparison` 三张表。
 
-组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
+筛选、排名图和明细分析均使用单层中性 Analytical Surface；矩阵表保留自己的横向滚动边界，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
 ## Scenarios
 

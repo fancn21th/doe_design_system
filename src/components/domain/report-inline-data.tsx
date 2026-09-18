@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ChartNoAxesColumnIncreasingIcon, Table2Icon } from "lucide-react"
 
 import { Measurement } from "@/components/domain/measurement"
 import { reportInlineDataScenarios } from "@/components/domain/report-inline-data.scenarios"
@@ -9,6 +10,14 @@ import {
   ReportBadge,
 } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -23,9 +32,19 @@ import {
   type ReportInlineDataInput,
 } from "@/schemas/domain-component-inputs"
 
-type ReportInlineDataProps = {
+export type ReportInlineDataSelection = {
+  parameterId: string | null
+  waferId: string | null
+}
+
+export type ReportInlineDataProps = {
   input?: ReportInlineDataInput
   className?: string
+  /**
+   * Selected parameter/raw detail is App workflow state. The component keeps
+   * only its presentation-only distribution/matrix mode locally.
+   */
+  selection?: ReportInlineDataSelection
   onParameterSelect?: (parameterId: string) => void
   onWaferSelect?: (waferId: string) => void
 }
@@ -35,6 +54,7 @@ type InlineViewMode = "distribution" | "matrix"
 export function ReportInlineData({
   input = reportInlineDataScenarios.normal.input,
   className,
+  selection,
   onParameterSelect,
   onWaferSelect,
 }: ReportInlineDataProps) {
@@ -45,20 +65,22 @@ export function ReportInlineData({
   const [viewMode, setViewMode] = useState<InlineViewMode>(
     parsedInput.defaultViewMode ?? "distribution"
   )
-  const [selectedParameterId, setSelectedParameterId] = useState(
+  const [uncontrolledParameterId, setUncontrolledParameterId] = useState(
     parsedInput.selectedParameterId ?? parameters[0] ?? ""
   )
-  const [selectedWaferId, setSelectedWaferId] = useState(
+  const [uncontrolledWaferId, setUncontrolledWaferId] = useState(
     parsedInput.selectedWaferId ?? ""
   )
+  const selectedParameterId = selection?.parameterId ?? uncontrolledParameterId
+  const selectedWaferId = selection?.waferId ?? uncontrolledWaferId
 
   function selectParameter(parameterId: string) {
-    setSelectedParameterId(parameterId)
+    if (!selection) setUncontrolledParameterId(parameterId)
     onParameterSelect?.(parameterId)
   }
 
   function selectWafer(waferId: string) {
-    setSelectedWaferId(waferId)
+    if (!selection) setUncontrolledWaferId(waferId)
     onWaferSelect?.(waferId)
   }
 
@@ -67,26 +89,44 @@ export function ReportInlineData({
     selectWafer(waferId)
   }
 
-  const moduleTitle = measurement?.title ?? "Wafer × Inline Parameter"
-
   return (
-    <section className={cn("overflow-hidden rounded-xl border bg-card", className)}>
-      <header className="flex min-h-20 items-center justify-between gap-4 border-b px-5 py-4">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">{moduleTitle}</h2>
-          {parsedInput.sourceLabel ? <p className="mt-1 text-xs text-muted-foreground">{parsedInput.sourceLabel}</p> : null}
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="shrink-0 border-sky-200 bg-sky-50 text-sky-600 hover:bg-sky-100 hover:text-sky-700"
-          onClick={() => setViewMode((current) => current === "distribution" ? "matrix" : "distribution")}
-          aria-label={viewMode === "distribution" ? "切换为矩阵视图" : "切换为箱型图视图"}
-          title={viewMode === "distribution" ? "切换为矩阵视图" : "切换为箱型图视图"}
+    <div className={cn("domain-ui-typography grid gap-4 p-4", className)}>
+      <div className="flex justify-end">
+        <div
+          className="flex items-center rounded-lg border bg-muted/50 p-0.5"
+          role="group"
+          aria-label="视图切换"
         >
-          {viewMode === "distribution" ? <MatrixIcon /> : <ChartIcon />}
-        </Button>
-      </header>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(
+              "rounded-md",
+              viewMode === "distribution" && "bg-background text-foreground ring-1 ring-border"
+            )}
+            onClick={() => setViewMode("distribution")}
+            aria-label="箱型图视图"
+            aria-pressed={viewMode === "distribution"}
+            title="箱型图视图"
+          >
+            <ChartNoAxesColumnIncreasingIcon />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(
+              "rounded-md",
+              viewMode === "matrix" && "bg-background text-foreground ring-1 ring-border"
+            )}
+            onClick={() => setViewMode("matrix")}
+            aria-label="参数与 wafer 矩阵视图"
+            aria-pressed={viewMode === "matrix"}
+            title="参数与 wafer 矩阵视图"
+          >
+            <Table2Icon />
+          </Button>
+        </div>
+      </div>
       {parameters.length === 0 || !measurement ? (
         <EmptyState>暂无 Inline Data 数据</EmptyState>
       ) : viewMode === "matrix" ? (
@@ -98,29 +138,29 @@ export function ReportInlineData({
           onSelect={selectMatrixCell}
         />
       ) : (
-        <div className="grid gap-4 p-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-            <aside className="rounded-lg border p-3">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <b className="text-sm">SPC_inline parameter</b>
-              <ReportBadge tone="neutral">{parameters.length}</ReportBadge>
-            </div>
-            <div className="grid gap-2">
-              {parameters.map((parameter) => (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  key={parameter}
-                  onClick={() => selectParameter(parameter)}
-                  className={cn(
-                    "h-auto w-full justify-start border bg-background p-2 font-mono text-[11px]",
-                    parameter === selectedParameterId && "border-sky-300 bg-sky-50 text-sky-900"
-                  )}
-                >
-                  {parameter}
-                </Button>
-              ))}
-            </div>
-            </aside>
+        <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
+            <Card size="sm" className="border ring-0 shadow-none">
+              <CardHeader className="flex items-center justify-between gap-2">
+                <CardTitle>SPC inline parameter</CardTitle>
+                <CardAction><ReportBadge tone="neutral">{parameters.length}</ReportBadge></CardAction>
+              </CardHeader>
+              <CardContent className="grid gap-2 pb-(--card-spacing)">
+                {parameters.map((parameter) => (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    key={parameter}
+                    onClick={() => selectParameter(parameter)}
+                    className={cn(
+                      "h-auto w-full justify-start border bg-background p-2 font-mono text-[11px]",
+                      parameter === selectedParameterId && "bg-muted text-foreground"
+                    )}
+                  >
+                    {parameter}
+                  </Button>
+                ))}
+              </CardContent>
+            </Card>
           <div className="min-w-0 xl:col-span-1">
             <div className="mb-3 flex flex-wrap gap-2">
               <ReportBadge tone="neutral">
@@ -143,13 +183,13 @@ export function ReportInlineData({
               </div>
             ) : null}
             <Measurement input={measurement} onGroupSelect={selectWafer} />
-            {parsedInput.coverage.length ? <section className="mt-4 rounded-lg border p-3"><b className="text-sm">Wafer coverage</b><div className="mt-2 flex flex-wrap gap-2">{parsedInput.coverage.map((item) => <Button type="button" key={item.waferId} variant="outline" size="xs" disabled={!item.measured} onClick={() => selectWafer(item.waferId)} className={cn(item.waferId === selectedWaferId && "border-sky-300 bg-sky-50 text-sky-900")}>{item.waferId}{item.measured ? " · current sample" : " · missing"}</Button>)}</div></section> : null}
+            {parsedInput.coverage.length ? <Card size="sm" className="mt-4 border ring-0 shadow-none"><CardHeader><CardTitle>Wafer coverage</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2 pb-(--card-spacing)">{parsedInput.coverage.map((item) => <Button type="button" key={item.waferId} variant="outline" size="xs" disabled={!item.measured} onClick={() => selectWafer(item.waferId)} className={cn(item.waferId === selectedWaferId && "bg-muted text-foreground")}>{item.waferId}{item.measured ? " · current sample" : " · missing"}</Button>)}</CardContent></Card> : null}
             {parsedInput.rawDetail ? <p className="mt-3 text-xs text-muted-foreground">{parsedInput.rawDetail.parameterId}: {parsedInput.rawDetail.rawPointCount} RAW_VALUE · {parsedInput.rawDetail.status.toUpperCase()}{parsedInput.rawDetail.reason ? ` · ${parsedInput.rawDetail.reason}` : ""}</p> : null}
             {parsedInput.summary?.limitation ? <p className="mt-2 text-xs text-muted-foreground">{parsedInput.summary.limitation}</p> : null}
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
@@ -202,14 +242,6 @@ function InlineMatrix({
   )
 }
 
-function MatrixIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M4 4v16h16" /><path d="M8 16v-4M12 16V8m4 8v-6" /></svg>
-}
-
-function ChartIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M4 4v16h16" /><path d="M8 14v2m4-8v8m4-11v11m4-6v6" /></svg>
-}
-
 function formatInlineValue(value: number | null | undefined) {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—"
   return Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(3)
@@ -217,10 +249,12 @@ function formatInlineValue(value: number | null | undefined) {
 
 function SnapshotMetric({ label, value, detail }: { label: string; value?: number; detail: string }) {
   return (
-    <article className="rounded-lg border bg-muted/20 p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value ?? "—"}</p>
-      <p className="mt-1 text-[11px] text-muted-foreground">{detail}</p>
-    </article>
+    <Card size="sm" className="border ring-0 shadow-none">
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-xl font-semibold tabular-nums">{value ?? "—"}</CardTitle>
+      </CardHeader>
+      <CardContent className="pb-(--card-spacing) text-[11px] text-muted-foreground">{detail}</CardContent>
+    </Card>
   )
 }

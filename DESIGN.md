@@ -55,7 +55,9 @@ Ownership is defined in `docs/visual-system/architecture.md`.
   navigation, theme presets, and demo styling are not DOE product rules.
 - The app consumes the design system. It owns workflow, routing, services,
   backend calls, and page-specific composition; it must not invent competing
-  visual language.
+  visual language. DOE App's current consumption mode is local-source adoption,
+  not a runtime package; its consumer boundary is documented in
+  [`doe-new-app/docs/frontend/design-system-consumer-contract.md`](../doe-new-app/docs/frontend/design-system-consumer-contract.md).
 - A source template or screenshot is evidence. It becomes a DOE rule only
   after its distilled rule is recorded in this design system.
 

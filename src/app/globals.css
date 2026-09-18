@@ -161,6 +161,9 @@
     --doe-component-preview-wide-width: 78rem;
     --doe-split-table-min-width: 111rem;
     --doe-report-split-table-min-width: 128rem;
+    --doe-yield-matrix-min-width: 180rem;
+    --doe-parameter-median-matrix-min-width: 240rem;
+    --doe-parameter-median-matrix-height: 34rem;
     --doe-split-table-stage-column: 7rem;
     --doe-split-table-step-column: 12rem;
     --doe-split-table-baseline-column: 6rem;

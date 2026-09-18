@@ -499,6 +499,16 @@ export const reportWaferMapInputSchema = z.object({
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
   mapViews: z.array(waferMapGalleryInputSchema).optional(),
+  viewStates: z.array(z.object({
+    view: z.enum(["cp-final-bin", "cp-parameter", "defect"]),
+    status: z.enum(["ready", "loading", "unavailable", "failed"]),
+    reason: z.string().optional(),
+  })).optional(),
+  parameterOptions: z.array(z.object({
+    label: z.string(),
+    value: z.string(),
+    disabled: z.boolean().optional(),
+  })).optional(),
 })
 export const reportParameterMedianCellSchema = z.object({
   waferId: z.string(),
@@ -537,7 +547,11 @@ export const reportCpDataInputSchema = z.object({
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
   selectedParameterId: z.string().optional(),
-  parameterOptions: z.array(z.string()).optional(),
+  parameterOptions: z.array(z.object({
+    label: z.string(),
+    value: z.string(),
+    disabled: z.boolean().optional(),
+  })).optional(),
   measurement: measurementInputSchema.optional(),
 })
 export const reportInlineDataInputSchema = z.object({

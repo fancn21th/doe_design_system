@@ -978,7 +978,11 @@ export const reportCpDataFixture: ReportCpDataInput = {
   subtitle: "Parent report tab that adapts CP die measurement data into Measurement.",
   sourceLabel: "CP REPORT",
   selectedParameterId: "BVDSS",
-  parameterOptions: ["BVDSS", "IGSSN1", "IDSS"],
+  parameterOptions: [
+    { label: "BVDSS", value: "BVDSS" },
+    { label: "IGSSN1", value: "IGSSN1" },
+    { label: "IDSS", value: "IDSS" },
+  ],
   measurement: {
     ...measurementFixture,
     title: "Die Measurement Distribution",

@@ -165,8 +165,12 @@ The development, display, and verification environment for domain UI assets. It 
 _Avoid_: DOE App, workflow host, production shell
 
 **Public API**:
-The stable package boundary that applications use to import supported domain components, schemas, and types. Internal directories, helpers, and foundation UI wrappers are not public API.
-_Avoid_: Internal path imports, implementation exports
+The stable supported consumption boundary for Domain UI assets, schemas, and
+types. For DOE App, this is currently the documented canonical source and
+schema contract adopted into App-local source; it is not a runtime package.
+Internal directories, helpers, and foundation UI wrappers are not a supported
+consumption boundary.
+_Avoid_: Internal path imports, treating local adoption as visual ownership
 
 **Round**:
 A DOE iteration with its own experimental boundary. A Round can be shown by domain UI assets without making the component library responsible for the application workflow around it.

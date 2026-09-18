@@ -21,11 +21,41 @@ import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.sc
 数据合同：CP Final Bin、CP Parameter 与 Defect。Overlay 因为没有共同坐标合同，本轮
 不实现。
 
+它是 Report Center Wafer Map 的唯一视觉组合入口：DOE App 负责 URL、XState、BFF
+请求、缓存、失败重试与把 BFF payload 映射为输入；组件负责同一条控制栏、图例和地图
+卡片的层级。App 不得在 `WaferMapGallery` 外另建 CP/Defect、Final Bin/Parameter 或
+Overlay 的视觉控制器。
+
 页面有两层局部筛选：一级在 `CP Map` 与 `Defect Map` 间切换；CP Map 下的二级筛选为
 `Final Bin` 与 `Parameter Map` 标准 Tabs。选择 `Parameter Map` 后，使用单选、可搜索、
 可清除的 `CP Parameter` Combobox；每个参数选项都有其独立的 25 片 wafer map 输入。
 Defect Map 的二级筛选由 shared gallery 提供 `Layer` 与 `Defect Type` 两个单选、可搜索
 Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视图间共享或推断。
+
+## Consumer Schema
+
+`ReportWaferMapInput` 将已取得的可渲染视图与尚未取得的视图状态分开：
+
+```ts
+type ReportWaferMapInput = {
+  mapViews?: WaferMapGalleryInput[]
+  viewStates?: Array<{
+    view: "cp-final-bin" | "cp-parameter" | "defect"
+    status: "ready" | "loading" | "unavailable" | "failed"
+    reason?: string
+  }>
+  parameterOptions?: Array<{ label: string; value: string; disabled?: boolean }>
+}
+```
+
+`mapViews` 只包含已由 BFF 映射完成的真实数据，不能用 fixture 填补。`viewStates`
+允许 App 在按需加载时仍保留完整的 Report 级控制层：`loading` 表示请求中，
+`unavailable` 表示权威字段尚未提供，`failed` 表示本次请求失败。当前 CP Parameter
+必须以 `unavailable` 呈现，直到 BFF 提供全 wafer 共用色阶以及逐 die 有效性/OOS 原因。
+
+组件可选地接受 `selection`、`onPrimaryViewChange`、`onCpViewChange` 和
+`onParameterChange`。传入这些 props 后，它是受控视觉组件：回调只表达用户意图，
+不触发网络请求；DOE App 将意图发送给自己的 XState workflow。
 
 筛选区、图例与每片 wafer 卡片使用中性 Analytical Surface：单层边界、无装饰性阴影与
 无渐变填色；map canvas 和其 Pass / Fail 读数保留各自的业务语义。
@@ -34,3 +64,4 @@ Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视�
 
 - `normal`
 - `empty`
+- `controlledPartial`

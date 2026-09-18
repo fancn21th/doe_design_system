@@ -21,9 +21,23 @@ import {
   type WaferMapGalleryInput,
 } from "@/schemas/domain-component-inputs"
 
-type ReportWaferMapProps = {
+export type ReportWaferMapSelection = {
+  primaryView: PrimaryView
+  cpView: CpView
+  parameterCode: string | null
+}
+
+export type ReportWaferMapProps = {
   input?: ReportWaferMapInput
   className?: string
+  /**
+   * Optional App-owned selection. When present, the component is a controlled
+   * visual surface; it never initiates a data request itself.
+   */
+  selection?: ReportWaferMapSelection
+  onPrimaryViewChange?: (view: PrimaryView) => void
+  onCpViewChange?: (view: CpView) => void
+  onParameterChange?: (parameterCode: string | null) => void
 }
 
 type PrimaryView = "cp" | "defect"
@@ -33,6 +47,10 @@ type CpParameterOption = { label: string; value: string }
 export function ReportWaferMap({
   input = reportWaferMapScenarios.normal.input,
   className,
+  selection,
+  onPrimaryViewChange,
+  onCpViewChange,
+  onParameterChange,
 }: ReportWaferMapProps) {
   const scenarioInput = reportWaferMapScenarios.normal.input
   const parsedInput = reportWaferMapInputSchema.parse(input)
@@ -40,15 +58,27 @@ export function ReportWaferMap({
   const finalBinView = findMapView(mapViews, "cp-final-bin")
   const parameterViews = findMapViews(mapViews, "cp-parameter")
   const defectView = findMapView(mapViews, "defect")
-  const [primaryView, setPrimaryView] = React.useState<PrimaryView>("cp")
-  const [cpView, setCpView] = React.useState<CpView>("final-bin")
-  const [selectedParameterCode, setSelectedParameterCode] = React.useState<string | null>(
+  const [uncontrolledPrimaryView, setUncontrolledPrimaryView] = React.useState<PrimaryView>("cp")
+  const [uncontrolledCpView, setUncontrolledCpView] = React.useState<CpView>("final-bin")
+  const [uncontrolledParameterCode, setUncontrolledParameterCode] = React.useState<string | null>(
     () => parameterViews[0]?.parameter.parameterCode ?? null
   )
-  const parameterOptions = parameterViews.map((view) => ({
+  const primaryView = selection?.primaryView ?? uncontrolledPrimaryView
+  const cpView = selection?.cpView ?? uncontrolledCpView
+  const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const parameterOptions = parsedInput.parameterOptions ?? parameterViews.map((view) => ({
     label: view.parameter.label,
     value: view.parameter.parameterCode,
   }))
+  const viewStates = parsedInput.viewStates ?? mapViews.map((mapView) => ({
+    view: mapView.kind,
+    status: "ready" as const,
+  }))
+  const finalBinState = findViewState(viewStates, "cp-final-bin")
+  const parameterState = findViewState(viewStates, "cp-parameter")
+  const defectState = findViewState(viewStates, "defect")
+  const hasCp = Boolean(finalBinView || parameterViews.length || finalBinState || parameterState)
+  const hasDefect = Boolean(defectView || defectState)
   const selectedParameterView = parameterViews.find(
     (view) => view.parameter.parameterCode === selectedParameterCode
   )
@@ -59,9 +89,27 @@ export function ReportWaferMap({
       ? selectedParameterView
       : finalBinView
 
-  if (!finalBinView && parameterViews.length === 0 && !defectView) {
+  if (!hasCp && !hasDefect) {
     return <EmptyState>暂无 Report Wafer Map 数据</EmptyState>
   }
+
+  const selectPrimaryView = (nextView: PrimaryView) => {
+    setUncontrolledPrimaryView(nextView)
+    onPrimaryViewChange?.(nextView)
+  }
+  const selectCpView = (nextView: CpView) => {
+    setUncontrolledCpView(nextView)
+    onCpViewChange?.(nextView)
+  }
+  const selectParameter = (nextParameterCode: string | null) => {
+    setUncontrolledParameterCode(nextParameterCode)
+    onParameterChange?.(nextParameterCode)
+  }
+  const visibleState = primaryView === "defect"
+    ? defectState
+    : cpView === "parameter"
+      ? parameterState
+      : finalBinState
 
   return (
     <section className={className} aria-label="Report Wafer Map">
@@ -69,32 +117,32 @@ export function ReportWaferMap({
         <div className="flex flex-wrap items-center gap-3">
           <Tabs
             value={primaryView}
-            onValueChange={(value) => setPrimaryView(value as PrimaryView)}
+            onValueChange={(value) => selectPrimaryView(value as PrimaryView)}
             className="gap-0"
           >
             <TabsList>
-              {(finalBinView || parameterViews.length > 0) && (
+              {hasCp && (
                 <TabsTrigger value="cp">CP Map</TabsTrigger>
               )}
-              {defectView && (
+              {hasDefect && (
                 <TabsTrigger value="defect">Defect Map</TabsTrigger>
               )}
             </TabsList>
           </Tabs>
 
-          {primaryView === "cp" && (finalBinView || parameterViews.length > 0) && (
+          {primaryView === "cp" && hasCp && (
             <>
               <Separator orientation="vertical" className="h-5" />
               <Tabs
                 value={cpView}
-                onValueChange={(value) => setCpView(value as CpView)}
+                onValueChange={(value) => selectCpView(value as CpView)}
                 className="gap-0"
               >
                 <TabsList>
-                {finalBinView && (
+                {(finalBinView || finalBinState) && (
                   <TabsTrigger value="final-bin">Final Bin</TabsTrigger>
                 )}
-                {parameterViews.length > 0 && (
+                {(parameterViews.length > 0 || parameterState) && (
                   <TabsTrigger value="parameter">Parameter Map</TabsTrigger>
                 )}
                 </TabsList>
@@ -107,7 +155,7 @@ export function ReportWaferMap({
           <CpParameterCombobox
             options={parameterOptions}
             value={selectedParameterCode}
-            onValueChange={setSelectedParameterCode}
+            onValueChange={selectParameter}
           />
         )}
 
@@ -116,12 +164,29 @@ export function ReportWaferMap({
             input={visibleMapView}
             showParameterLegend={false}
           />
+        ) : visibleState ? (
+          <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
         ) : primaryView === "cp" && cpView === "parameter" ? (
           <EmptyState>请选择 CP Parameter</EmptyState>
         ) : null}
       </div>
     </section>
   )
+}
+
+function findViewState(
+  viewStates: Array<{ view: WaferMapGalleryInput["kind"]; status: "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
+  view: WaferMapGalleryInput["kind"],
+) {
+  return viewStates.find((viewState) => viewState.view === view)
+}
+
+function viewStateMessage(status: "ready" | "loading" | "unavailable" | "failed", reason?: string) {
+  if (reason) return reason
+  if (status === "loading") return "正在读取 Wafer Map 数据"
+  if (status === "unavailable") return "当前视图暂不可用"
+  if (status === "failed") return "读取 Wafer Map 数据失败"
+  return "当前视图暂无可渲染数据"
 }
 
 function CpParameterCombobox({

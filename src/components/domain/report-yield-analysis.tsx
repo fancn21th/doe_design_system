@@ -15,6 +15,14 @@ import {
   formatPercent,
 } from "@/components/domain/report-parts"
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
   Combobox,
   ComboboxChip,
   ComboboxChips,
@@ -93,20 +101,11 @@ function valuesFromOptions(options: ComboboxOption[]) {
   return options.map((option) => option.value)
 }
 
-function getYieldTone(
-  yieldValue: number,
-  thresholds: ReportYieldThresholds
-): ReportTone {
-  if (yieldValue < thresholds.watch) return "bad"
-  if (yieldValue < thresholds.good) return "watch"
-  return "good"
-}
-
-function getYieldColor(yieldValue: number, thresholds: ReportYieldThresholds) {
-  const tone = getYieldTone(yieldValue, thresholds)
+function getYieldColor(tone: ReportTone) {
   if (tone === "bad") return "#dc2626"
   if (tone === "watch") return "#d97706"
-  return "#059669"
+  if (tone === "good") return "#059669"
+  return "#64748b"
 }
 
 function formatCount(value: number) {
@@ -270,7 +269,7 @@ function WaferYieldRanking({
         Plot.barY(sortedWafers, {
           x: "waferId",
           y: "yield",
-          fill: (wafer) => getYieldColor(wafer.yield, thresholds),
+          fill: (wafer) => getYieldColor(wafer.tone ?? "neutral"),
           insetLeft: 5,
           insetRight: 5,
           title: (wafer) =>
@@ -305,32 +304,34 @@ function WaferYieldRanking({
   }, [sortedWafers, thresholds])
 
   return (
-    <section className="rounded-lg border">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+    <Card size="sm" className="border ring-0 shadow-none">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b">
         <div>
-          <h3 className="text-sm font-semibold">Wafer Yield Ranking</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <CardTitle>Wafer Yield Ranking</CardTitle>
+          <CardDescription>
             Sorted by yield, lowest wafer first.
-          </p>
+          </CardDescription>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <CardAction className="flex flex-wrap items-center gap-2">
           <ReportBadge tone="good">&gt;= {thresholds.good}%</ReportBadge>
           <ReportBadge tone="watch">
             {thresholds.watch}%-{thresholds.good}%
           </ReportBadge>
           <ReportBadge tone="bad">&lt; {thresholds.watch}%</ReportBadge>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0">
+        <div className="overflow-x-auto px-3">
+          <div ref={containerRef} className="min-h-80" />
         </div>
-      </div>
-      <div className="overflow-x-auto p-3">
-        <div ref={containerRef} className="min-h-80" />
-      </div>
+      </CardContent>
       {onWaferSelect && (
         <div className="grid grid-cols-5 border-t sm:grid-cols-8 md:grid-cols-12 xl:grid-cols-25">
           {sortedWafers.map((wafer) => (
             <button
               key={wafer.waferId}
               type="button"
-              className="border-r border-b px-2 py-1.5 text-center font-mono text-xs text-sky-700 transition-colors hover:bg-muted/50"
+              className="border-r border-b px-2 py-1.5 text-center font-mono text-xs transition-colors hover:bg-muted"
               onClick={() => onWaferSelect(wafer.waferId)}
             >
               {wafer.waferId}
@@ -338,18 +339,16 @@ function WaferYieldRanking({
           ))}
         </div>
       )}
-    </section>
+    </Card>
   )
 }
 
 function MatrixTable({
   rows,
   matrixColumns,
-  thresholds,
 }: {
   rows: ReportYieldMatrixRow[]
   matrixColumns: string[]
-  thresholds: ReportYieldThresholds
 }) {
   if (rows.length === 0) {
     return <EmptyState>暂无 Wafer x CP Matrix 数据</EmptyState>
@@ -357,7 +356,7 @@ function MatrixTable({
 
   return (
     <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-[180rem]">
+      <Table className="min-w-(--doe-yield-matrix-min-width)">
         <TableHeader>
           <TableRow>
             <TableHead className="sticky left-0 z-10 w-24 bg-muted/80">
@@ -393,7 +392,7 @@ function MatrixTable({
               </TableCell>
               <TableCell className="font-mono text-xs">{row.condition}</TableCell>
               <TableCell>
-                <ReportBadge tone={row.tone ?? getYieldTone(row.yield, thresholds)}>
+                <ReportBadge tone={row.tone ?? "neutral"}>
                   {formatPercent(row.yield)}
                 </ReportBadge>
               </TableCell>
@@ -593,23 +592,27 @@ export function ReportYieldAnalysis({
       {wafers.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
-        <div className="grid gap-4 p-4">
-          <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 md:flex-row">
-            <MultiFilterCombobox
-              label="Stage"
-              placeholder="全部"
-              options={stageOptions}
-              value={selectedStageOptions}
-              onValueChange={setSelectedStageOptions}
-            />
-            <MultiFilterCombobox
-              label="Step"
-              placeholder="全部"
-              options={stepOptions}
-              value={selectedStepOptions}
-              onValueChange={setSelectedStepOptions}
-            />
-          </div>
+        <div className="domain-ui-typography grid gap-4 p-4">
+          <Card size="sm" className="border ring-0 shadow-none">
+            <CardContent className="py-0">
+              <div className="flex flex-col gap-3 md:flex-row">
+                <MultiFilterCombobox
+                  label="Stage"
+                  placeholder="全部"
+                  options={stageOptions}
+                  value={selectedStageOptions}
+                  onValueChange={setSelectedStageOptions}
+                />
+                <MultiFilterCombobox
+                  label="Step"
+                  placeholder="全部"
+                  options={stepOptions}
+                  value={selectedStepOptions}
+                  onValueChange={setSelectedStepOptions}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           <WaferYieldRanking
             wafers={wafers}
@@ -617,42 +620,45 @@ export function ReportYieldAnalysis({
             onWaferSelect={onWaferSelect}
           />
 
-          <section className="grid gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold">Yield Detail Analysis</h3>
-            </div>
+          <Card size="sm" className="min-w-0 border ring-0 shadow-none">
             <Tabs
               value={selectedDetailMode}
               onValueChange={handleDetailModeChange}
-              className="min-w-0 max-w-full gap-3"
+              className="min-w-0 max-w-full gap-0"
             >
-              <TabsList className="flex-wrap">
-                {detailModeOptions.map((option) => (
-                  <TabsTrigger key={option.id} value={option.id}>
-                    {option.id === "wafer-cp-matrix" && <Table2Icon />}
-                    {option.id === "loss-yield" && <TrendingDownIcon />}
-                    {option.id === "condition-yield-comparison" && (
-                      <GitCompareArrowsIcon />
-                    )}
-                    {option.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
-                <MatrixTable
-                  rows={matrixRows}
-                  matrixColumns={matrixColumns}
-                  thresholds={thresholds}
-                />
-              </TabsContent>
-              <TabsContent value="loss-yield" className="min-w-0 max-w-full">
-                <LossYieldTable rows={lossYieldRows} />
-              </TabsContent>
-              <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
-                <ConditionYieldTable rows={conditionYieldRows} />
-              </TabsContent>
+              <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b">
+                <CardTitle>Yield Detail Analysis</CardTitle>
+                <CardAction>
+                  <TabsList className="flex-wrap">
+                    {detailModeOptions.map((option) => (
+                      <TabsTrigger key={option.id} value={option.id}>
+                        {option.id === "wafer-cp-matrix" && <Table2Icon />}
+                        {option.id === "loss-yield" && <TrendingDownIcon />}
+                        {option.id === "condition-yield-comparison" && (
+                          <GitCompareArrowsIcon />
+                        )}
+                        {option.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="min-w-0 max-w-full">
+                <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
+                  <MatrixTable
+                    rows={matrixRows}
+                    matrixColumns={matrixColumns}
+                  />
+                </TabsContent>
+                <TabsContent value="loss-yield" className="min-w-0 max-w-full">
+                  <LossYieldTable rows={lossYieldRows} />
+                </TabsContent>
+                <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
+                  <ConditionYieldTable rows={conditionYieldRows} />
+                </TabsContent>
+              </CardContent>
             </Tabs>
-          </section>
+          </Card>
         </div>
       )}
     </div>

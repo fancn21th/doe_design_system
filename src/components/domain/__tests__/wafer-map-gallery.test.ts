@@ -31,6 +31,7 @@ describe("wafer map gallery contract", () => {
 
   it("uses stable discrete Final Bin colors and a bounded parameter gradient", () => {
     expect(finalBinColor("1")).toBe(DEFAULT_FINAL_BIN_PALETTE["1"])
+    expect(finalBinColor("PASS")).toBe(DEFAULT_FINAL_BIN_PALETTE.PASS)
     expect(parameterColor(-1, 0, 1)).toBe(parameterColor(0, 0, 1))
     expect(parameterColor(2, 0, 1)).toBe(parameterColor(1, 0, 1))
   })

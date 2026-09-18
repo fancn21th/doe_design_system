@@ -7,6 +7,13 @@ import {
   EmptyState,
   ReportBadge,
 } from "@/components/domain/report-parts"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -118,7 +125,7 @@ function ParameterMedianFilterBar({
   )
 
   return (
-    <FieldGroup className="gap-3 rounded-lg border bg-muted/20 p-3">
+    <FieldGroup className="gap-3">
       <div className="grid gap-3 md:grid-cols-[minmax(16rem,24rem)_auto_1fr] md:items-end">
         <Field>
           <FieldLabel htmlFor={inputId}>CP Parameter</FieldLabel>
@@ -238,12 +245,12 @@ function ParameterMedianMatrix({
 
   return (
     <div
-      className="max-h-[34rem] overflow-auto rounded-lg border"
+      className="max-h-(--doe-parameter-median-matrix-height) overflow-auto rounded-lg border"
       role="region"
       aria-label="Parameter Median matrix"
       tabIndex={0}
     >
-      <Table className="min-w-[240rem] border-separate border-spacing-0 text-xs">
+      <Table className="min-w-(--doe-parameter-median-matrix-min-width) border-separate border-spacing-0 text-xs">
         <TableHeader>
           <TableRow>
             <TableHead className={cn("w-44 min-w-44", cornerClass)}>
@@ -380,34 +387,54 @@ export function ReportParameterMedian({
       {rows.length === 0 ? (
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
-        <div className="grid gap-3 p-4">
-          <ParameterMedianFilterBar
-            parameterQuery={parameterQuery}
-            parameterOptions={parameterOptions}
-            showOosOnly={showOosOnly}
-            oosResultCount={oosResultCount}
-            onParameterQueryChange={onParameterQueryChange}
-            onOosOnlyChange={onOosOnlyChange}
-          />
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <ReportBadge tone="neutral">
-              Parameter: {parameterQuery || "All"}
-            </ReportBadge>
-            <ReportBadge tone={showOosOnly ? "watch" : "neutral"}>
-              OOS only: {showOosOnly ? "On" : "Off"}
-            </ReportBadge>
-            <span>
-              Rendering {rows.length} injected parameters across {waferIds.length} wafers
-            </span>
-          </div>
-          <ParameterMedianMatrix
-            rows={rows}
-            waferIds={waferIds}
-            stickyHeader={stickyHeader}
-            stickyFirstColumn={stickyFirstColumn}
-            onParameterSelect={onParameterSelect}
-            onWaferCellSelect={onWaferCellSelect}
-          />
+        <div className="domain-ui-typography grid gap-4 p-4">
+          <Card size="sm" className="border ring-0 shadow-none">
+            <CardHeader>
+              <CardTitle>Parameter Median</CardTitle>
+              <CardDescription>
+                CP parameter median and CPK matrix from the injected report snapshot.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-(--card-spacing)">
+              <ParameterMedianFilterBar
+                parameterQuery={parameterQuery}
+                parameterOptions={parameterOptions}
+                showOosOnly={showOosOnly}
+                oosResultCount={oosResultCount}
+                onParameterQueryChange={onParameterQueryChange}
+                onOosOnlyChange={onOosOnlyChange}
+              />
+            </CardContent>
+          </Card>
+          <section className="grid min-w-0 gap-3" aria-labelledby="parameter-median-matrix-title">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 id="parameter-median-matrix-title" className="text-sm font-semibold">
+                  Parameter Median Matrix
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  One row per injected CP parameter and one column per wafer.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <ReportBadge tone="neutral">
+                  Parameter: {parameterQuery || "All"}
+                </ReportBadge>
+                <ReportBadge tone={showOosOnly ? "watch" : "neutral"}>
+                  OOS only: {showOosOnly ? "On" : "Off"}
+                </ReportBadge>
+                <span>{rows.length} parameters · {waferIds.length} wafers</span>
+              </div>
+            </div>
+            <ParameterMedianMatrix
+              rows={rows}
+              waferIds={waferIds}
+              stickyHeader={stickyHeader}
+              stickyFirstColumn={stickyFirstColumn}
+              onParameterSelect={onParameterSelect}
+              onWaferCellSelect={onWaferCellSelect}
+            />
+          </section>
         </div>
       )}
     </div>

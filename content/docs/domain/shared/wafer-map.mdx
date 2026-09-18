@@ -30,7 +30,17 @@ import { waferMapGalleryScenarios, waferMapScenarios } from "@/components/domain
 
 ## Contract
 
-`WaferMapGallery` is the business entry point. It accepts one discriminated input: `cp-final-bin`, `cp-parameter`, or `defect`. Every wafer carries its own geometry and its own data payload; no fixture or component assumes that 25 wafers share values.
+`WaferMapGallery` is the shared rendering entry point, not the Report Center tab entry
+point. It accepts one resolved discriminated input: `cp-final-bin`, `cp-parameter`,
+or `defect`. `ReportWaferMap` composes this Gallery for Report Center; DOE App must
+not place a Gallery beside a separately reimplemented Report control bar. Every wafer
+carries its own geometry and data payload; no fixture or component assumes that 25
+wafers share values.
+
+Final Bin presentation accepts the BFF-preserved bin label literally. The default
+palette gives semantic `PASS` the same green treatment as numeric Bin `1`; a
+different authoritative bin palette may be supplied through the input. The App
+must not infer a numeric bin code from a label.
 
 `WaferMapCore` owns three stacked Canvas layers: an immediate base layer for all legal dies, a data layer for Final Bin / parameter / defect color, and an interaction layer. The shallow grey circular boundary is presentation only; the supplied legal-die coordinates define the actual footprint.
 

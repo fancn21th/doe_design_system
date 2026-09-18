@@ -21,6 +21,14 @@ import {
   type MeasurementGroup,
   type MeasurementInput,
 } from "@/schemas/domain-component-inputs"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 const CHART_HEIGHT = 560
 const MIN_GROUP_WIDTH = 68
@@ -37,12 +45,15 @@ export type MeasurementProps = {
   input: MeasurementInput
   /** Reports a whole wafer-column click without creating a persistent visual selection. */
   onGroupSelect?: (groupId: string) => void
+  /** Optional report-level context rendered with the chart metadata. */
+  headerAction?: React.ReactNode
   className?: string
 }
 
 export function Measurement({
   input,
   onGroupSelect,
+  headerAction,
   className,
 }: MeasurementProps) {
   const parsedInput = useMemo(() => measurementInputSchema.parse(input), [input])
@@ -130,54 +141,55 @@ export function Measurement({
   }
 
   return (
-    <section className={cn("rounded-xl border bg-card text-card-foreground shadow-sm", className)}>
-      <header className="border-b px-4 py-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">{parsedInput.title ?? "Measurement"}</h3>
-            {parsedInput.subtitle && <p className="mt-1 text-sm text-muted-foreground">{parsedInput.subtitle}</p>}
-          </div>
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {parsedInput.sourceLabel && <span className="rounded-md border px-2 py-1">{parsedInput.sourceLabel}</span>}
-            <span className="rounded-md border px-2 py-1">{parsedInput.groups.length} wafers</span>
-            <span className="rounded-md border px-2 py-1">{parsedInput.metric.label}</span>
-          </div>
+    <Card size="sm" className={cn("border ring-0 shadow-none", className)}>
+      <CardHeader className="flex flex-wrap items-start justify-between gap-3 border-b">
+        <div>
+          <CardTitle>{parsedInput.title ?? "Measurement"}</CardTitle>
+          {parsedInput.subtitle && <CardDescription>{parsedInput.subtitle}</CardDescription>}
         </div>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <CardAction className="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
+          {headerAction}
+          {parsedInput.sourceLabel && <span className="rounded-md border px-2 py-1">{parsedInput.sourceLabel}</span>}
+          <span className="rounded-md border px-2 py-1">{parsedInput.groups.length} wafers</span>
+          <span className="rounded-md border px-2 py-1">{parsedInput.metric.label}</span>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 text-xs text-muted-foreground">
           <LegendMark color="#2563a6" label="die point" />
           <LegendMark color="#0f766e" label="mean" />
           <LegendMark color="#c53a3a" label="median" />
           <LegendMark color="#7c3aed" label="mean ±3σ" />
           <LegendMark color="#b45309" dashed label="reference" />
         </div>
-      </header>
-      <div className="overflow-x-auto p-3" ref={hostRef}>
-        <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
-          <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
-          <CanvasLayer canvasRef={pointCanvasRef} width={width} height={CHART_HEIGHT} />
-          <CanvasLayer canvasRef={summaryCanvasRef} width={width} height={CHART_HEIGHT} />
-          <canvas
-            aria-label={`${metricLabel} grouped distribution. Click a wafer column to select it.`}
-            className="absolute inset-0 cursor-crosshair"
-            height={CHART_HEIGHT}
-            onClick={onClick}
-            onPointerLeave={() => { setActivePoint(null); setHoveredGroupIndex(null) }}
-            onPointerMove={onPointerMove}
-            ref={interactionCanvasRef}
-            role="img"
-            width={width}
-          />
-          {activePoint && (
-            <PointPopover
-              group={parsedInput.groups[activePoint.groupIndex]}
-              metric={parsedInput.metric}
-              point={activePoint}
+        <div className="overflow-x-auto p-3" ref={hostRef}>
+          <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
+            <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
+            <CanvasLayer canvasRef={pointCanvasRef} width={width} height={CHART_HEIGHT} />
+            <CanvasLayer canvasRef={summaryCanvasRef} width={width} height={CHART_HEIGHT} />
+            <canvas
+              aria-label={`${metricLabel} grouped distribution. Click a wafer column to select it.`}
+              className="absolute inset-0 cursor-crosshair"
+              height={CHART_HEIGHT}
+              onClick={onClick}
+              onPointerLeave={() => { setActivePoint(null); setHoveredGroupIndex(null) }}
+              onPointerMove={onPointerMove}
+              ref={interactionCanvasRef}
+              role="img"
               width={width}
             />
-          )}
+            {activePoint && (
+              <PointPopover
+                group={parsedInput.groups[activePoint.groupIndex]}
+                metric={parsedInput.metric}
+                point={activePoint}
+                width={width}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -186,7 +198,7 @@ function CanvasLayer({ canvasRef, width, height }: CanvasLayerProps) {
 }
 
 function MeasurementState({ className, label }: { className?: string; label: string }) {
-  return <section className={cn("rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground", className)}>{label}</section>
+  return <Card className={cn("border ring-0 shadow-none", className)}><CardContent className="p-8 text-center text-sm text-muted-foreground">{label}</CardContent></Card>
 }
 
 function LegendMark({ color, dashed, label }: { color: string; dashed?: boolean; label: string }) {

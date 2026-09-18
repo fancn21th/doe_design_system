@@ -197,6 +197,9 @@ export function createDieVisualStates(
 }
 
 export const DEFAULT_FINAL_BIN_PALETTE: Readonly<Record<string, string>> = {
+  // BFF may preserve semantic PASS/FAIL labels instead of numeric SBIN codes.
+  PASS: "#16a34a",
+  FAIL: "#ef4444",
   "1": "#16a34a",
   "9": "#0891b2",
   "10": "#ef4444",

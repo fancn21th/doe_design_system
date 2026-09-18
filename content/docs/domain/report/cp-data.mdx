@@ -17,7 +17,11 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
 
 ## Contract
 
-`ReportCpData` 只负责 CP Data report tab 的业务内容组合。测量分布图必须组合 shared `Measurement`，当前不实现 Measurement 内部交互。
+`ReportCpData` 负责 CP Data report tab 的业务内容组合：可搜索的 CP Parameter 控制面与 shared `Measurement`。它以 `selection.parameterCode` 接收可选的 App 受控选择，并以 `onParameterChange` 发出选择意图；组件不请求数据，也不拥有 BFF、重试或路由工作流。未传入 `selection` 时，Component Lab scenario 可使用本地展示状态。
+
+选择器与 `Measurement` 放在同一份 report 业务表面中，不增加仅承载选择器的外层 Card；当前参数不会在图表头部重复展示。
+
+`Measurement` 使用单层中性 Analytical Surface：标题、范围、图例与分布证据按顺序呈现；画布宽度超出容器时在图表内部横向滚动。
 
 ## Scenarios
 
