@@ -89,7 +89,7 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 3. 应用 workflow、页面路由、跨组件状态机、真实提交、重试和轮询属于应用工程。
 4. 领域组件只能拥有局部展示状态，例如展开、展示模式、表格局部排序、局部校验。过滤或选择若会改变注入数据集、触发跨组件联动或请求 backend，则属于外部业务状态。
 5. 基础 UI 必须组合 `src/components/ui` 的 shadcn primitive，不自建 Button、Input、Select、Dialog、Table、Tabs、Badge、Switch、Tooltip、Card 或 Dropdown Menu 替代体系。
-6. 业务尺寸走 `.domain-ui-typography`、`src/app/globals.css` 中的 DOE density tokens 和 `docs/practices/domain-ui-sizing.md`。
+6. 视觉、尺寸与 token 决策从 `DESIGN.md` 开始；运行时通过 `.domain-ui-typography` 和 `src/app/globals.css` 实现。业务表面尺寸再使用 `docs/practices/domain-ui-sizing.md`。
 7. 不要把 `NO_DATA`、`N/A` 或 missing values 转换成 `0`。
 8. Planned Condition 不能展示成 Actual Condition。
 9. Observed Wafer Scope 不能默认解释成 planned、released、executed 或 completed wafer scope。
@@ -101,8 +101,8 @@ description: 从当前项目提交历史中沉淀出的领域组件设计与创�
 
 - `AGENTS.md`
 - `CONTEXT.md`
-- `DESIGN_SYSTEM.md`
+- `DESIGN.md`
 - `docs/adr/`
 - `docs/practices/domain-ui-sizing.md`
 - `docs/upstream/components/`
-- `content/docs/knowledge/coding-rules.mdx`
+- `content/docs/knowledge/coding-rules.mdx`（非视觉的 Domain UI 护栏）

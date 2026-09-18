@@ -1,159 +1,24 @@
 ---
-title: 设计系统 / Design System
-description: DOE Domain UI 的 shadcn 基础层、密度 token 与应用接入规范。
+title: DOE Product Design System
+description: DOE 产品视觉语言的唯一规范入口。
 ---
 
-DOE Domain UI 不是自建基础设计系统。基础控件来自 shadcn，本项目只在业务组件范围内增加 DOE 工作台密度 token。
+DOE 产品设计系统的唯一权威入口是仓库根目录的 `DESIGN.md`；在本地仓库中请直接打开该文件。
 
-## 设计语言优先级
+它把以下内容从 Fumadocs 文档壳和 shadcn primitive 实现中分离出来：
 
-本项目对 shadcn 的关注重点是完整的设计语言，而不只是单个组件：布局组合、字体层级、间距、控件尺寸、圆角、语义色、响应式节奏和交互状态都应保持一致。
+- DOE visual language 与其原则；
+- DOE-owned token 与 density contract；
+- 可复用 Pattern 和 Domain visual asset 的准入边界；
+- 参考模板、原型和截图如何被提炼为 DOE 规则。
 
-本地上游 `/Users/fantianze/Vibe/g-working/g-doe/ui` 是该设计语言的 source of truth。引入 block 时先忠实同步其 layout 与 component composition；其中的业务文案、样例数据、账号和页面功能不是 DOE 设计事实，只有在用户确认适配时才替换。完整规则见 [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor)。
+Fumadocs 的导航、prose 样式、theme preset 与演示页面仅服务文档。shadcn 是实现基础层。两者都不是 DOE 产品设计规则的来源。
 
-## 应用接入入口
+## Read Next
 
-应用工程使用这套业务组件时，先读根目录：
+1. `DESIGN.md`
+2. `docs/visual-system/principles.md`
+3. `docs/visual-system/architecture.md`
+4. `docs/foundation/tokens.md`
 
-- `DESIGN_SYSTEM.md`
-- `CONTEXT.md`
-- `docs/practices/domain-ui-sizing.md`
-- `docs/adr/0008-use-shadcn-for-foundation-ui.md`
-- `docs/adr/0009-layout-components-are-domain-assets.md`
-
-应用侧必须把承载 DOE 业务组件的区域包在 `.domain-ui-typography` 下：
-
-```tsx
-<main className="domain-ui-typography">
-  <Lot />
-  <Steps />
-  <RunCard />
-</main>
-```
-
-## 基础层
-
-- shadcn 是基础 UI 层。
-- DOE Domain UI 不提供第二套 Button、Input、Select、Dialog、Table、Badge、Card。
-- 领域组件只组合 shadcn primitive、业务 schema、fixtures/scenarios 和局部交互状态。
-
-## 密度 Token
-
-Token 源头在 `src/app/globals.css`。
-
-| Token | Value | 用途 |
-| --- | ---: | --- |
-| `--doe-font-meta` | `12px` | 表格、元信息 |
-| `--doe-font-label` | `13px` | 表单 label、辅助标签 |
-| `--doe-font-body` | `14px` | 默认业务阅读字号 |
-| `--doe-font-module-title` | `16px` | 模块标题 |
-| `--doe-font-modal-title` | `20px` | Modal 标题 |
-| `--doe-font-workspace-title` | `28px` | 工作流起点标题 |
-| `--doe-control-sm` | `32px` | 小按钮、图标按钮 |
-| `--doe-control-md` | `36px` | 默认按钮 |
-| `--doe-control-lg` | `40px` | 表单控件、主操作 |
-| `--doe-table-row-height` | `52px` | Split Table 行高 |
-| `--doe-module-padding` | `20px` | 模块内边距 |
-| `--doe-component-preview-wide-width` | `1248px` | Component Lab 宽检测组件预览宽度 |
-| `--doe-related-component-gap` | `16px` | 主组件与关联结果组件之间的间距 |
-| `--doe-split-table-min-width` | `1776px` | Step x Wafer 宽表的最小可读宽度 |
-| `--doe-split-table-*-column` | varies | Stage、Step、Condition、Recipe、操作、Wafer 等语义列宽 |
-| `--doe-inline-matrix-min-width` | `1680px` | Inline Parameter × Wafer 矩阵的最小可读宽度 |
-| `--doe-inline-matrix-*-column` | varies | Inline 矩阵 parameter 与 wafer 的语义列宽 |
-| `--doe-release-modal-width` | `780px` | RunCard 下发弹窗宽度 |
-| `--doe-release-modal-max-height` | `760px / viewport-safe` | 下发弹窗最大高度 |
-| `--doe-release-tree-min-width` | `672px` | RunCard 树结构最小可读宽度 |
-| `--doe-release-owner-width` | `192px` | RunCard 归属选择列宽 |
-| `--doe-wafer-parameter-column` | `248px` | Wafer capability 参数选择列宽 |
-| `--doe-wafer-parameter-padding` | `16px` | 参数选择面板内边距 |
-| `--doe-wafer-parameter-list-gap` | `10px` | 参数选择项间距 |
-| `--doe-defect-wafer-column` | `216px` | Wafer defect 选择列宽 |
-| `--doe-defect-map-column-min` | `544px` | Wafer map 最小可读列宽 |
-| `--doe-defect-detail-column-min` | `352px` | 缺陷详情最小可读列宽 |
-| `--doe-defect-detail-column-max` | `480px` | 缺陷详情最大列宽，剩余空间留给 wafer map |
-| `--doe-defect-wafer-item-min-width` | `168px` | 窄布局下 Wafer defect 选择项最小宽度 |
-| `--doe-defect-wafer-item-min-height` | `64px` | Wafer defect 选择项最小高度 |
-| `--doe-defect-map-panel-padding` | `16px` | Wafer defect map 面板内边距 |
-| `--doe-defect-detail-panel-padding` | `20px` | Wafer defect detail 面板内边距 |
-| `--doe-defect-image-height` | `252px` | 内联缺陷证据图高度 |
-| `--doe-radius-control` | `10px` | 控件圆角 |
-| `--doe-radius-card` | `14px` | 业务模块卡片圆角 |
-
-## shadcn Slot 覆盖
-
-`.domain-ui-typography` 会统一约束这些 shadcn slot：
-
-- `data-slot="card"`
-- `data-slot="card-header"`
-- `data-slot="card-footer"`
-- `data-slot="card-title"`
-- `data-slot="button"`
-- `data-slot="input"`
-- `data-slot="select-trigger"`
-- `data-slot="textarea"`
-- `data-slot="table"`
-- `data-slot="table-head"`
-- `data-slot="table-cell"`
-
-## 关联组件栈
-
-当一个业务组件因为局部交互渲染另一个关联结果组件时，使用语义 utility，不要给子组件写局部 margin：
-
-```tsx
-<div className="domain-ui-related-stack">
-  <Steps />
-  <RunCardHistory />
-</div>
-```
-
-间距由 `--doe-related-component-gap` 控制，当前对齐原型模块间距 `16px`。
-
-## 宽业务表格
-
-Step x Wafer 这类表格天然比普通应用容器更宽。页面不应该被表格撑开，横向滚动应该收在业务模块内部：
-
-```tsx
-<div className="domain-ui-split-table-shell">
-  <Table className="domain-ui-split-table" />
-</div>
-```
-
-列宽由 `--doe-split-table-*-column` 系列 token 控制；组件可以用 `colgroup` 消费这些 token，避免在单元格上写一次性的宽度值。
-
-Inline Parameter × Wafer 矩阵同样把滚动限制在 `domain-ui-inline-matrix-shell` 内，并使用 `domain-ui-inline-matrix-*-column` 控制列宽。
-
-## 业务表面尺寸
-
-当 shadcn primitive 在领域组件中表现为业务卡片、tab、tile、证据图触发器、宽表或图表面板时，不要直接在 JSX 里拍局部尺寸。保留 shadcn primitive，把尺寸契约放进语义 token 和 utility。
-
-例如证据图虽然用 `Button` 打开弹窗，但视觉上是图片预览面板，所以高度走 `--doe-defect-image-height`：
-
-```css
-.domain-ui-typography [data-slot="button"].domain-ui-defect-image-trigger {
-  height: var(--doe-defect-image-height);
-}
-```
-
-完整方法见 `docs/practices/domain-ui-sizing.md`。
-
-## 禁止项
-
-普通业务组件不要直接使用展示型尺寸作为默认样式：
-
-```text
-text-xl text-2xl text-3xl text-4xl
-h-12 p-8 p-10 space-y-8
-```
-
-只有工作流起点、图表重点数值、Modal 标题这类明确语义可以使用较大 token。
-
-## 验收方式
-
-应用侧接入后，至少检查：
-
-- 默认业务文本约为 `14px`
-- dense table 文本约为 `12px`
-- Input、Select、主要 Button 高度为 `40px`
-- Split Table 行高为 `52px`
-- Step x Wafer 宽表只在模块内部横向滚动，不撑开页面
-- 业务模块标题为 `16px`
+业务表面尺寸的实施方法见 `docs/practices/domain-ui-sizing.md`。具体领域组件的数据、状态与局部交互仍以其 MDX、schema、fixture 和 scenario 为准。

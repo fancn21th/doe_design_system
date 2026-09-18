@@ -9,10 +9,10 @@ Use this protocol for DOE Domain UI work. The goal is to make agents execute est
 ### Global Sources
 
 - `AGENTS.md` is the always-loaded constitution: framework safety, Domain UI hard rules, and routing pointers.
-- `DESIGN_SYSTEM.md` is the consumer-facing entry point for application projects that integrate the Domain UI package.
+- `DESIGN.md` is the sole entry point and authority for DOE product visual decisions. Its `docs/visual-system/`, `docs/foundation/`, `docs/patterns/`, and `docs/domain/` tree is the design-system source; `DESIGN_SYSTEM.md` is a compatibility pointer only.
 - `CONTEXT.md` is the handbook: glossary, rationale, conventions, and execution protocol.
 - `docs/adr/` records architectural boundaries: domain UI assets, schema independence, scenarios, dependency direction, shadcn foundation, and layout assets.
-- `docs/practices/domain-ui-sizing.md` records the sizing method for business surfaces composed from shadcn primitives, including selector cards, evidence previews, wide tables, and chart panels.
+- `docs/practices/domain-ui-sizing.md` is the component-level method for applying the foundation token contract to business surfaces.
 - `docs/upstream/` stores raw prototype screenshots and notes. Treat them as evidence to distill, not as runtime instructions.
 - `content/docs/knowledge/coding-rules.mdx` is the user-facing coding rule page.
 
@@ -48,32 +48,14 @@ Foundation UI comes from this repository's `src/components/ui` shadcn components
 
 Important local shadcn detail: this project uses Base UI style primitives in places such as `Select` and `DropdownMenu`. Before using a primitive in a new way, check an existing local usage or the component source under `src/components/ui`.
 
-### Domain Density Tokens
+### Visual System Routing
 
-DOE Domain UI uses a compact workstation density derived from the prototype. The default body reading size is 14px; metadata and table text are smaller; module titles are compact; modal or workflow-start titles are the exception.
-
-Apply density through `.domain-ui-typography` and the DOE token set in `src/app/globals.css`. New domain components should inherit shadcn primitive sizing from that scope instead of adding local display-scale classes.
-
-Avoid using these classes as a component default unless the component is explicitly a workflow start screen, chart focus value, or modal title:
-
-```text
-text-xl text-2xl text-3xl text-4xl
-h-12 p-8 p-10 space-y-8
-```
-
-Prefer shadcn primitive sizes plus scoped tokens:
-
-```text
-Button size="default" | "lg"
-Input / Select / Textarea under .domain-ui-typography
-Card / Table / Badge under .domain-ui-typography
-```
-
-If a component needs a larger value, name the semantic reason first, then use an existing DOE token or add a token in `globals.css`. Do not tune one component with isolated pixel values.
-
-When a component renders a related result component from its own local interaction, wrap them with `.domain-ui-related-stack`. The gap is controlled by `--doe-related-component-gap`; do not put ad hoc margins on either child component.
-
-When a shadcn primitive visually behaves like a business card, tab, tile, image trigger, wide table, or chart panel, read `docs/practices/domain-ui-sizing.md` before changing its size. Keep the shadcn primitive, but move the size contract into semantic DOE tokens and utility classes.
+`CONTEXT.md` does not define visual rules. For density, typography, colour,
+spacing, radius, layout, token, Pattern, or Domain visual decisions, follow the
+reading order in `DESIGN.md`. Apply the resulting token contract through
+`.domain-ui-typography` and the DOE implementation in `src/app/globals.css`.
+Use `docs/practices/domain-ui-sizing.md` only when a shadcn primitive acts as a
+larger DOE business surface.
 
 ### Prototype Distillation
 
@@ -124,8 +106,11 @@ The project is AI-friendly when a new agent can receive a request such as "add a
 ## Language
 
 **Domain UI Project**:
-A project that collects reusable DOE business UI assets: schemas, fixtures, scenarios, domain components, and a component lab. It does not own application workflows or backend integrations.
-_Avoid_: Application, app shell, page workflow, design system
+A project that collects reusable DOE business UI assets—schemas, fixtures,
+scenarios, domain components, and a component lab—and owns the DOE Product
+Design System's visual contracts. It does not own application workflows,
+backend integrations, or generic foundation primitives.
+_Avoid_: Application, app shell, page workflow, generic primitive library
 
 **Domain UI Asset**:
 A reusable asset that represents DOE business data, business presentation, or local business interaction. Examples include a domain schema, fixture, scenario, component, or business layout fragment.
@@ -140,12 +125,14 @@ A reusable layout asset for arranging DOE business surfaces, such as a domain wo
 _Avoid_: App shell, page workflow, CSS framework
 
 **Foundation UI**:
-Low-level reusable UI primitives used to build domain components, such as buttons, inputs, badges, and dialogs. In this project, Foundation UI comes from shadcn and is not a local design system owned by the domain UI project.
-_Avoid_: Domain asset, public component, local design system
+Low-level reusable UI primitives used to build domain components, such as
+buttons, inputs, badges, and dialogs. In this project, Foundation UI comes from
+shadcn; it is separate from DOE Product Design System visual contracts.
+_Avoid_: Domain asset, public component, DOE visual authority
 
 **Shadcn Foundation**:
 The design-system-backed foundation layer used for generic UI primitives and interaction patterns. Domain components compose this foundation instead of replacing it.
-_Avoid_: Custom primitive library, local design system
+_Avoid_: Custom primitive library, DOE product visual authority
 
 **UI-Facing Schema**:
 A schema that describes the business data shape consumed by domain UI assets. It is not the backend, MES, Oracle, or gateway contract.

@@ -14,7 +14,7 @@ pnpm dev
 
 ## 应用接入 / Application Integration
 
-应用工程接入这套业务组件前，先读 [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)。
+应用工程接入这套业务组件前，先读 [DESIGN.md](./DESIGN.md)。
 
 最小接入约束：
 
@@ -23,7 +23,8 @@ pnpm dev
 - 承载业务组件的区域必须包在 `.domain-ui-typography` 下。
 - 应用 workflow、App Service、Gateway、MES/Oracle 调用留在应用工程内。
 
-文档站入口：[设计系统 / Design System](/docs/knowledge/design-system)。
+文档站入口：[DOE Product Design System](./DESIGN.md)。Fumadocs 文档站的
+主题与示例 UI 仅服务文档，不是 DOE 产品设计规范。
 
 ## 当前领域组件 / Domain Components
 
@@ -47,6 +48,6 @@ pnpm exec shadcn build
 
 ## AI 编码规则 / Coding Rule
 
-创建新组件前优先复用已有 Domain Components。基础 UI 控件必须使用原生 shadcn 组件拼装。
-
-尺寸和密度必须走 DOE density tokens，不要在组件里硬编码一套局部大号样式。
+创建新组件前先按 [DESIGN.md](./DESIGN.md) 查找已有 Pattern 或 Domain
+资产。基础 UI 控件必须使用原生 shadcn 组件拼装；DOE 视觉规则和 token 以
+`DESIGN.md` 指向的规范为准。
