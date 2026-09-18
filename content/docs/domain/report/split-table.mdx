@@ -18,14 +18,18 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 ## Contract
 
 `ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
-组件由两部分组成：过滤区域和 Split Table。过滤区域使用多选 Combobox
-按 `stageOptions` / `stepOptions` 过滤；空选中表示 `全部`。表格基于 shadcn
-Table，第一列按 Stage 分组，第二列按 Step / Seq 分组，最后一列 `Top Fail`
-展示该 wafer 中 fail die 数量最多的指标及数量。
+组件由过滤区域和逐 wafer 的 Split Table 组成；过滤区域使用多选 Combobox 按
+`stageOptions` / `stepOptions` 过滤，空选中表示 `全部`。
 
-表格沿用 Layout Shell 的舒展基础 Table 度量：14px 文本、40px 透明表头与
-8px 单元格间距。较宽的业务投影通过组件自身的单层横向滚动容器展示，不能撑破
-MDX 预览壳。
+本轮表格不做 Stage、Step 或 Sequence 聚合：每一行保留 `选择`、Wafer Id、Wafer
+Order、Stage Id、Step Id、Step Sequence、Variant Sequence、Factor、Planned
+Condition、Recipe Id、Is Baseline、Excluded、Step、Coverage Status、Yield、Top
+Fail Group 与 Top Fail Count 的独立字段。来源尚未提供的字段按行显示 `—`，不推断
+实际工艺事实。
+
+过滤区使用紧凑 Analytical Surface；表格保持自己的单层中性边界与浅色结构表头，
+不嵌入第二张 Card。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
+预览壳。
 
 ## Scenarios
 

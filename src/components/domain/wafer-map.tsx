@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
 import {
@@ -19,6 +19,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
 import { cn } from "@/lib/utils"
 import {
   waferMapDataSchema,
@@ -233,10 +241,10 @@ export type WaferMapCardProps = { input: WaferMapGalleryInput; wafer: AnyWafer; 
 
 export function WaferMapCard({ input, wafer, className, onDieSelect }: WaferMapCardProps) {
   return (
-    <Card size="sm" className={cn("gap-2", className)}>
+    <Card size="sm" className={cn("gap-2 border ring-0 shadow-none", className)}>
       <CardHeader className="px-3"><CardTitle className="font-mono">{wafer.waferId}</CardTitle></CardHeader>
       <CardContent className="px-3"><WaferMapCore input={input} wafer={wafer} onDieSelect={onDieSelect} /></CardContent>
-      <CardFooter className="grid grid-cols-2 gap-2 px-3 py-2 text-xs"><Metric label="Pass" value={wafer.summary.pass} /><Metric label="Fail" value={wafer.summary.fail} /></CardFooter>
+      <CardFooter className="grid grid-cols-2 gap-2 bg-transparent px-3 py-2 text-xs"><Metric label="Pass" value={wafer.summary.pass} /><Metric label="Fail" value={wafer.summary.fail} /></CardFooter>
     </Card>
   )
 }
@@ -250,9 +258,10 @@ export type WaferMapGalleryProps = {
   className?: string
   onDieSelect?: (waferId: string, die: DieData) => void
   onDefectFiltersChange?: (filters: { layerId: string; typeIds: string[] }) => void
+  showParameterLegend?: boolean
 }
 
-export function WaferMapGallery({ input, className, onDieSelect, onDefectFiltersChange }: WaferMapGalleryProps) {
+export function WaferMapGallery({ input, className, onDieSelect, onDefectFiltersChange, showParameterLegend = true }: WaferMapGalleryProps) {
   const parsedInput = waferMapGalleryInputSchema.parse(input)
   const [localDefectFilters, setLocalDefectFilters] = useState<{ layerId: string; typeIds: string[] } | null>(null)
   const galleryInput = parsedInput.kind === "defect" && localDefectFilters
@@ -266,8 +275,8 @@ export function WaferMapGallery({ input, className, onDieSelect, onDefectFilters
 
   return (
     <section className={cn("not-prose domain-ui-typography grid gap-3", className)} aria-label="Wafer map gallery">
-      <GalleryLegend input={galleryInput} onDefectFiltersChange={changeDefectFilters} />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {(galleryInput.kind !== "cp-parameter" || showParameterLegend) && <GalleryLegend input={galleryInput} onDefectFiltersChange={changeDefectFilters} />}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {galleryInput.wafers.map((wafer) => <WaferMapCard key={wafer.waferId} input={galleryInput} wafer={wafer} onDieSelect={onDieSelect} />)}
       </div>
     </section>
@@ -275,15 +284,103 @@ export function WaferMapGallery({ input, className, onDieSelect, onDefectFilters
 }
 
 function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGalleryInput; onDefectFiltersChange: (filters: { layerId: string; typeIds: string[] }) => void }) {
-  if (input.kind === "cp-parameter") return <div className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground"><b className="mr-2 text-foreground">{input.parameter.label}</b>{input.parameter.scale.domainMin} → {input.parameter.scale.domainMax}{input.parameter.unit ? ` ${input.parameter.unit}` : ""}</div>
-  if (input.kind === "defect") return <div className="grid gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-xs"><div className="flex flex-wrap items-center gap-1"><span className="mr-1 text-muted-foreground">Layer</span>{input.layers.map((layer) => <FilterButton key={layer.id} active={layer.id === input.selectedLayerId} onClick={() => onDefectFiltersChange({ layerId: layer.id, typeIds: input.selectedDefectTypeIds })}>{layer.label}</FilterButton>)}</div><div className="flex flex-wrap items-center gap-1"><span className="mr-1 text-muted-foreground">Type</span>{input.defectTypes.map((type) => <FilterButton key={type.id} active={input.selectedDefectTypeIds.includes(type.id)} onClick={() => onDefectFiltersChange({ layerId: input.selectedLayerId, typeIds: input.selectedDefectTypeIds.includes(type.id) ? input.selectedDefectTypeIds.filter((id) => id !== type.id) : [...input.selectedDefectTypeIds, type.id] })}><i className="size-2 rounded-sm" style={{ background: defectColor(type.id) }} />{type.label}</FilterButton>)}</div></div>
+  if (input.kind === "cp-parameter") return <GalleryFilterSurface><p className="text-xs text-muted-foreground"><b className="mr-2 text-foreground">{input.parameter.label}</b>{input.parameter.scale.domainMin} → {input.parameter.scale.domainMax}{input.parameter.unit ? ` ${input.parameter.unit}` : ""}</p></GalleryFilterSurface>
+  if (input.kind === "defect") return <DefectFilterComboboxes input={input} onChange={onDefectFiltersChange} />
   const binCounts = new Map<string, number>()
   for (const wafer of input.wafers) for (const die of wafer.dies) binCounts.set(die.finalBin, (binCounts.get(die.finalBin) ?? 0) + 1)
-  return <div className="flex flex-wrap gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-xs">{[...binCounts.entries()].sort(([left], [right]) => Number(left) - Number(right)).map(([bin, count]) => <span key={bin} className="flex items-center gap-1"><i className="size-2 rounded-sm" style={{ background: finalBinColor(bin, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />Bin {bin} · {count.toLocaleString()}</span>)}</div>
+  return <GalleryFilterSurface><div className="flex flex-wrap gap-2 text-xs">{[...binCounts.entries()].sort(([left], [right]) => Number(left) - Number(right)).map(([bin, count]) => <span key={bin} className="flex items-center gap-1"><i className="size-2 rounded-sm" style={{ background: finalBinColor(bin, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />Bin {bin} · {count.toLocaleString()}</span>)}</div></GalleryFilterSurface>
 }
 
-function FilterButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
-  return <button type="button" className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5", active ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground")} aria-pressed={active} onClick={onClick}>{children}</button>
+type FilterOption = { id: string; label: string }
+
+function DefectFilterComboboxes({
+  input,
+  onChange,
+}: {
+  input: Extract<WaferMapGalleryInput, { kind: "defect" }>
+  onChange: (filters: { layerId: string; typeIds: string[] }) => void
+}) {
+  const layerInputId = useId()
+  const typeInputId = useId()
+  const selectedLayer = input.layers.find((layer) => layer.id === input.selectedLayerId) ?? null
+  const selectedType = input.selectedDefectTypeIds.length === 1
+    ? input.defectTypes.find((type) => type.id === input.selectedDefectTypeIds[0]) ?? null
+    : null
+  const typeOptions: FilterOption[] = [
+    { id: "__all__", label: "All Defect Type" },
+    ...input.defectTypes,
+  ]
+  const selectedTypeOption = selectedType ?? typeOptions[0]
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      <FilterCombobox
+        id={layerInputId}
+        label="Layer"
+        placeholder="搜索并选择 Layer"
+        items={input.layers}
+        value={selectedLayer}
+        onValueChange={(nextLayer) => {
+          if (nextLayer) onChange({ layerId: nextLayer.id, typeIds: input.selectedDefectTypeIds })
+        }}
+      />
+      <FilterCombobox
+        id={typeInputId}
+        label="Defect Type"
+        placeholder="搜索 Defect Type"
+        items={typeOptions}
+        value={selectedTypeOption}
+        onValueChange={(nextType) => onChange({
+          layerId: input.selectedLayerId,
+          typeIds: nextType && nextType.id !== "__all__" ? [nextType.id] : [],
+        })}
+      />
+    </div>
+  )
+}
+
+function FilterCombobox({
+  id,
+  label,
+  placeholder,
+  items,
+  value,
+  onValueChange,
+}: {
+  id: string
+  label: string
+  placeholder: string
+  items: FilterOption[]
+  value: FilterOption | null
+  onValueChange: (value: FilterOption | null) => void
+}) {
+  return (
+    <Combobox
+      items={items}
+      value={value}
+      onValueChange={onValueChange}
+      itemToStringLabel={(item) => item.label}
+      itemToStringValue={(item) => item.id}
+      isItemEqualToValue={(item, selectedItem) => item.id === selectedItem.id}
+    >
+      <div className="grid gap-1 sm:w-64">
+        <label htmlFor={id} className="text-xs font-medium text-muted-foreground">{label}</label>
+        <ComboboxInput id={id} placeholder={placeholder} />
+      </div>
+      <ComboboxContent>
+        <ComboboxEmpty>无匹配选项</ComboboxEmpty>
+        <ComboboxList>
+          {(item: FilterOption) => (
+            <ComboboxItem key={item.id} value={item}>{item.label}</ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
+}
+
+function GalleryFilterSurface({ children }: { children: React.ReactNode }) {
+  return <Card size="sm" className="border ring-0 shadow-none"><CardContent className="py-0">{children}</CardContent></Card>
 }
 
 export type WaferMapProps = {

@@ -36,6 +36,8 @@ import { waferMapGalleryScenarios, waferMapScenarios } from "@/components/domain
 
 CP geometry (`CP_DIE_GRID_V1`) and defect geometry (`DEFECT_INDEX_V1`) are independent coordinate contracts. This component deliberately does not infer an overlay between them.
 
+Defect gallery uses single-select, searchable Combobox controls for `Layer` and `Defect Type`. `All Defect Type` serializes to an empty type filter, which means all defect types on the selected Layer.
+
 Hover uses Canvas hit testing and one document portal tooltip, so a 4,099-die wafer never creates 4,099 React nodes. The tooltip currently shows wafer, DIE_X, DIE_Y, Final Bin and, where relevant, parameter value/validity or defect count.
 
 ## Schema

@@ -17,7 +17,18 @@ import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.sc
 
 ## Contract
 
-`ReportWaferMap` 是 report tab 的业务内容组件。每片 wafer 的可视化必须组合 shared `WaferMap`，当前不实现单片 wafer 内部交互。
+`ReportWaferMap` 是 report tab 的业务内容组件，组合 shared `WaferMapGallery` 的三种
+数据合同：CP Final Bin、CP Parameter 与 Defect。Overlay 因为没有共同坐标合同，本轮
+不实现。
+
+页面有两层局部筛选：一级在 `CP Map` 与 `Defect Map` 间切换；CP Map 下的二级筛选为
+`Final Bin` 与 `Parameter Map` 标准 Tabs。选择 `Parameter Map` 后，使用单选、可搜索、
+可清除的 `CP Parameter` Combobox；每个参数选项都有其独立的 25 片 wafer map 输入。
+Defect Map 的二级筛选由 shared gallery 提供 `Layer` 与 `Defect Type` 两个单选、可搜索
+Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视图间共享或推断。
+
+筛选区、图例与每片 wafer 卡片使用中性 Analytical Surface：单层边界、无装饰性阴影与
+无渐变填色；map canvas 和其 Pass / Fail 读数保留各自的业务语义。
 
 ## Scenarios
 

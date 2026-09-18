@@ -1,5 +1,10 @@
 import { measurementFixture } from "@/components/domain/measurement.fixtures"
-import { waferMapW01Fixture } from "@/components/domain/wafer-map.fixtures"
+import {
+  waferMapDefectOverviewFixture,
+  waferMapFinalBinOverviewFixture,
+  waferMapParameterBvdssOverviewFixture,
+  waferMapParameterOverviewFixture,
+} from "@/components/domain/wafer-map.fixtures"
 import type {
   ReportCpDataInput,
   ReportCpInlineInput,
@@ -717,25 +722,53 @@ export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
   ],
 }
 
-function mapFor(waferId: string) {
-  return {
-    ...waferMapW01Fixture,
-    id: waferId,
-    dies: [...waferMapW01Fixture.dies],
-  }
-}
-
 export const reportWaferMapFixture: ReportWaferMapInput = {
   title: "Wafer Map",
-  subtitle: "Report-level wafer grid. Wafer visualization composes shared WaferMap.",
+  subtitle: "Report-level CP final-bin, parameter, and defect wafer-map views.",
   sourceLabel: "REPORT SNAPSHOT",
-  mode: "CP Map",
-  layer: "Final Bin",
-  wafers: [
-    { waferId: "W01", role: "BSL", pass: 4084, fail: 15, defect: 68, tone: "good", map: mapFor("W01") },
-    { waferId: "W02", role: "split-1", pass: 4087, fail: 12, defect: 73, tone: "good", map: mapFor("W02") },
-    { waferId: "W03", role: "split-2", pass: 319, fail: 3780, defect: 225, tone: "bad", map: mapFor("W03") },
-    { waferId: "W10", role: "split-2", pass: 2559, fail: 1540, defect: 148, tone: "watch", map: mapFor("W10") },
+  mapViews: [
+    {
+      kind: "cp-final-bin",
+      status: "ready",
+      wafers: waferMapFinalBinOverviewFixture,
+    },
+    {
+      kind: "cp-parameter",
+      status: "ready",
+      parameter: {
+        parameterCode: "IDDQ",
+        label: "IDDQ",
+        unit: "mA",
+        scale: { domainMin: 0.7, median: 0.85, domainMax: 1 },
+      },
+      wafers: waferMapParameterOverviewFixture,
+    },
+    {
+      kind: "cp-parameter",
+      status: "ready",
+      parameter: {
+        parameterCode: "BVDSS",
+        label: "BVDSS",
+        unit: "V",
+        scale: { domainMin: 540, median: 582.5, domainMax: 625 },
+      },
+      wafers: waferMapParameterBvdssOverviewFixture,
+    },
+    {
+      kind: "defect",
+      status: "ready",
+      layers: [
+        { id: "M1", label: "M1" },
+        { id: "M2", label: "M2" },
+      ],
+      selectedLayerId: "M1",
+      defectTypes: [
+        { id: "particle", label: "Particle" },
+        { id: "scratch", label: "Scratch" },
+      ],
+      selectedDefectTypeIds: ["particle", "scratch"],
+      wafers: waferMapDefectOverviewFixture,
+    },
   ],
 }
 

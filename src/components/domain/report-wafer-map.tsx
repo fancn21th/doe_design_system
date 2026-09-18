@@ -1,16 +1,24 @@
 "use client"
 
-import { WaferMap } from "@/components/domain/wafer-map"
+import * as React from "react"
+
 import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
+import { WaferMapGallery } from "@/components/domain/wafer-map"
+import { EmptyState } from "@/components/domain/report-parts"
 import {
-  EmptyState,
-  ReportBadge,
-  reportToneClass,
-} from "@/components/domain/report-parts"
-import { cn } from "@/lib/utils"
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   reportWaferMapInputSchema,
   type ReportWaferMapInput,
+  type WaferMapGalleryInput,
 } from "@/schemas/domain-component-inputs"
 
 type ReportWaferMapProps = {
@@ -18,62 +26,165 @@ type ReportWaferMapProps = {
   className?: string
 }
 
+type PrimaryView = "cp" | "defect"
+type CpView = "final-bin" | "parameter"
+type CpParameterOption = { label: string; value: string }
+
 export function ReportWaferMap({
   input = reportWaferMapScenarios.normal.input,
   className,
 }: ReportWaferMapProps) {
   const scenarioInput = reportWaferMapScenarios.normal.input
   const parsedInput = reportWaferMapInputSchema.parse(input)
-  const wafers = parsedInput.wafers ?? scenarioInput.wafers ?? []
+  const mapViews = parsedInput.mapViews ?? scenarioInput.mapViews ?? []
+  const finalBinView = findMapView(mapViews, "cp-final-bin")
+  const parameterViews = findMapViews(mapViews, "cp-parameter")
+  const defectView = findMapView(mapViews, "defect")
+  const [primaryView, setPrimaryView] = React.useState<PrimaryView>("cp")
+  const [cpView, setCpView] = React.useState<CpView>("final-bin")
+  const [selectedParameterCode, setSelectedParameterCode] = React.useState<string | null>(
+    () => parameterViews[0]?.parameter.parameterCode ?? null
+  )
+  const parameterOptions = parameterViews.map((view) => ({
+    label: view.parameter.label,
+    value: view.parameter.parameterCode,
+  }))
+  const selectedParameterView = parameterViews.find(
+    (view) => view.parameter.parameterCode === selectedParameterCode
+  )
+
+  const visibleMapView = primaryView === "defect"
+    ? defectView
+    : cpView === "parameter"
+      ? selectedParameterView
+      : finalBinView
+
+  if (!finalBinView && parameterViews.length === 0 && !defectView) {
+    return <EmptyState>暂无 Report Wafer Map 数据</EmptyState>
+  }
 
   return (
-    <div className={className}>
-      {wafers.length === 0 ? (
-        <EmptyState>暂无 Report Wafer Map 数据</EmptyState>
-      ) : (
-        <div className="grid gap-4 p-4">
-          <div className="flex flex-wrap gap-2">
-            <ReportBadge tone="neutral">{parsedInput.mode ?? "CP Map"}</ReportBadge>
-            <ReportBadge tone="neutral">{parsedInput.layer ?? "Final Bin"}</ReportBadge>
-            <ReportBadge tone="neutral">uses shared WaferMap</ReportBadge>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {wafers.map((wafer) => (
-              <article key={wafer.waferId} className="rounded-lg border bg-background p-3">
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <b className="font-mono text-sm">{wafer.waferId}</b>
-                    {wafer.role && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {wafer.role}
-                      </span>
-                    )}
-                  </div>
-                  <ReportBadge tone={wafer.tone}>{wafer.fail} Fail</ReportBadge>
-                </div>
-                <div className="flex aspect-square items-center justify-center rounded-md border bg-muted/20 p-2">
-                  <WaferMap data={wafer.map} width={180} height={180} />
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                  {[
-                    ["Pass", wafer.pass, "good"],
-                    ["Fail", wafer.fail, wafer.tone],
-                    ["Defect", wafer.defect, "watch"],
-                  ].map(([label, value, tone]) => (
-                    <div
-                      key={label}
-                      className={cn("rounded-md border p-2", reportToneClass(tone as never))}
-                    >
-                      <b className="block font-mono">{Number(value).toLocaleString()}</b>
-                      <span className="text-muted-foreground">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
+    <section className={className} aria-label="Report Wafer Map">
+      <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs
+            value={primaryView}
+            onValueChange={(value) => setPrimaryView(value as PrimaryView)}
+            className="gap-0"
+          >
+            <TabsList>
+              {(finalBinView || parameterViews.length > 0) && (
+                <TabsTrigger value="cp">CP Map</TabsTrigger>
+              )}
+              {defectView && (
+                <TabsTrigger value="defect">Defect Map</TabsTrigger>
+              )}
+            </TabsList>
+          </Tabs>
+
+          {primaryView === "cp" && (finalBinView || parameterViews.length > 0) && (
+            <>
+              <Separator orientation="vertical" className="h-5" />
+              <Tabs
+                value={cpView}
+                onValueChange={(value) => setCpView(value as CpView)}
+                className="gap-0"
+              >
+                <TabsList>
+                {finalBinView && (
+                  <TabsTrigger value="final-bin">Final Bin</TabsTrigger>
+                )}
+                {parameterViews.length > 0 && (
+                  <TabsTrigger value="parameter">Parameter Map</TabsTrigger>
+                )}
+                </TabsList>
+              </Tabs>
+            </>
+          )}
         </div>
-      )}
-    </div>
+
+        {primaryView === "cp" && cpView === "parameter" && (
+          <CpParameterCombobox
+            options={parameterOptions}
+            value={selectedParameterCode}
+            onValueChange={setSelectedParameterCode}
+          />
+        )}
+
+        {visibleMapView ? (
+          <WaferMapGallery
+            input={visibleMapView}
+            showParameterLegend={false}
+          />
+        ) : primaryView === "cp" && cpView === "parameter" ? (
+          <EmptyState>请选择 CP Parameter</EmptyState>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+function CpParameterCombobox({
+  options,
+  value,
+  onValueChange,
+}: {
+  options: CpParameterOption[]
+  value: string | null
+  onValueChange: (value: string | null) => void
+}) {
+  const inputId = React.useId()
+  const selectedOption = options.find((option) => option.value === value) ?? null
+
+  return (
+    <Combobox
+      items={options}
+      value={selectedOption}
+      onValueChange={(nextValue) => onValueChange(nextValue?.value ?? null)}
+      itemToStringLabel={(item) => item.label}
+      itemToStringValue={(item) => item.value}
+      isItemEqualToValue={(item, selectedItem) => item.value === selectedItem.value}
+    >
+      <div className="grid gap-1 sm:max-w-xs">
+        <label htmlFor={inputId} className="text-xs font-medium text-muted-foreground">
+          CP Parameter
+        </label>
+        <ComboboxInput
+          id={inputId}
+          placeholder="搜索并选择 CP Parameter"
+          showClear
+        />
+      </div>
+      <ComboboxContent>
+        <ComboboxEmpty>无匹配参数</ComboboxEmpty>
+        <ComboboxList>
+          {(option: CpParameterOption) => (
+            <ComboboxItem key={option.value} value={option}>
+              {option.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
+}
+
+function findMapView<Kind extends WaferMapGalleryInput["kind"]>(
+  mapViews: WaferMapGalleryInput[],
+  kind: Kind
+) {
+  return mapViews.find(
+    (mapView): mapView is Extract<WaferMapGalleryInput, { kind: Kind }> =>
+      mapView.kind === kind
+  )
+}
+
+function findMapViews<Kind extends WaferMapGalleryInput["kind"]>(
+  mapViews: WaferMapGalleryInput[],
+  kind: Kind
+) {
+  return mapViews.filter(
+    (mapView): mapView is Extract<WaferMapGalleryInput, { kind: Kind }> =>
+      mapView.kind === kind
   )
 }

@@ -8,6 +8,8 @@ import {
   ReportBadge,
   formatPercent,
 } from "@/components/domain/report-parts"
+import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Combobox,
   ComboboxChip,
@@ -44,15 +46,6 @@ type ComboboxOption = {
   value: string
 }
 
-type RenderRow = {
-  row: ReportSplitTableRow
-  key: string
-  showStage: boolean
-  stageRowSpan: number
-  showStep: boolean
-  stepRowSpan: number
-}
-
 const EMPTY_SPLIT_TABLE_ROWS: ReportSplitTableRow[] = []
 
 function unique(values: string[]) {
@@ -78,53 +71,8 @@ function getRowTone(yieldValue: number): ReportSplitTableRow["tone"] {
   return "good"
 }
 
-function groupRows(rows: ReportSplitTableRow[]): RenderRow[] {
-  const renderRows: RenderRow[] = rows.map((row, index) => ({
-    row,
-    key: `${row.stage}-${row.step}-${row.seq}-${row.waferId}-${row.role}-${index}`,
-    showStage: false,
-    stageRowSpan: 0,
-    showStep: false,
-    stepRowSpan: 0,
-  }))
-
-  let stageStart = 0
-  while (stageStart < renderRows.length) {
-    const stage = renderRows[stageStart].row.stage
-    let stageEnd = stageStart + 1
-
-    while (
-      stageEnd < renderRows.length &&
-      renderRows[stageEnd].row.stage === stage
-    ) {
-      stageEnd += 1
-    }
-
-    renderRows[stageStart].showStage = true
-    renderRows[stageStart].stageRowSpan = stageEnd - stageStart
-
-    let stepStart = stageStart
-    while (stepStart < stageEnd) {
-      const { step, seq } = renderRows[stepStart].row
-      let stepEnd = stepStart + 1
-
-      while (
-        stepEnd < stageEnd &&
-        renderRows[stepEnd].row.step === step &&
-        renderRows[stepEnd].row.seq === seq
-      ) {
-        stepEnd += 1
-      }
-
-      renderRows[stepStart].showStep = true
-      renderRows[stepStart].stepRowSpan = stepEnd - stepStart
-      stepStart = stepEnd
-    }
-
-    stageStart = stageEnd
-  }
-
-  return renderRows
+function displayValue(value: string | number | undefined) {
+  return value ?? "—"
 }
 
 function MultiFilterCombobox({
@@ -261,93 +209,133 @@ export function ReportSplitTable({
       }),
     [rows, selectedStages, selectedSteps]
   )
-  const renderRows = React.useMemo(
-    () => groupRows(filteredRows),
-    [filteredRows]
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(
+    () => new Set()
   )
+  const rowKey = React.useCallback(
+    (row: ReportSplitTableRow, index: number) =>
+      `${row.stage}-${row.step}-${row.seq}-${row.waferId}-${row.role}-${index}`,
+    []
+  )
+  const filteredRowKeys = React.useMemo(
+    () => filteredRows.map(rowKey),
+    [filteredRows, rowKey]
+  )
+  const allFilteredRowsSelected =
+    filteredRowKeys.length > 0 &&
+    filteredRowKeys.every((key) => selectedRowKeys.has(key))
+
+  function setRowSelected(key: string, selected: boolean) {
+    setSelectedRowKeys((current) => {
+      const next = new Set(current)
+      if (selected) next.add(key)
+      else next.delete(key)
+      return next
+    })
+  }
+
+  function setFilteredRowsSelected(selected: boolean) {
+    setSelectedRowKeys((current) => {
+      const next = new Set(current)
+      for (const key of filteredRowKeys) {
+        if (selected) next.add(key)
+        else next.delete(key)
+      }
+      return next
+    })
+  }
 
   return (
     <div className={className}>
       {rows.length === 0 ? (
         <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
       ) : (
-        <div className="p-4">
-          <div className="mb-4 flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 md:flex-row">
-            <MultiFilterCombobox
-              label="Stage"
-              placeholder="全部"
-              options={stageOptions}
-              value={selectedStageOptions}
-              onValueChange={setSelectedStageOptions}
-            />
-            <MultiFilterCombobox
-              label="Step"
-              placeholder="全部"
-              options={stepOptions}
-              value={selectedStepOptions}
-              onValueChange={setSelectedStepOptions}
-            />
-          </div>
+        <div className="domain-ui-typography grid gap-4 p-4">
+          <Card size="sm" className="border ring-0 shadow-none">
+            <CardContent className="py-0">
+              <div className="flex flex-col gap-3 md:flex-row">
+                <MultiFilterCombobox
+                  label="Stage"
+                  placeholder="全部"
+                  options={stageOptions}
+                  value={selectedStageOptions}
+                  onValueChange={setSelectedStageOptions}
+                />
+                <MultiFilterCombobox
+                  label="Step"
+                  placeholder="全部"
+                  options={stepOptions}
+                  value={selectedStepOptions}
+                  onValueChange={setSelectedStepOptions}
+                />
+              </div>
+            </CardContent>
+          </Card>
           {filteredRows.length === 0 ? (
             <EmptyState>当前筛选条件下暂无 Wafer Split Table 数据</EmptyState>
           ) : (
             <div className="domain-ui-split-table-shell">
-              <Table className="domain-ui-split-table">
-                <TableHeader>
+              <Table className="domain-ui-split-table domain-ui-report-split-table">
+                <TableHeader className="bg-muted/60">
                   <TableRow>
-                    <TableHead className="w-36">Stage</TableHead>
-                    <TableHead className="w-44">
-                      Step / Seq
+                    <TableHead className="w-12">
+                      <Checkbox
+                        aria-label="选择当前筛选结果"
+                        checked={allFilteredRowsSelected}
+                        onCheckedChange={(checked) =>
+                          setFilteredRowsSelected(Boolean(checked))
+                        }
+                      />
                     </TableHead>
                     <TableHead>Wafer ID</TableHead>
-                    <TableHead>Recipe</TableHead>
-                    <TableHead>Condition</TableHead>
+                    <TableHead>Wafer Order</TableHead>
+                    <TableHead>Stage ID</TableHead>
+                    <TableHead>Step ID</TableHead>
+                    <TableHead>Step Sequence</TableHead>
+                    <TableHead>Variant Sequence</TableHead>
+                    <TableHead>Factor</TableHead>
+                    <TableHead>Planned Condition</TableHead>
+                    <TableHead>Recipe ID</TableHead>
+                    <TableHead>Is Baseline</TableHead>
+                    <TableHead>Excluded</TableHead>
+                    <TableHead>Step</TableHead>
+                    <TableHead>Coverage Status</TableHead>
                     <TableHead>Yield</TableHead>
-                    <TableHead>Top Fail</TableHead>
+                    <TableHead>Top Fail Group</TableHead>
+                    <TableHead>Top Fail Count</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {renderRows.map(
-                    ({
-                      row,
-                      key,
-                      showStage,
-                      stageRowSpan,
-                      showStep,
-                      stepRowSpan,
-                    }) => (
-                      <TableRow key={key}>
-                        {showStage && (
-                          <TableCell
-                            rowSpan={stageRowSpan}
-                            className="border-r bg-muted/20 align-top font-medium"
-                          >
-                            {row.stage}
-                          </TableCell>
-                        )}
-                        {showStep && (
-                          <TableCell
-                            rowSpan={stepRowSpan}
-                            className="border-r bg-background align-top"
-                          >
-                            <span className="font-medium">{row.step}</span>
-                            <span className="block font-mono text-xs text-muted-foreground">
-                              {row.seq}
-                            </span>
-                          </TableCell>
-                        )}
+                  {filteredRows.map((row, index) => {
+                    const key = rowKey(row, index)
+                    const isSelected = selectedRowKeys.has(key)
+
+                    return (
+                      <TableRow key={key} data-state={isSelected ? "selected" : undefined}>
                         <TableCell>
-                          <b className="font-mono text-sky-700">
-                            {row.waferId}
-                          </b>
-                          <span className="ml-2 text-xs text-muted-foreground">
-                            {row.role}
-                          </span>
+                          <Checkbox
+                            aria-label={`选择 ${row.waferId}`}
+                            checked={isSelected}
+                            onCheckedChange={(checked) =>
+                              setRowSelected(key, Boolean(checked))
+                            }
+                          />
                         </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {row.recipe}
+                        <TableCell>
+                          <b className="font-mono font-medium">{row.waferId}</b>
                         </TableCell>
-                        <TableCell>{row.condition}</TableCell>
+                        <TableCell>{displayValue(row.waferOrder)}</TableCell>
+                        <TableCell className="font-mono text-xs">{displayValue(row.stageId)}</TableCell>
+                        <TableCell className="font-mono text-xs">{displayValue(row.stepId)}</TableCell>
+                        <TableCell>{displayValue(row.stepSequence ?? row.seq)}</TableCell>
+                        <TableCell>{displayValue(row.variantSequence)}</TableCell>
+                        <TableCell>{displayValue(row.factor)}</TableCell>
+                        <TableCell>{displayValue(row.plannedCondition ?? row.condition)}</TableCell>
+                        <TableCell className="font-mono text-xs">{displayValue(row.recipeId)}</TableCell>
+                        <TableCell>{row.isBaseline === undefined ? "—" : row.isBaseline ? "Yes" : "No"}</TableCell>
+                        <TableCell>{row.excluded === undefined ? "—" : row.excluded ? "Yes" : "No"}</TableCell>
+                        <TableCell>{row.step}</TableCell>
+                        <TableCell>{displayValue(row.coverageStatus)}</TableCell>
                         <TableCell>
                           <ReportBadge
                             tone={row.tone ?? getRowTone(row.yield)}
@@ -369,13 +357,13 @@ export function ReportSplitTable({
                               {row.topFail}
                             </span>
                           )}
-                          <span className="ml-1 text-xs text-muted-foreground">
-                            · {row.topFailCount.toLocaleString()}
-                          </span>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {row.topFailCount.toLocaleString()}
                         </TableCell>
                       </TableRow>
                     )
-                  )}
+                  })}
                 </TableBody>
               </Table>
             </div>

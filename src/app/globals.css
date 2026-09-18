@@ -160,6 +160,7 @@
     --doe-table-cell-padding-y: 0.4375rem;
     --doe-component-preview-wide-width: 78rem;
     --doe-split-table-min-width: 111rem;
+    --doe-report-split-table-min-width: 128rem;
     --doe-split-table-stage-column: 7rem;
     --doe-split-table-step-column: 12rem;
     --doe-split-table-baseline-column: 6rem;
@@ -362,6 +363,11 @@
     min-width: var(--doe-split-table-min-width);
   }
 
+  .domain-ui-report-split-table {
+    min-width: var(--doe-report-split-table-min-width);
+    table-layout: auto;
+  }
+
   .domain-ui-typography .domain-ui-split-table[data-slot="table"] {
     font-size: 0.875rem;
   }
@@ -370,6 +376,10 @@
     height: 2.5rem;
     padding: 0 0.5rem;
     background: transparent;
+  }
+
+  .domain-ui-typography .domain-ui-report-split-table [data-slot="table-head"] {
+    background: var(--muted);
   }
 
   .domain-ui-typography .domain-ui-split-table [data-slot="table-cell"] {

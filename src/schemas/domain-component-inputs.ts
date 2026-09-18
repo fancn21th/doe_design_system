@@ -387,12 +387,23 @@ export const reportOverviewInputSchema = z.object({
 })
 export const reportSplitTableRowSchema = z.object({
   waferId: z.string(),
+  waferOrder: z.number().int().nonnegative().optional(),
   role: z.string(),
   stage: z.string(),
+  stageId: z.string().optional(),
   step: z.string(),
+  stepId: z.string().optional(),
   seq: z.string(),
+  stepSequence: z.union([z.string(), z.number().int()]).optional(),
+  variantSequence: z.union([z.string(), z.number().int()]).optional(),
+  factor: z.string().optional(),
   recipe: z.string(),
+  recipeId: z.string().optional(),
   condition: z.string(),
+  plannedCondition: z.string().optional(),
+  isBaseline: z.boolean().optional(),
+  excluded: z.boolean().optional(),
+  coverageStatus: z.string().optional(),
   yield: z.number(),
   topFail: z.string(),
   topFailCount: z.number().int().nonnegative(),
@@ -483,22 +494,11 @@ export const reportYieldAnalysisInputSchema = z.object({
   lossYieldRows: z.array(reportYieldLossRowSchema).optional(),
   conditionYieldRows: z.array(reportYieldConditionRowSchema).optional(),
 })
-export const reportWaferMapCardSchema = z.object({
-  waferId: z.string(),
-  role: z.string().optional(),
-  pass: z.number().int().nonnegative(),
-  fail: z.number().int().nonnegative(),
-  defect: z.number().int().nonnegative(),
-  tone: reportToneSchema.default("neutral"),
-  map: waferMapDataSchema,
-})
 export const reportWaferMapInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
-  mode: z.string().optional(),
-  layer: z.string().optional(),
-  wafers: z.array(reportWaferMapCardSchema).optional(),
+  mapViews: z.array(waferMapGalleryInputSchema).optional(),
 })
 export const reportParameterMedianCellSchema = z.object({
   waferId: z.string(),
@@ -705,7 +705,6 @@ export type ReportYieldConditionRow = z.infer<
 export type ReportYieldAnalysisInput = z.infer<
   typeof reportYieldAnalysisInputSchema
 >
-export type ReportWaferMapCard = z.infer<typeof reportWaferMapCardSchema>
 export type ReportWaferMapInput = z.infer<typeof reportWaferMapInputSchema>
 export type ReportParameterMedianCell = z.infer<
   typeof reportParameterMedianCellSchema

@@ -78,6 +78,16 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
   return { waferId, geometry, dies, summary: summaryFor(dies) }
 })
 
+export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
+  const dies = waferMapW01Dies.map((die, dieIndex) => {
+    const pass = (dieIndex * 7 + waferIndex * 31) % 211 !== 0
+    const status = dieIndex % 487 === 0 ? "MISSING" as const : "VALID" as const
+    const value = status === "MISSING" ? null : 540 + ((die.x * 11 + die.y * 7 + waferIndex * 23 + 1600) % 850) / 10
+    return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
+  })
+  return { waferId, geometry, dies, summary: summaryFor(dies) }
+})
+
 export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferIds.map((waferId, waferIndex) => {
   const dies = waferMapW01Dies.map((die, dieIndex) => {
     const defects = (dieIndex + waferIndex * 47) % 197 === 0
