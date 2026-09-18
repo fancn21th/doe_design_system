@@ -39,12 +39,28 @@ export function ReportOverview({
       {!identity && metrics.length === 0 ? (
         <EmptyState>暂无 Report Overview 数据</EmptyState>
       ) : (
-        <div className="grid gap-4 p-4">
+        <div className="domain-ui-typography grid gap-4 p-4">
           {identity && (
-            <OverviewCard><CardHeader><CardDescription>实验基础信息</CardDescription><CardTitle className="text-xl">{identity.product}</CardTitle></CardHeader><CardContent className="grid gap-3 pb-(--card-spacing) text-sm text-muted-foreground"><span>Lot {identity.lotId} · Step {identity.stepCount} · Wafer {identity.waferCount}</span><span>{identity.summary}</span></CardContent></OverviewCard>
+            <OverviewCard>
+              <CardHeader>
+                <CardDescription>实验基础信息</CardDescription>
+                <CardTitle>{identity.product}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 pb-(--card-spacing) text-sm text-muted-foreground">
+                <span>Lot {identity.lotId} · Step {identity.stepCount} · Wafer {identity.waferCount}</span>
+                <span>{identity.summary}</span>
+              </CardContent>
+            </OverviewCard>
           )}
           {metrics.length > 0 && (
-            <section><h2 className="mb-3 text-sm font-semibold">实验概览</h2><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{metrics.map((metric) => <OverviewCard key={metric.label} emphasis><CardHeader><CardDescription>{metric.label}</CardDescription><CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{metric.value}</CardTitle><CardAction>{metric.tone && <ReportBadge tone={metric.tone}>{metric.tone === "bad" ? "需关注" : "已就绪"}</ReportBadge>}</CardAction></CardHeader><CardContent className="pb-(--card-spacing) text-sm text-muted-foreground">{metric.detail}</CardContent></OverviewCard>)}</div></section>
+            <section aria-labelledby="report-overview-metrics">
+              <h2 id="report-overview-metrics" className="mb-3 text-sm font-semibold">实验概览</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {metrics.map((metric) => (
+                  <MetricSnapshot key={metric.label} metric={metric} />
+                ))}
+              </div>
+            </section>
           )}
           {(parsedInput.anomalyRows?.length ?? 0) > 0 && (
             <section className="grid gap-3">
@@ -96,14 +112,54 @@ export function ReportOverview({
   )
 }
 
+function MetricSnapshot({
+  metric,
+}: {
+  metric: NonNullable<ReportOverviewInput["metrics"]>[number]
+}) {
+  const assessmentLabel = metric.tone === "bad"
+    ? "需关注"
+    : metric.tone === "watch"
+      ? "需复核"
+      : metric.tone === "good"
+        ? "状态正常"
+        : undefined
+
+  return (
+    <OverviewCard size="sm">
+      <CardHeader>
+        <CardDescription>{metric.label}</CardDescription>
+        <CardTitle className="font-semibold tabular-nums">{metric.value}</CardTitle>
+        {assessmentLabel && (
+          <CardAction>
+            <ReportBadge tone={metric.tone}>{assessmentLabel}</ReportBadge>
+          </CardAction>
+        )}
+      </CardHeader>
+      {metric.detail && (
+        <CardContent className="pb-(--card-spacing) text-sm text-muted-foreground">
+          {metric.detail}
+        </CardContent>
+      )}
+    </OverviewCard>
+  )
+}
+
 function ItemPanel({ title, items }: { title: string; items: ReportListItem[] }) {
   return (
-    <OverviewCard><CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader><CardContent className="grid gap-2">
+    <OverviewCard size="sm">
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2">
         {items.length === 0 ? (
           <span className="text-sm text-muted-foreground">暂无记录</span>
         ) : (
           items.map((item) => (
-            <div key={`${item.label}-${item.value ?? ""}`} className="border-b py-2 last:border-b-0 first:pt-0 last:pb-0">
+            <div
+              key={`${item.label}-${item.value ?? ""}`}
+              className="border-b py-2 first:pt-0 last:border-b-0 last:pb-0"
+            >
               <div className="flex items-start justify-between gap-2">
                 <b className="min-w-0 break-words font-mono text-xs">{item.label}</b>
                 {item.value && <ReportBadge tone={item.tone}>{item.value}</ReportBadge>}
@@ -114,25 +170,20 @@ function ItemPanel({ title, items }: { title: string; items: ReportListItem[] })
             </div>
           ))
         )}
-      </CardContent></OverviewCard>
+      </CardContent>
+    </OverviewCard>
   )
 }
 
 function OverviewCard({
   children,
-  emphasis = false,
+  size = "default",
 }: {
   children: React.ReactNode
-  emphasis?: boolean
+  size?: "default" | "sm"
 }) {
   return (
-    <Card
-      className={
-        emphasis
-          ? "@container/card gap-0 bg-gradient-to-t from-primary/5 to-card py-0 shadow-xs"
-          : "@container/card gap-0 py-0 shadow-xs"
-      }
-    >
+    <Card size={size} className="@container/card border ring-0 shadow-none">
       {children}
     </Card>
   )

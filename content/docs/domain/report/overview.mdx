@@ -21,8 +21,8 @@ import { reportOverviewScenarios } from "@/components/domain/report-overview.sce
 
 ## Layout roles
 
-- 实验概览 KPI 整组使用 Layout Shell 的渐变指标卡，方便横向比较且可作为未来 Masonry 的独立单元；同组内不混用渐变与普通卡。
-- 分析和摘要使用宽内容卡，承载具有上下文的业务信息。
+- 实验概览 KPI 使用中性 Metric Snapshot：label、可比较 value、明确 assessment 和 evidence 依序呈现；Card 只是承载实现，不使用无业务语义的渐变或阴影强调。
+- 实验基础信息使用默认密度的 Analytical Surface；Metric Snapshot 与四组摘要卡使用紧凑密度。所有 Card 保持单层中性边界，不叠加 ring、阴影或装饰性填色。
 - 明细表保持为直接的圆角表格面，不再嵌入第二层卡片，以保留多列内容的有效宽度。
 
 ## Scenarios

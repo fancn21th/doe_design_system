@@ -16,7 +16,8 @@ Reference
 
 Start with an identifiable template, screenshot, prototype, or existing
 implementation. Record its path, URL, commit, or source context in
-`references/`. A reference is evidence, never a DOE rule by itself.
+`docs/visual-system/reference-analysis/`. A reference is evidence, never a DOE
+rule by itself.
 
 ## 2. Observation
 

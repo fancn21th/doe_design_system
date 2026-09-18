@@ -124,6 +124,24 @@ _Avoid_: Button, Input, Dialog, app container
 A reusable layout asset for arranging DOE business surfaces, such as a domain workspace, module section, evidence preview pane, or business modal frame. It is a domain asset because it preserves business reading order and evidence context, not because it creates a new foundation layout system.
 _Avoid_: App shell, page workflow, CSS framework
 
+**ExperimentSummary**:
+A candidate DOE Domain visual asset that identifies a report or experiment
+subject through its identity, Lot, Step scope, Wafer scope, and source-backed
+context. It is not a generic page header or an execution-status surface.
+_Avoid_: Page title, route header, causal report conclusion
+
+**MetricSnapshot**:
+A candidate product Pattern for one analytical measure plus its explicit
+assessment and interpretive evidence. It is not a generic KPI card and does
+not define the measurement's business meaning.
+_Avoid_: Marketing metric, decorative trend, global status taxonomy
+
+**YieldExceptionSummary**:
+A candidate DOE Domain visual asset that keeps a yield exception attributable
+to split context, wafer identity, available baseline comparison, CP evidence,
+and assessment. It is not a generic data table.
+_Avoid_: Generic grid, inferred pass state, global low-yield threshold
+
 **Foundation UI**:
 Low-level reusable UI primitives used to build domain components, such as
 buttons, inputs, badges, and dialogs. In this project, Foundation UI comes from

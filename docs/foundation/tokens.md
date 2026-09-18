@@ -86,3 +86,5 @@ before changing the runtime value.
   DOE tokens without recording the DOE semantic contract here.
 
 For the component-level sizing method, see `docs/practices/domain-ui-sizing.md`.
+For the selected neutral Card boundary, radius, background, and decoration
+rules, see `docs/foundation/analytical-surfaces.md`.

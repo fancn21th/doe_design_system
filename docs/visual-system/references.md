@@ -4,7 +4,8 @@
 
 References are inputs to analyse, not sources to copy blindly. Record the
 source, the extracted rule, what DOE adopts, and what DOE rejects in
-`references/`. Promote only the distilled rule into this design system.
+`docs/visual-system/reference-analysis/`. Promote only the distilled rule into
+this design system.
 
 Use `docs/visual-system/extraction-process.md` for the required sequence from
 evidence to a Foundation, Pattern, or Domain contract.
