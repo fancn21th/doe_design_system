@@ -13,6 +13,7 @@ import type {
   ReportParameterMedianInput,
   ReportSplitTableInput,
   ReportWaferMapInput,
+  ReportWaferYieldCpFail,
   ReportYieldAnalysisInput,
 } from "@/schemas/domain-component-inputs"
 
@@ -724,6 +725,67 @@ export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
     { waferIds: ["W08"], stage: "Clean", step: "Pre clean", seq: "seq-num-001", condition: "HF 30A", weightedYield: 99.66, medianYield: 99.66, averageYield: 99.66, minYield: 99.66, maxYield: 99.66, tone: "good" },
     { waferIds: ["W09"], stage: "Oxidation", step: "LOX", seq: "seq-num-001", condition: "3600A", weightedYield: 99.73, medianYield: 99.73, averageYield: 99.73, minYield: 99.73, maxYield: 99.73, tone: "good" },
   ],
+}
+
+const waferYieldCpFailOrder = [
+  "W01",
+  "W11",
+  "W25",
+  "W16",
+  "W17",
+  "W09",
+  "W10",
+  "W14",
+  "W15",
+  "W22",
+  "W23",
+  "W20",
+  "W21",
+  "W08",
+  "W24",
+  "W12",
+  "W13",
+  "W02",
+  "W03",
+  "W04",
+  "W05",
+  "W06",
+  "W07",
+  "W18",
+  "W19",
+] as const
+
+const waferYieldCpFailParameters = ["VGSTX1", "IGSSP1", "IGSSPSC"] as const
+
+export const reportWaferYieldCpFailFixture: ReportWaferYieldCpFail = {
+  title: "Wafer Yield & CP Fail Analysis",
+  failThresholdPercent: 2,
+  series: waferYieldCpFailParameters.map((parameter) => ({ parameter })),
+  wafers: waferYieldCpFailOrder.map((waferId) => {
+    const source = reportYieldAnalysisFixture.matrixRows?.find(
+      (row) => row.waferId === waferId
+    )
+    if (!source) {
+      throw new Error(`Missing report yield fixture row for ${waferId}`)
+    }
+
+    return {
+      waferId: source.waferId,
+      step: source.role === "BSL" ? "BSL" : source.step,
+      condition: source.condition,
+      yield: source.yield,
+      cpFails: waferYieldCpFailParameters.flatMap((parameter) => {
+        const failedDies = source.failCounts[parameter] ?? 0
+        return failedDies > 0
+          ? [{
+              parameter,
+              failedDies,
+              percent: (failedDies / source.testedDies) * 100,
+            }]
+          : []
+      }),
+    }
+  }),
 }
 
 export const reportWaferMapFixture: ReportWaferMapInput = {

@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
+import { WaferYieldCpFailAnalysis } from "@/components/domain/report-wafer-map"
 import {
   EmptyState,
   formatPercent,
@@ -223,6 +224,7 @@ export function ReportSplitTable({
   const scenarioInput = reportSplitTableScenarios.normal.input
   const parsedInput = reportSplitTableInputSchema.parse(input)
   const rows = parsedInput.rows ?? scenarioInput.rows ?? EMPTY_SPLIT_TABLE_ROWS
+  const yieldCpFailAnalysis = parsedInput.yieldCpFailAnalysis
   const stageOptions = React.useMemo(
     () =>
       toOptions(
@@ -282,10 +284,14 @@ export function ReportSplitTable({
 
   return (
     <div className={className}>
-      {rows.length === 0 ? (
-        <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
-      ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+      <div className="domain-ui-typography grid gap-4 p-4">
+        {yieldCpFailAnalysis && (
+          <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
+        )}
+        {rows.length === 0 && (
+          <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
+        )}
+        {rows.length > 0 && (
           <Card size="sm" className="border ring-0 shadow-none">
             <CardContent className="py-0">
               <div className="flex flex-col gap-3 md:flex-row">
@@ -306,7 +312,8 @@ export function ReportSplitTable({
               </div>
             </CardContent>
           </Card>
-          {filteredRows.length === 0 ? (
+        )}
+        {rows.length > 0 && (filteredRows.length === 0 ? (
             <EmptyState>当前筛选条件下暂无 Wafer Split Table 数据</EmptyState>
           ) : (
             <div className="domain-ui-split-table-shell">
@@ -406,9 +413,8 @@ export function ReportSplitTable({
                 </TableBody>
               </Table>
             </div>
-          )}
-        </div>
-      )}
+          ))}
+      </div>
     </div>
   )
 }

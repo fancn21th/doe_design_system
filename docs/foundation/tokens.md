@@ -44,6 +44,8 @@ shell tokens are outside this scope.
 | `--doe-split-table-min-width` | `1776px` | Step × Wafer readable width |
 | `--doe-report-split-table-min-width` | `1152px` | Grouped read-only report split assignment width |
 | `--doe-yield-matrix-min-width` | `2880px` | Yield analysis wafer × CP inspection width |
+| `--doe-wafer-yield-chart-min-width` | `1100px` | Wafer yield × CP fail chart readable width |
+| `--doe-wafer-yield-plot-height` | `220px` | Wafer yield × CP fail shared percentage plot |
 | `--doe-parameter-median-matrix-min-width` | `3840px` | Parameter median wafer inspection width |
 | `--doe-parameter-median-matrix-height` | `544px` | Parameter median local inspection height |
 | `--doe-inline-matrix-min-width` | `3372px` | Inline matrix readable width |

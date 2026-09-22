@@ -1,5 +1,11 @@
 # DOE Visual System Evolution Log
 
+## v0.1.1 — 2026-09-22
+
+- Added the scoped Wafer Yield × CP Fail chart dimensions and recorded its
+  Analytical Surface, local scrolling, legend, tooltip, and grouping contract
+  under Report Split Table.
+
 ## v0.1 — 2026-09-18
 
 - Established `DESIGN.md` and `docs/visual-system/` as the DOE product design

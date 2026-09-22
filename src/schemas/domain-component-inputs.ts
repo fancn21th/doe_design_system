@@ -418,6 +418,7 @@ export const reportSplitTableInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  yieldCpFailAnalysis: z.lazy(() => reportWaferYieldCpFailSchema).optional(),
   stageOptions: z.array(z.string()).optional(),
   stepOptions: z.array(z.string()).optional(),
   selectedStages: z.array(z.string()).optional(),
@@ -498,6 +499,24 @@ export const reportYieldAnalysisInputSchema = z.object({
   matrixRows: z.array(reportYieldMatrixRowSchema).optional(),
   lossYieldRows: z.array(reportYieldLossRowSchema).optional(),
   conditionYieldRows: z.array(reportYieldConditionRowSchema).optional(),
+})
+export const reportWaferYieldCpFailSchema = z.object({
+  title: z.string().default("Wafer Yield & CP Fail Analysis"),
+  failThresholdPercent: z.number().min(0).max(100).default(2),
+  series: z.array(z.object({
+    parameter: z.string(),
+  })),
+  wafers: z.array(z.object({
+    waferId: z.string(),
+    step: z.string(),
+    condition: z.string(),
+    yield: z.number().min(0).max(100),
+    cpFails: z.array(z.object({
+      parameter: z.string(),
+      failedDies: z.number().int().nonnegative(),
+      percent: z.number().min(0).max(100),
+    })),
+  })),
 })
 export const reportWaferMapInputSchema = z.object({
   title: z.string().optional(),
@@ -726,6 +745,9 @@ export type ReportYieldConditionRow = z.infer<
 >
 export type ReportYieldAnalysisInput = z.infer<
   typeof reportYieldAnalysisInputSchema
+>
+export type ReportWaferYieldCpFail = z.infer<
+  typeof reportWaferYieldCpFailSchema
 >
 export type ReportWaferMapInput = z.infer<typeof reportWaferMapInputSchema>
 export type ReportParameterMedianCell = z.infer<
