@@ -7,13 +7,6 @@ import {
   EmptyState,
   ReportBadge,
 } from "@/components/domain/report-parts"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -126,7 +119,7 @@ function ParameterMedianFilterBar({
 
   return (
     <FieldGroup className="gap-3">
-      <div className="grid gap-3 md:grid-cols-[minmax(16rem,24rem)_auto_1fr] md:items-end">
+      <div className="grid gap-3 md:grid-cols-[minmax(16rem,24rem)_auto] md:items-end">
         <Field>
           <FieldLabel htmlFor={inputId}>CP Parameter</FieldLabel>
           <Input
@@ -145,7 +138,7 @@ function ParameterMedianFilterBar({
           </datalist>
         </Field>
 
-        <Field orientation="horizontal" className="h-8 items-center">
+        <Field orientation="horizontal" className="h-8 w-fit items-center">
           <Checkbox
             id={checkboxId}
             checked={displayOosOnly}
@@ -160,12 +153,6 @@ function ParameterMedianFilterBar({
             {oosResultCount}
           </ReportBadge>
         </Field>
-
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          <ReportBadge tone="bad">Mock-SPEC OOS</ReportBadge>
-          <ReportBadge tone="watch">Low Yield context</ReportBadge>
-          <ReportBadge tone="good">Within Mock SPEC</ReportBadge>
-        </div>
       </div>
     </FieldGroup>
   )
@@ -388,53 +375,22 @@ export function ReportParameterMedian({
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography grid gap-4 p-4">
-          <Card size="sm" className="border ring-0 shadow-none">
-            <CardHeader>
-              <CardTitle>Parameter Median</CardTitle>
-              <CardDescription>
-                CP parameter median and CPK matrix from the injected report snapshot.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pb-(--card-spacing)">
-              <ParameterMedianFilterBar
-                parameterQuery={parameterQuery}
-                parameterOptions={parameterOptions}
-                showOosOnly={showOosOnly}
-                oosResultCount={oosResultCount}
-                onParameterQueryChange={onParameterQueryChange}
-                onOosOnlyChange={onOosOnlyChange}
-              />
-            </CardContent>
-          </Card>
-          <section className="grid min-w-0 gap-3" aria-labelledby="parameter-median-matrix-title">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 id="parameter-median-matrix-title" className="text-sm font-semibold">
-                  Parameter Median Matrix
-                </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  One row per injected CP parameter and one column per wafer.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <ReportBadge tone="neutral">
-                  Parameter: {parameterQuery || "All"}
-                </ReportBadge>
-                <ReportBadge tone={showOosOnly ? "watch" : "neutral"}>
-                  OOS only: {showOosOnly ? "On" : "Off"}
-                </ReportBadge>
-                <span>{rows.length} parameters · {waferIds.length} wafers</span>
-              </div>
-            </div>
-            <ParameterMedianMatrix
-              rows={rows}
-              waferIds={waferIds}
-              stickyHeader={stickyHeader}
-              stickyFirstColumn={stickyFirstColumn}
-              onParameterSelect={onParameterSelect}
-              onWaferCellSelect={onWaferCellSelect}
-            />
-          </section>
+          <ParameterMedianFilterBar
+            parameterQuery={parameterQuery}
+            parameterOptions={parameterOptions}
+            showOosOnly={showOosOnly}
+            oosResultCount={oosResultCount}
+            onParameterQueryChange={onParameterQueryChange}
+            onOosOnlyChange={onOosOnlyChange}
+          />
+          <ParameterMedianMatrix
+            rows={rows}
+            waferIds={waferIds}
+            stickyHeader={stickyHeader}
+            stickyFirstColumn={stickyFirstColumn}
+            onParameterSelect={onParameterSelect}
+            onWaferCellSelect={onWaferCellSelect}
+          />
         </div>
       )}
     </div>

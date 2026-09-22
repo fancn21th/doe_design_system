@@ -25,7 +25,7 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 - `Mock LSL` / `Mock USL` 按原型字段展示，不视为生产规格。
 - `OOS`、`CPK`、median value 均来自 fixture/schema，不在组件内部重算。
 
-查询面使用单层中性 Analytical Surface：标题、报告范围与外部拥有的筛选控件共同出现。矩阵本身保留独立的边界和局部双向滚动，不嵌套第二张分析卡片；其固定首列与表头只服务于宽表检视。
+查询区使用无外框的紧凑控制行，只保留 CP Parameter、OOS 开关、结果数与控件自身边界；不重复展示标题、描述、状态图例或查询摘要。矩阵以自身边界和局部双向滚动作为唯一内容壳，其固定首列与表头只服务于宽表检视。
 
 ## Scenarios
 
