@@ -167,8 +167,6 @@ export function ReportInlineData({
               </div>
             )}
             <Measurement input={measurement} onGroupSelect={selectWafer} />
-            {parsedInput.rawDetail ? <p className="mt-3 text-xs text-muted-foreground">{parsedInput.rawDetail.parameterId}: {parsedInput.rawDetail.rawPointCount} RAW_VALUE · {parsedInput.rawDetail.status.toUpperCase()}{parsedInput.rawDetail.reason ? ` · ${parsedInput.rawDetail.reason}` : ""}</p> : null}
-            {parsedInput.summary?.limitation ? <p className="mt-2 text-xs text-muted-foreground">{parsedInput.summary.limitation}</p> : null}
           </div>
         </div>
       )}
