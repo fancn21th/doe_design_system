@@ -151,11 +151,50 @@ export const waferMapSummarySchema = z.object({
   pass: z.number().int().nonnegative(),
   fail: z.number().int().nonnegative(),
 })
+export const waferMapFinalBinInspectionSchema = z.object({
+  testedDieCount: z.number().int().nonnegative(),
+  totalFailBinCount: z.number().int().nonnegative(),
+  totalFailBinRatePercent: z.number().finite().nonnegative(),
+  rows: z.array(z.object({
+    binCode: z.string(),
+    binDescription: z.string(),
+    count: z.number().int().nonnegative(),
+    ratePercent: z.number().finite().nonnegative(),
+  })),
+})
+export const waferMapParameterInspectionSchema = z.object({
+  testedDieCount: z.number().int().nonnegative(),
+  rows: z.array(z.object({
+    classification: z.enum([
+      "cp-fail-defect",
+      "cp-pass-defect",
+      "cp-pass-no-defect",
+      "cp-fail-no-defect",
+    ]),
+    label: z.string(),
+    count: z.number().int().nonnegative(),
+    ratePercent: z.number().finite().nonnegative(),
+  })),
+})
+export const waferMapDefectInspectionSchema = z.object({
+  byLayer: z.array(z.object({
+    layerId: z.string(),
+    defectDieCount: z.number().int().nonnegative(),
+    defectRecordCount: z.number().int().nonnegative(),
+    rows: z.array(z.object({
+      typeId: z.string(),
+      label: z.string(),
+      count: z.number().int().nonnegative(),
+      ratePercent: z.number().finite().nonnegative(),
+    })),
+  })),
+})
 export const waferMapFinalBinWaferSchema = z.object({
   waferId: z.string(),
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapFinalBinDieSchema),
   summary: waferMapSummarySchema,
+  inspection: waferMapFinalBinInspectionSchema,
 })
 export const waferMapParameterContextSchema = z.object({
   parameterCode: z.string(),
@@ -172,12 +211,14 @@ export const waferMapParameterWaferSchema = z.object({
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapParameterDieSchema),
   summary: waferMapSummarySchema,
+  inspection: waferMapParameterInspectionSchema,
 })
 export const waferMapDefectWaferSchema = z.object({
   waferId: z.string(),
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapDefectDieSchema),
   summary: waferMapSummarySchema,
+  inspection: waferMapDefectInspectionSchema,
 })
 export const waferMapFilterOptionSchema = z.object({
   id: z.string(),
@@ -699,6 +740,15 @@ export type WaferMapFinalBinWaferInput = z.infer<
 >
 export type WaferMapParameterContext = z.infer<
   typeof waferMapParameterContextSchema
+>
+export type WaferMapFinalBinInspection = z.infer<
+  typeof waferMapFinalBinInspectionSchema
+>
+export type WaferMapParameterInspection = z.infer<
+  typeof waferMapParameterInspectionSchema
+>
+export type WaferMapDefectInspection = z.infer<
+  typeof waferMapDefectInspectionSchema
 >
 export type WaferMapParameterWaferInput = z.infer<
   typeof waferMapParameterWaferSchema

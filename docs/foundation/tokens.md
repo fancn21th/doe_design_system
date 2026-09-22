@@ -60,6 +60,10 @@ shell tokens are outside this scope.
 | `--doe-wafer-panel-min-height` | `520px` | Wafer inspection panel |
 | `--doe-wafer-kpi-width` | `92px` | Wafer KPI column |
 | `--doe-wafer-chart-height` | `416px` | Wafer chart |
+| `--doe-wafer-inspection-dialog-width` | `1280px` | Expanded wafer inspection surface |
+| `--doe-wafer-inspection-dialog-height` | `min(768px, viewport - 32px)` | Expanded wafer inspection height |
+| `--doe-wafer-inspection-map-min` | `544px` | Expanded wafer-map readable minimum |
+| `--doe-wafer-inspection-detail-column` | `320px` | Expanded wafer detail and statistics column |
 | `--doe-defect-wafer-column` | `216px` | Defect wafer selector column |
 | `--doe-defect-map-column-min` | `544px` | Defect-map readable column |
 | `--doe-defect-detail-column-min` | `352px` | Defect-detail readable minimum |

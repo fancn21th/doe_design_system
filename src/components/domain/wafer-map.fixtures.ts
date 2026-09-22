@@ -49,6 +49,19 @@ const geometry = {
 
 const waferIds = Array.from({ length: 25 }, (_, index) => `W${String(index + 1).padStart(2, "0")}`)
 const bins = ["1", "13", "10", "31", "19", "12", "9"] as const
+const binDescriptions: Record<string, string> = {
+  "1": "PASS",
+  "9": "SHORT",
+  "10": "LEAKAGE",
+  "12": "VTH",
+  "13": "RDS(ON)",
+  "19": "BVDSS",
+  "31": "Default",
+}
+
+function ratePercent(count: number, total: number) {
+  return total === 0 ? 0 : Number(((count / total) * 100).toFixed(2))
+}
 
 function summaryFor(dies: ReadonlyArray<{ pass: boolean }>) {
   const pass = dies.filter((die) => die.pass).length
@@ -63,10 +76,49 @@ function finalBinWafer(waferId: string, waferIndex: number): WaferMapFinalBinWaf
     const finalBin = failure ? bins[(dieIndex + waferIndex) % bins.length] : "1"
     return { ...die, finalBin, pass: !failure }
   })
-  return { waferId, geometry, dies, summary: summaryFor(dies) }
+  const summary = summaryFor(dies)
+  const counts = new Map<string, number>()
+  for (const die of dies) counts.set(die.finalBin, (counts.get(die.finalBin) ?? 0) + 1)
+  const rows = [...counts.entries()]
+    .sort(([left], [right]) => Number(left) - Number(right))
+    .map(([binCode, count]) => ({
+      binCode,
+      binDescription: binDescriptions[binCode] ?? "Unclassified",
+      count,
+      ratePercent: ratePercent(count, dies.length),
+    }))
+
+  return {
+    waferId,
+    geometry,
+    dies,
+    summary,
+    inspection: {
+      testedDieCount: dies.length,
+      totalFailBinCount: summary.fail,
+      totalFailBinRatePercent: ratePercent(summary.fail, dies.length),
+      rows,
+    },
+  }
 }
 
 export const waferMapFinalBinOverviewFixture: WaferMapFinalBinWaferInput[] = waferIds.map(finalBinWafer)
+
+function parameterInspection(pass: number, fail: number, waferIndex: number) {
+  const testedDieCount = pass + fail
+  const defectDieCount = Math.min(pass, 75 + ((waferIndex * 11) % 28))
+  const failDefectCount = Math.min(fail, waferIndex % 3)
+  const counts = [
+    { classification: "cp-fail-defect" as const, label: "CP Fail & Defect", count: failDefectCount },
+    { classification: "cp-pass-defect" as const, label: "CP Pass & Defect", count: defectDieCount },
+    { classification: "cp-pass-no-defect" as const, label: "CP Pass & No Defect", count: pass - defectDieCount },
+    { classification: "cp-fail-no-defect" as const, label: "CP Fail & No Defect", count: fail - failDefectCount },
+  ]
+  return {
+    testedDieCount,
+    rows: counts.map((row) => ({ ...row, ratePercent: ratePercent(row.count, testedDieCount) })),
+  }
+}
 
 export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
   const dies = waferMapW01Dies.map((die, dieIndex) => {
@@ -75,7 +127,8 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     const value = status === "MISSING" ? null : 0.72 + ((die.x * 3 + die.y * 5 + waferIndex * 17 + 500) % 260) / 1000
     return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
   })
-  return { waferId, geometry, dies, summary: summaryFor(dies) }
+  const summary = summaryFor(dies)
+  return { waferId, geometry, dies, summary, inspection: parameterInspection(summary.pass, summary.fail, waferIndex) }
 })
 
 export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -85,7 +138,8 @@ export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[
     const value = status === "MISSING" ? null : 540 + ((die.x * 11 + die.y * 7 + waferIndex * 23 + 1600) % 850) / 10
     return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
   })
-  return { waferId, geometry, dies, summary: summaryFor(dies) }
+  const summary = summaryFor(dies)
+  return { waferId, geometry, dies, summary, inspection: parameterInspection(summary.pass, summary.fail, waferIndex) }
 })
 
 export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -97,5 +151,32 @@ export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferId
         : []
     return { ...die, defects }
   })
-  return { waferId, geometry: { ...geometry, coordinateSystem: "DEFECT_INDEX_V1" as const }, dies, summary: { pass: 4099 - dies.filter((die) => die.defects.length > 0).length, fail: dies.filter((die) => die.defects.length > 0).length } }
+  const byLayer = ["M1", "M2"].map((layerId) => {
+    const layerDefects = dies.flatMap((die) => die.defects.filter((defect) => defect.layerId === layerId))
+    const layerDefectDies = dies.filter((die) => die.defects.some((defect) => defect.layerId === layerId))
+    const typeCounts = new Map<string, { label: string; count: number }>()
+    for (const defect of layerDefects) {
+      const current = typeCounts.get(defect.typeId)
+      typeCounts.set(defect.typeId, { label: defect.typeLabel, count: (current?.count ?? 0) + 1 })
+    }
+    return {
+      layerId,
+      defectDieCount: layerDefectDies.length,
+      defectRecordCount: layerDefects.length,
+      rows: [...typeCounts.entries()].map(([typeId, row]) => ({
+        typeId,
+        label: row.label,
+        count: row.count,
+        ratePercent: ratePercent(row.count, layerDefects.length),
+      })),
+    }
+  })
+  const defectDieCount = dies.filter((die) => die.defects.length > 0).length
+  return {
+    waferId,
+    geometry: { ...geometry, coordinateSystem: "DEFECT_INDEX_V1" as const },
+    dies,
+    summary: { pass: dies.length - defectDieCount, fail: defectDieCount },
+    inspection: { byLayer },
+  }
 })

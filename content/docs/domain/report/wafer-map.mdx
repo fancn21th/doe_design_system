@@ -60,6 +60,11 @@ type ReportWaferMapInput = {
 筛选区、图例与每片 wafer 卡片使用中性 Analytical Surface：单层边界、无装饰性阴影与
 无渐变填色。map canvas 和其 Pass / Fail 读数保留各自的业务语义。
 
+每片卡片的 `全屏查看` 由 shared `WaferMapGallery` 提供。放大层在大屏采用左侧 map、
+右侧 320px 明细栏的双栏布局，并按当前 CP Final Bin、CP Parameter 或 Defect 视图显示
+对应统计表。表格数据来自每片 wafer 的 `inspection` expected schema；Report 组件不在
+客户端重新聚合或补造统计。
+
 ## Scenarios
 
 - `normal`

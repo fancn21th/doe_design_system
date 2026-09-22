@@ -192,6 +192,11 @@
     --doe-wafer-panel-min-height: 32.5rem;
     --doe-wafer-kpi-width: 5.75rem;
     --doe-wafer-chart-height: 26rem;
+    --doe-wafer-inspection-dialog-width: 80rem;
+    --doe-wafer-inspection-dialog-height: min(48rem, calc(100dvh - 2rem));
+    --doe-wafer-inspection-map-min: 34rem;
+    --doe-wafer-inspection-detail-column: 20rem;
+    --doe-wafer-inspection-layout: minmax(var(--doe-wafer-inspection-map-min), 1fr) var(--doe-wafer-inspection-detail-column);
     --doe-defect-wafer-column: 13.5rem;
     --doe-defect-map-column-min: 34rem;
     --doe-defect-detail-column-min: 22rem;
@@ -492,6 +497,19 @@
     white-space: normal;
   }
 
+  .domain-ui-wafer-inspection-dialog {
+    width: min(var(--doe-wafer-inspection-dialog-width), calc(100vw - 2rem));
+    height: var(--doe-wafer-inspection-dialog-height);
+    max-width: min(var(--doe-wafer-inspection-dialog-width), calc(100vw - 2rem));
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+
+  .domain-ui-wafer-inspection-layout {
+    display: grid;
+    grid-template-columns: var(--doe-wafer-inspection-layout);
+    overflow: hidden;
+  }
+
   .domain-ui-defect-wafer-panel {
     padding: var(--doe-defect-wafer-panel-padding);
   }
@@ -540,6 +558,18 @@
     max-width: none;
     min-height: calc(100dvh - 1px);
     padding: 0;
+  }
+
+  @media (max-width: 64rem) {
+    .domain-ui-wafer-inspection-dialog {
+      overflow-y: auto;
+    }
+
+    .domain-ui-wafer-inspection-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(28rem, 1fr) auto;
+      overflow: visible;
+    }
   }
 }
 
