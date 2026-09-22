@@ -30,8 +30,8 @@ Wafer 共享同一个 split 标签。表格投影固定为 `Stage / Step / Seq`�
 多个 `CP Parameter · Count`；未提供时兼容单值 `topFail` / `topFailCount`。组件不从
 raw die data 推算阈值或 Top Fail，也不推断实际工艺事实。
 
-过滤区使用紧凑 Analytical Surface；表格保持自己的单层中性边界与浅色结构表头，
-不嵌入第二张 Card。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
+过滤区使用无外框的紧凑控制行，只保留控件自身边界；表格保持自己的单层中性边界
+与浅色结构表头。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
 预览壳。
 
 本轮表格组合参考本地原型 `DOE Workbench 单文件版.html` 的 `renderSplit`：只迁入

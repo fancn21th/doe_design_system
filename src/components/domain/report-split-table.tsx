@@ -8,7 +8,6 @@ import {
   formatPercent,
 } from "@/components/domain/report-parts"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Combobox,
   ComboboxChip,
@@ -287,26 +286,22 @@ export function ReportSplitTable({
           <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
         )}
         {rows.length > 0 && (
-          <Card size="sm" className="border ring-0 shadow-none">
-            <CardContent className="py-0">
-              <div className="flex flex-col gap-3 md:flex-row">
-                <MultiFilterCombobox
-                  label="Stage"
-                  placeholder="全部"
-                  options={stageOptions}
-                  value={selectedStageOptions}
-                  onValueChange={setSelectedStageOptions}
-                />
-                <MultiFilterCombobox
-                  label="Step"
-                  placeholder="全部"
-                  options={stepOptions}
-                  value={selectedStepOptions}
-                  onValueChange={setSelectedStepOptions}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <MultiFilterCombobox
+              label="Stage"
+              placeholder="全部"
+              options={stageOptions}
+              value={selectedStageOptions}
+              onValueChange={setSelectedStageOptions}
+            />
+            <MultiFilterCombobox
+              label="Step"
+              placeholder="全部"
+              options={stepOptions}
+              value={selectedStepOptions}
+              onValueChange={setSelectedStepOptions}
+            />
+          </div>
         )}
         {rows.length > 0 && (filteredRows.length === 0 ? (
             <EmptyState>当前筛选条件下暂无 Wafer Split Table 数据</EmptyState>
