@@ -14,7 +14,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -139,51 +138,35 @@ export function ReportInlineData({
         />
       ) : (
         <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-            <Card size="sm" className="border ring-0 shadow-none">
-              <CardHeader className="flex items-center justify-between gap-2">
-                <CardTitle>SPC inline parameter</CardTitle>
-                <CardAction><ReportBadge tone="neutral">{parameters.length}</ReportBadge></CardAction>
-              </CardHeader>
-              <CardContent className="grid gap-2 pb-(--card-spacing)">
-                {parameters.map((parameter) => (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    key={parameter}
-                    onClick={() => selectParameter(parameter)}
-                    className={cn(
-                      "h-auto w-full justify-start border bg-background p-2 font-mono text-[11px]",
-                      parameter === selectedParameterId && "bg-muted text-foreground"
-                    )}
-                  >
-                    {parameter}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
+          <Card size="sm" className="border ring-0 shadow-none">
+            <CardHeader className="flex items-center justify-between gap-2">
+              <CardTitle>SPC inline parameter</CardTitle>
+              <CardAction><ReportBadge tone="neutral">{parameters.length}</ReportBadge></CardAction>
+            </CardHeader>
+            <CardContent className="grid gap-2 pb-(--card-spacing)">
+              {parameters.map((parameter) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  key={parameter}
+                  onClick={() => selectParameter(parameter)}
+                  className={cn(
+                    "h-auto w-full justify-start border bg-background p-2 font-mono text-[11px]",
+                    parameter === selectedParameterId && "bg-muted text-foreground"
+                  )}
+                >
+                  {parameter}
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
           <div className="min-w-0 xl:col-span-1">
-            <div className="mb-3 flex flex-wrap gap-2">
-              <ReportBadge tone="neutral">
-                Inline Parameter: {selectedParameterId}
-              </ReportBadge>
-              {selectedWaferId && (
+            {selectedWaferId && (
+              <div className="mb-3 flex flex-wrap gap-2">
                 <ReportBadge tone="neutral">Wafer: {selectedWaferId}</ReportBadge>
-              )}
-              <ReportBadge tone="neutral">uses shared Measurement</ReportBadge>
-              <ReportBadge tone={parsedInput.status === "unavailable" ? "bad" : parsedInput.status === "partial" ? "watch" : "neutral"}>
-                {parsedInput.status.toUpperCase()}
-              </ReportBadge>
-            </div>
-            {parsedInput.summary ? (
-              <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <SnapshotMetric label="Inline parameters" value={parsedInput.summary.parameterCount} detail="snapshot parameter catalog" />
-                <SnapshotMetric label="Current raw measurements" value={parsedInput.summary.rawRowCount} detail="latest valid SAMPLE_ID only" />
-                <SnapshotMetric label="Latest valid samples" value={parsedInput.summary.sampleRowCount} detail="history samples excluded" />
-                <SnapshotMetric label="Cpk evaluable" value={parsedInput.summary.cpkEvaluableCount} detail="of current samples" />
               </div>
-            ) : null}
+            )}
             <Measurement input={measurement} onGroupSelect={selectWafer} />
-            {parsedInput.coverage.length ? <Card size="sm" className="mt-4 border ring-0 shadow-none"><CardHeader><CardTitle>Wafer coverage</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2 pb-(--card-spacing)">{parsedInput.coverage.map((item) => <Button type="button" key={item.waferId} variant="outline" size="xs" disabled={!item.measured} onClick={() => selectWafer(item.waferId)} className={cn(item.waferId === selectedWaferId && "bg-muted text-foreground")}>{item.waferId}{item.measured ? " · current sample" : " · missing"}</Button>)}</CardContent></Card> : null}
             {parsedInput.rawDetail ? <p className="mt-3 text-xs text-muted-foreground">{parsedInput.rawDetail.parameterId}: {parsedInput.rawDetail.rawPointCount} RAW_VALUE · {parsedInput.rawDetail.status.toUpperCase()}{parsedInput.rawDetail.reason ? ` · ${parsedInput.rawDetail.reason}` : ""}</p> : null}
             {parsedInput.summary?.limitation ? <p className="mt-2 text-xs text-muted-foreground">{parsedInput.summary.limitation}</p> : null}
           </div>
@@ -245,16 +228,4 @@ function InlineMatrix({
 function formatInlineValue(value: number | null | undefined) {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—"
   return Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(3)
-}
-
-function SnapshotMetric({ label, value, detail }: { label: string; value?: number; detail: string }) {
-  return (
-    <Card size="sm" className="border ring-0 shadow-none">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-xl font-semibold tabular-nums">{value ?? "—"}</CardTitle>
-      </CardHeader>
-      <CardContent className="pb-(--card-spacing) text-[11px] text-muted-foreground">{detail}</CardContent>
-    </Card>
-  )
 }
