@@ -1,6 +1,5 @@
 "use client"
 
-import * as Plot from "@observablehq/plot"
 import {
   GitCompareArrowsIcon,
   Table2Icon,
@@ -9,6 +8,7 @@ import {
 import * as React from "react"
 
 import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-analysis.scenarios"
+import { WaferYieldCpFailAnalysis } from "@/components/domain/report-wafer-yield-cp-fail-analysis"
 import {
   EmptyState,
   ReportBadge,
@@ -18,7 +18,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -49,13 +48,11 @@ import {
 } from "@/components/ui/tabs"
 import {
   reportYieldAnalysisInputSchema,
-  type ReportTone,
   type ReportYieldAnalysisInput,
   type ReportYieldConditionRow,
   type ReportYieldDetailMode,
   type ReportYieldLossRow,
   type ReportYieldMatrixRow,
-  type ReportYieldThresholds,
   type ReportYieldWafer,
 } from "@/schemas/domain-component-inputs"
 
@@ -65,7 +62,6 @@ type ReportYieldAnalysisProps = {
   onStageFilterChange?: (stages: string[]) => void
   onStepFilterChange?: (steps: string[]) => void
   onDetailModeChange?: (mode: ReportYieldDetailMode) => void
-  onWaferSelect?: (waferId: string) => void
 }
 
 type ComboboxOption = {
@@ -77,7 +73,6 @@ const EMPTY_WAFERS: ReportYieldWafer[] = []
 const EMPTY_MATRIX_ROWS: ReportYieldMatrixRow[] = []
 const EMPTY_LOSS_ROWS: ReportYieldLossRow[] = []
 const EMPTY_CONDITION_ROWS: ReportYieldConditionRow[] = []
-const DEFAULT_THRESHOLDS: ReportYieldThresholds = { good: 99.5, watch: 90 }
 const DEFAULT_DETAIL_MODE_OPTIONS = [
   { id: "wafer-cp-matrix", label: "Wafer x CP Matrix" },
   { id: "loss-yield", label: "Loss Yield" },
@@ -101,20 +96,8 @@ function valuesFromOptions(options: ComboboxOption[]) {
   return options.map((option) => option.value)
 }
 
-function getYieldColor(tone: ReportTone) {
-  if (tone === "bad") return "#dc2626"
-  if (tone === "watch") return "#d97706"
-  if (tone === "good") return "#059669"
-  return "#64748b"
-}
-
 function formatCount(value: number) {
   return value.toLocaleString()
-}
-
-function compactWaferLabel(waferId: string) {
-  const snapshotSuffix = waferId.match(/_(\d{1,3})$/)?.[1]
-  return snapshotSuffix ? `W${snapshotSuffix.padStart(2, "0")}` : waferId
 }
 
 function useDisplayFilterValues(
@@ -208,138 +191,6 @@ function MultiFilterCombobox({
         </div>
       </div>
     </Combobox>
-  )
-}
-
-function WaferYieldRanking({
-  wafers,
-  thresholds,
-  onWaferSelect,
-}: {
-  wafers: ReportYieldWafer[]
-  thresholds: ReportYieldThresholds
-  onWaferSelect?: (waferId: string) => void
-}) {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const sortedWafers = React.useMemo(
-    () => [...wafers].sort((a, b) => a.yield - b.yield),
-    [wafers]
-  )
-
-  React.useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    container.textContent = ""
-
-    const chart = Plot.plot({
-      width: Math.max(900, sortedWafers.length * 42 + 96),
-      height: 320,
-      marginTop: 28,
-      marginRight: 24,
-      marginBottom: 54,
-      marginLeft: 58,
-      x: {
-        domain: sortedWafers.map((wafer) => wafer.waferId),
-        label: null,
-        tickSize: 0,
-        // Snapshot ids are deliberately kept in bar tooltips and callbacks.
-        // The axis uses the prototype's compact wafer label so dense rankings
-        // remain legible without document-level overflow.
-        tickFormat: (waferId) => compactWaferLabel(String(waferId)),
-      },
-      y: {
-        label: "Yield (%)",
-        domain: [0, 100],
-        grid: true,
-        ticks: [0, 25, 50, 75, 100],
-        tickFormat: (value) => `${value}%`,
-      },
-      marks: [
-        Plot.ruleY([thresholds.watch], {
-          stroke: "#d97706",
-          strokeDasharray: "4 4",
-          strokeOpacity: 0.8,
-        }),
-        Plot.ruleY([thresholds.good], {
-          stroke: "#059669",
-          strokeDasharray: "4 4",
-          strokeOpacity: 0.8,
-        }),
-        Plot.barY(sortedWafers, {
-          x: "waferId",
-          y: "yield",
-          fill: (wafer) => getYieldColor(wafer.tone ?? "neutral"),
-          insetLeft: 5,
-          insetRight: 5,
-          title: (wafer) =>
-            `${wafer.waferId} ${formatPercent(wafer.yield)}${
-              wafer.condition ? ` · ${wafer.condition}` : ""
-            }`,
-        }),
-        Plot.text(sortedWafers, {
-          x: "waferId",
-          y: "yield",
-          text: (wafer) => formatPercent(wafer.yield),
-          dy: -7,
-          fontSize: 10,
-          fill: "#334155",
-        }),
-      ],
-      style: {
-        background: "transparent",
-        fontFamily: "var(--font-sans), ui-sans-serif, system-ui, sans-serif",
-        fontSize: "12px",
-      },
-    })
-
-    chart.setAttribute("role", "img")
-    chart.setAttribute(
-      "aria-label",
-      "Wafer yield ranking bar chart sorted from low yield to high yield."
-    )
-    container.append(chart)
-
-    return () => chart.remove()
-  }, [sortedWafers, thresholds])
-
-  return (
-    <Card size="sm" className="border ring-0 shadow-none">
-      <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b">
-        <div>
-          <CardTitle>Wafer Yield Ranking</CardTitle>
-          <CardDescription>
-            Sorted by yield, lowest wafer first.
-          </CardDescription>
-        </div>
-        <CardAction className="flex flex-wrap items-center gap-2">
-          <ReportBadge tone="good">&gt;= {thresholds.good}%</ReportBadge>
-          <ReportBadge tone="watch">
-            {thresholds.watch}%-{thresholds.good}%
-          </ReportBadge>
-          <ReportBadge tone="bad">&lt; {thresholds.watch}%</ReportBadge>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="px-0">
-        <div className="overflow-x-auto px-3">
-          <div ref={containerRef} className="min-h-80" />
-        </div>
-      </CardContent>
-      {onWaferSelect && (
-        <div className="grid grid-cols-5 border-t sm:grid-cols-8 md:grid-cols-12 xl:grid-cols-25">
-          {sortedWafers.map((wafer) => (
-            <button
-              key={wafer.waferId}
-              type="button"
-              className="border-r border-b px-2 py-1.5 text-center font-mono text-xs transition-colors hover:bg-muted"
-              onClick={() => onWaferSelect(wafer.waferId)}
-            >
-              {wafer.waferId}
-            </button>
-          ))}
-        </div>
-      )}
-    </Card>
   )
 }
 
@@ -526,7 +377,6 @@ export function ReportYieldAnalysis({
   onStageFilterChange,
   onStepFilterChange,
   onDetailModeChange,
-  onWaferSelect,
 }: ReportYieldAnalysisProps) {
   const scenarioInput = reportYieldAnalysisScenarios.normal.input
   const parsedInput = reportYieldAnalysisInputSchema.parse(input)
@@ -541,8 +391,7 @@ export function ReportYieldAnalysis({
     parsedInput.conditionYieldRows ??
     scenarioInput.conditionYieldRows ??
     EMPTY_CONDITION_ROWS
-  const thresholds =
-    parsedInput.thresholds ?? scenarioInput.thresholds ?? DEFAULT_THRESHOLDS
+  const yieldCpFailAnalysis = parsedInput.yieldCpFailAnalysis
   const detailModeOptions =
     parsedInput.detailModeOptions ??
     scenarioInput.detailModeOptions ??
@@ -614,11 +463,9 @@ export function ReportYieldAnalysis({
             </CardContent>
           </Card>
 
-          <WaferYieldRanking
-            wafers={wafers}
-            thresholds={thresholds}
-            onWaferSelect={onWaferSelect}
-          />
+          {yieldCpFailAnalysis && (
+            <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
+          )}
 
           <Card size="sm" className="min-w-0 border ring-0 shadow-none">
             <Tabs

@@ -459,7 +459,6 @@ export const reportSplitTableInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
-  yieldCpFailAnalysis: z.lazy(() => reportWaferYieldCpFailSchema).optional(),
   stageOptions: z.array(z.string()).optional(),
   stepOptions: z.array(z.string()).optional(),
   selectedStages: z.array(z.string()).optional(),
@@ -475,10 +474,6 @@ export const reportYieldWaferSchema = z.object({
   role: z.string().optional(),
   condition: z.string().optional(),
   tone: reportToneSchema.default("neutral"),
-})
-export const reportYieldThresholdsSchema = z.object({
-  good: z.number().default(99.5),
-  watch: z.number().default(90),
 })
 export const reportYieldDetailModeSchema = z.enum([
   "wafer-cp-matrix",
@@ -528,11 +523,11 @@ export const reportYieldAnalysisInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  yieldCpFailAnalysis: z.lazy(() => reportWaferYieldCpFailSchema).optional(),
   stageOptions: z.array(z.string()).optional(),
   stepOptions: z.array(z.string()).optional(),
   selectedStages: z.array(z.string()).optional(),
   selectedSteps: z.array(z.string()).optional(),
-  thresholds: reportYieldThresholdsSchema.optional(),
   wafers: z.array(reportYieldWaferSchema).optional(),
   detailModeOptions: z.array(reportYieldDetailModeOptionSchema).optional(),
   selectedDetailMode: reportYieldDetailModeSchema.optional(),
@@ -779,9 +774,6 @@ export type ReportSplitTableTopFail = z.infer<
 export type ReportSplitTableRow = z.infer<typeof reportSplitTableRowSchema>
 export type ReportSplitTableInput = z.infer<typeof reportSplitTableInputSchema>
 export type ReportYieldWafer = z.infer<typeof reportYieldWaferSchema>
-export type ReportYieldThresholds = z.infer<
-  typeof reportYieldThresholdsSchema
->
 export type ReportYieldDetailMode = z.infer<
   typeof reportYieldDetailModeSchema
 >

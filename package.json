@@ -16,7 +16,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.9.1",
-    "@observablehq/plot": "^0.6.17",
     "@tabler/icons-react": "^3.46.0",
     "@tanstack/react-table": "^9.2.4",
     "@types/mdx": "^2.0.14",
