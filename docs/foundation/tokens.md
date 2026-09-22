@@ -42,7 +42,7 @@ shell tokens are outside this scope.
 | `--doe-component-preview-wide-width` | `1248px` | Component Lab wide preview |
 | `--doe-related-component-gap` | `16px` | Related local-result stack |
 | `--doe-split-table-min-width` | `1776px` | Step × Wafer readable width |
-| `--doe-report-split-table-min-width` | `2048px` | Read-only report split assignment width |
+| `--doe-report-split-table-min-width` | `1152px` | Grouped read-only report split assignment width |
 | `--doe-yield-matrix-min-width` | `2880px` | Yield analysis wafer × CP inspection width |
 | `--doe-parameter-median-matrix-min-width` | `3840px` | Parameter median wafer inspection width |
 | `--doe-parameter-median-matrix-height` | `544px` | Parameter median local inspection height |

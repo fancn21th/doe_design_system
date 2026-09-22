@@ -385,6 +385,10 @@ export const reportOverviewInputSchema = z.object({
     tone: reportToneSchema.default("neutral"),
   })).optional(),
 })
+export const reportSplitTableTopFailSchema = z.object({
+  parameter: z.string(),
+  count: z.number().int().nonnegative(),
+})
 export const reportSplitTableRowSchema = z.object({
   waferId: z.string(),
   waferOrder: z.number().int().nonnegative().optional(),
@@ -407,6 +411,7 @@ export const reportSplitTableRowSchema = z.object({
   yield: z.number(),
   topFail: z.string(),
   topFailCount: z.number().int().nonnegative(),
+  topFails: z.array(reportSplitTableTopFailSchema).optional(),
   tone: reportToneSchema.default("neutral"),
 })
 export const reportSplitTableInputSchema = z.object({
@@ -699,6 +704,9 @@ export type MeasurementSummary = z.infer<typeof measurementSummarySchema>
 export type MeasurementGroup = z.infer<typeof measurementGroupSchema>
 export type MeasurementInput = z.infer<typeof measurementInputSchema>
 export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>
+export type ReportSplitTableTopFail = z.infer<
+  typeof reportSplitTableTopFailSchema
+>
 export type ReportSplitTableRow = z.infer<typeof reportSplitTableRowSchema>
 export type ReportSplitTableInput = z.infer<typeof reportSplitTableInputSchema>
 export type ReportYieldWafer = z.infer<typeof reportYieldWaferSchema>

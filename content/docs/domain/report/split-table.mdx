@@ -21,17 +21,25 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 组件由过滤区域和逐 wafer 的 Split Table 组成；过滤区域使用多选 Combobox 按
 `stageOptions` / `stepOptions` 过滤，空选中表示 `全部`。
 
-本轮表格不做 Stage、Step 或 Sequence 聚合：每一行保留 `选择`、Wafer Id、Wafer
-Order、Stage Id、Step Id、Step Sequence、Variant Sequence、Factor、Planned
-Condition、Recipe Id、Is Baseline、Excluded、Step、Coverage Status、Yield、Top
-Fail Group 与 Top Fail Count 的独立字段。来源尚未提供的字段按行显示 `—`，不推断
-实际工艺事实。
+表格按 `Stage + Step + Seq` 形成对照组并合并首列。每组先展示 Baseline，再按不同
+`condition` 的首次出现顺序生成 `split-1`、`split-2` 等标签；同一 condition 的多个
+Wafer 共享同一个 split 标签。表格投影固定为 `Stage / Step / Seq`、`Wafer ID`、
+`Recipe`、`Condition`、`Yield` 与 `Top Fail` 六列。
+
+`Top Fail` 直接消费 report snapshot 注入的 CP 参数与数量。`topFails` 有值时可展示
+多个 `CP Parameter · Count`；未提供时兼容单值 `topFail` / `topFailCount`。组件不从
+raw die data 推算阈值或 Top Fail，也不推断实际工艺事实。
 
 过滤区使用紧凑 Analytical Surface；表格保持自己的单层中性边界与浅色结构表头，
 不嵌入第二张 Card。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
 预览壳。
 
+本轮表格组合参考本地原型 `DOE Workbench 单文件版.html` 的 `renderSplit`：只迁入
+分组、Baseline-first、condition split 标签和多 CP Top Fail 展示；跨 Tab 导航仍由
+App 通过 callback 承接。
+
 ## Scenarios
 
 - `normal`
+- `baseline-after-splits`
 - `empty`
