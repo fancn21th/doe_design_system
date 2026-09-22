@@ -14,13 +14,7 @@ import {
   ReportBadge,
   formatPercent,
 } from "@/components/domain/report-parts"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Combobox,
   ComboboxChip,
@@ -467,45 +461,46 @@ export function ReportYieldAnalysis({
             <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
           )}
 
-          <Card size="sm" className="min-w-0 border ring-0 shadow-none">
+          <section
+            className="grid min-w-0 max-w-full gap-3"
+            aria-labelledby="yield-detail-analysis-title"
+          >
             <Tabs
               value={selectedDetailMode}
               onValueChange={handleDetailModeChange}
-              className="min-w-0 max-w-full gap-0"
+              className="min-w-0 max-w-full gap-3"
             >
-              <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b">
-                <CardTitle>Yield Detail Analysis</CardTitle>
-                <CardAction>
-                  <TabsList className="flex-wrap">
-                    {detailModeOptions.map((option) => (
-                      <TabsTrigger key={option.id} value={option.id}>
-                        {option.id === "wafer-cp-matrix" && <Table2Icon />}
-                        {option.id === "loss-yield" && <TrendingDownIcon />}
-                        {option.id === "condition-yield-comparison" && (
-                          <GitCompareArrowsIcon />
-                        )}
-                        {option.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </CardAction>
-              </CardHeader>
-              <CardContent className="min-w-0 max-w-full">
-                <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
-                  <MatrixTable
-                    rows={matrixRows}
-                    matrixColumns={matrixColumns}
-                  />
-                </TabsContent>
-                <TabsContent value="loss-yield" className="min-w-0 max-w-full">
-                  <LossYieldTable rows={lossYieldRows} />
-                </TabsContent>
-                <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
-                  <ConditionYieldTable rows={conditionYieldRows} />
-                </TabsContent>
-              </CardContent>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2
+                  id="yield-detail-analysis-title"
+                  className="text-sm font-semibold"
+                >
+                  Yield Detail Analysis
+                </h2>
+                <TabsList className="h-auto flex-wrap">
+                  {detailModeOptions.map((option) => (
+                    <TabsTrigger key={option.id} value={option.id}>
+                      {option.id === "wafer-cp-matrix" && <Table2Icon />}
+                      {option.id === "loss-yield" && <TrendingDownIcon />}
+                      {option.id === "condition-yield-comparison" && (
+                        <GitCompareArrowsIcon />
+                      )}
+                      {option.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+              <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
+                <MatrixTable rows={matrixRows} matrixColumns={matrixColumns} />
+              </TabsContent>
+              <TabsContent value="loss-yield" className="min-w-0 max-w-full">
+                <LossYieldTable rows={lossYieldRows} />
+              </TabsContent>
+              <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
+                <ConditionYieldTable rows={conditionYieldRows} />
+              </TabsContent>
             </Tabs>
-          </Card>
+          </section>
         </div>
       )}
     </div>
