@@ -92,3 +92,24 @@ Out of scope during intake:
 - How are `Pass`, `Fail`, and `Defect` counts computed and passed in?
 - What interaction is expected when a wafer card is expanded?
 - Should selected parameters come from this tab, Parameter Median, or CP Data?
+
+## Confirmed Expanded-Wafer Interaction (2026-09-22)
+
+The user explicitly requested the click-to-expand view from
+`DOE Workbench 单文件版.html`, including the table to the right of the enlarged
+map. Prototype inspection confirmed:
+
+- Every wafer card exposes an expand affordance.
+- The expanded surface keeps the current map mode and wafer identity in its header.
+- A large reusable wafer canvas occupies the left column, with zoom controls and
+  previous/next wafer navigation.
+- The right column starts with selected-Die details and ends with a mode-specific
+  statistics table.
+- Final Bin uses `Bin Code / Bin Des / Count / Rate` plus tested and failed Die totals.
+- Parameter Map uses `Type / Count / Rate` for CP × defect classifications.
+- Defect Map uses `Defect Type / Count / Rate` plus Defect Die and Defect Record totals,
+  scoped by Layer.
+
+The statistics are expected input facts. They are represented by mode-specific
+`inspection` schemas and must not be inferred from missing backend fields by the
+Report component.

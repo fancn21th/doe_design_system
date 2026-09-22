@@ -35,4 +35,18 @@ describe("wafer map gallery contract", () => {
     expect(parameterColor(-1, 0, 1)).toBe(parameterColor(0, 0, 1))
     expect(parameterColor(2, 0, 1)).toBe(parameterColor(1, 0, 1))
   })
+
+  it("carries mode-specific inspection statistics for the expanded view", () => {
+    const finalBin = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.finalBinOverview.input)
+    const parameter = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.parameterOverview.input)
+    const defect = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectOverview.input)
+
+    if (finalBin.kind !== "cp-final-bin" || parameter.kind !== "cp-parameter" || defect.kind !== "defect") {
+      throw new Error("Unexpected wafer map scenario kind")
+    }
+
+    expect(finalBin.wafers[0].inspection.rows.reduce((sum, row) => sum + row.count, 0)).toBe(4099)
+    expect(parameter.wafers[0].inspection.rows.reduce((sum, row) => sum + row.count, 0)).toBe(4099)
+    expect(defect.wafers[0].inspection.byLayer.map((item) => item.layerId)).toEqual(["M1", "M2"])
+  })
 })
