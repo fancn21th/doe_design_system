@@ -106,3 +106,9 @@ Out of scope during intake:
 - The table uses the Layout Shell comfortable base-Table presentation (14px
   text, 40px transparent header, 8px cells). Wide report projections retain a
   local horizontal scroll container rather than changing page width.
+- The 2026-09-22 table alignment uses the local `DOE Workbench 单文件版.html`
+  `renderSplit` implementation as reference evidence. Rows are grouped by
+  `Stage + Step + Seq`, Baseline renders first, split labels are assigned by
+  distinct condition within the group, and source-provided `topFails` may show
+  multiple CP parameters in one cell. Cross-tab navigation from the prototype
+  remains outside this Domain UI component.

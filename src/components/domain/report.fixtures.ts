@@ -297,6 +297,10 @@ export const reportSplitTableFixture: ReportSplitTableInput = {
       yield: 23.69,
       topFail: "IGSSP1",
       topFailCount: 2996,
+      topFails: [
+        { parameter: "IGSSP1", count: 2996 },
+        { parameter: "IGSSPSC", count: 97 },
+      ],
       tone: "bad",
     },
     {
