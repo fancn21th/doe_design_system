@@ -680,11 +680,11 @@ function formatPercent(value: number) {
 }
 
 function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGalleryInput; onDefectFiltersChange: (filters: { layerId: string; typeIds: string[] }) => void }) {
-  if (input.kind === "cp-parameter") return <GalleryFilterSurface><p className="text-xs text-muted-foreground"><b className="mr-2 text-foreground">{input.parameter.label}</b>{input.parameter.scale.domainMin} → {input.parameter.scale.domainMax}{input.parameter.unit ? ` ${input.parameter.unit}` : ""}</p></GalleryFilterSurface>
+  if (input.kind === "cp-parameter") return <GalleryLegendRow><p className="text-xs text-muted-foreground"><b className="mr-2 text-foreground">{input.parameter.label}</b>{input.parameter.scale.domainMin} → {input.parameter.scale.domainMax}{input.parameter.unit ? ` ${input.parameter.unit}` : ""}</p></GalleryLegendRow>
   if (input.kind === "defect") return <DefectFilterComboboxes input={input} onChange={onDefectFiltersChange} />
   const binCounts = new Map<string, number>()
   for (const wafer of input.wafers) for (const die of wafer.dies) binCounts.set(die.finalBin, (binCounts.get(die.finalBin) ?? 0) + 1)
-  return <GalleryFilterSurface><div className="flex flex-wrap gap-2 text-xs">{[...binCounts.entries()].sort(([left], [right]) => Number(left) - Number(right)).map(([bin, count]) => <span key={bin} className="flex items-center gap-1"><i className="size-2 rounded-sm" style={{ background: finalBinColor(bin, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />Bin {bin} · {count.toLocaleString()}</span>)}</div></GalleryFilterSurface>
+  return <GalleryLegendRow><div className="flex flex-wrap gap-2 text-xs">{[...binCounts.entries()].sort(([left], [right]) => Number(left) - Number(right)).map(([bin, count]) => <span key={bin} className="flex items-center gap-1"><i className="size-2 rounded-sm" style={{ background: finalBinColor(bin, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />Bin {bin} · {count.toLocaleString()}</span>)}</div></GalleryLegendRow>
 }
 
 type FilterOption = { id: string; label: string }
@@ -775,8 +775,8 @@ function FilterCombobox({
   )
 }
 
-function GalleryFilterSurface({ children }: { children: React.ReactNode }) {
-  return <Card size="sm" className="border ring-0 shadow-none"><CardContent className="py-0">{children}</CardContent></Card>
+function GalleryLegendRow({ children }: { children: React.ReactNode }) {
+  return <div className="flex min-h-8 items-center">{children}</div>
 }
 
 export type WaferMapProps = {

@@ -25,7 +25,7 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 
 图表 hover 和键盘 focus 都显示当前 Wafer 的 Yield 及通过阈值的 CP Fail 详情；pointer leave、blur、滚动、resize 或 `Escape` 关闭 tooltip。图表面板可独立收起，这些都是局部展示状态，不触发数据请求或跨组件 workflow。
 
-筛选与组合图使用单层中性 Analytical Surface。明细分析使用无 Card 的轻量标题 / Tabs 工具栏，矩阵表以自身的边界和局部横向滚动作为唯一可读壳，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
+筛选区使用无外框的紧凑控制行，只保留控件自身边界；组合图继续使用单层中性 Analytical Surface。明细分析使用无 Card 的轻量标题 / Tabs 工具栏，矩阵表以自身的边界和局部横向滚动作为唯一可读壳，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
 ## Scenarios
 

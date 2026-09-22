@@ -14,7 +14,6 @@ import {
   ReportBadge,
   formatPercent,
 } from "@/components/domain/report-parts"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Combobox,
   ComboboxChip,
@@ -436,26 +435,22 @@ export function ReportYieldAnalysis({
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography grid gap-4 p-4">
-          <Card size="sm" className="border ring-0 shadow-none">
-            <CardContent className="py-0">
-              <div className="flex flex-col gap-3 md:flex-row">
-                <MultiFilterCombobox
-                  label="Stage"
-                  placeholder="全部"
-                  options={stageOptions}
-                  value={selectedStageOptions}
-                  onValueChange={setSelectedStageOptions}
-                />
-                <MultiFilterCombobox
-                  label="Step"
-                  placeholder="全部"
-                  options={stepOptions}
-                  value={selectedStepOptions}
-                  onValueChange={setSelectedStepOptions}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <MultiFilterCombobox
+              label="Stage"
+              placeholder="全部"
+              options={stageOptions}
+              value={selectedStageOptions}
+              onValueChange={setSelectedStageOptions}
+            />
+            <MultiFilterCombobox
+              label="Step"
+              placeholder="全部"
+              options={stepOptions}
+              value={selectedStepOptions}
+              onValueChange={setSelectedStepOptions}
+            />
+          </div>
 
           {yieldCpFailAnalysis && (
             <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
