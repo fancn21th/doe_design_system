@@ -20,13 +20,15 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 `ReportYieldAnalysis` 展示 Yield Analysis tab 的三段式结构：
 
 - 过滤区域使用 shadcn/base multiple combobox，Stage / Step 选择值通过 `onStageFilterChange`、`onStepFilterChange` 抛给外部业务状态。
-- Wafer Yield Ranking 使用 Observable Plot 渲染柱状图，组件按注入的 `wafers` 展示，不在内部做过滤。高密度 Snapshot wafer id 在 x 轴显示为原型一致的紧凑 `W##` 标签；完整 id 保留在 tooltip 和选择回调中。Wafer 的颜色和表格 assessment 仅使用输入提供的 `tone`，组件不会从 yield 数值推断状态。
+- Wafer Yield & CP Fail Analysis 的绿色折线与 CP Fail 堆叠柱共享 0–100% 纵轴。Wafer 顺序、Condition、Step、Yield、CP Fail 百分比与 failed-die count 全部来自输入；图表仅展示 `percent > failThresholdPercent` 的 CP Fail，图例保持 `series` 输入顺序。
 - Yield Detail Analysis 使用 shadcn/base tabs 切换 `Wafer x CP Matrix`、`Loss Yield`、`Condition Yield Comparison` 三张表。
 
-筛选、排名图和明细分析均使用单层中性 Analytical Surface；矩阵表保留自己的横向滚动边界，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
+图表 hover 和键盘 focus 都显示当前 Wafer 的 Yield 及通过阈值的 CP Fail 详情；pointer leave、blur、滚动、resize 或 `Escape` 关闭 tooltip。图表面板可独立收起，这些都是局部展示状态，不触发数据请求或跨组件 workflow。
+
+筛选、组合图和明细分析均使用单层中性 Analytical Surface；矩阵表保留自己的横向滚动边界，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
 ## Scenarios
 
 - `normal`
-- `dense`（25-wafer ranking，验证紧凑标签与局部横向滚动）
+- `dense`（25-wafer 组合图，验证 Condition / Wafer / Step 轴与局部横向滚动）
 - `empty`

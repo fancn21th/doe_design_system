@@ -556,7 +556,7 @@ export const reportSplitTableFixture: ReportSplitTableInput = {
 
 export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
   title: "Yield Analysis",
-  subtitle: "Wafer yield ranking with CP loss and condition-level detail.",
+  subtitle: "Wafer yield and CP fail analysis with condition-level detail.",
   sourceLabel: "REPORT SNAPSHOT",
   stageOptions: [
     "Lithography",
@@ -583,7 +583,6 @@ export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
   ],
   selectedStages: [],
   selectedSteps: [],
-  thresholds: { good: 99.5, watch: 90 },
   wafers: [
     { waferId: "W03", stage: "Lithography", step: "TR CD", seq: "seq-num-002", yield: 7.78, role: "split-2", condition: "0.83um", tone: "bad" },
     { waferId: "W12", stage: "Etch", step: "SG1 ET Depth", seq: "seq-num-001", yield: 23.69, role: "split-1", condition: "1.08um", tone: "bad" },

@@ -80,8 +80,8 @@ description: 面向 DOE 领域组件重构的启动输入清单和执行流程�
 
 - 目标路由：`/docs/domain/report/yield-analysis`
 - 原型：`DOE report.html` 的 `Yield Analysis` tab
-- 分区：过滤区域 + Wafer Yield Ranking + Yield Detail Analysis
-- 基础 UI：Combobox multiple + Observable Plot + Tabs + Table
-- fixture：注入 prototype-backed wafer ranking、CP matrix、loss yield、condition comparison 数据
+- 分区：过滤区域 + Wafer Yield & CP Fail Analysis + Yield Detail Analysis
+- 基础 UI：Combobox multiple + SVG chart + Tabs + Table
+- fixture：注入 prototype-backed wafer yield / CP fail、CP matrix、loss yield、condition comparison 数据
 - 本地状态：detail tabs 展示模式
-- 外部业务状态：Stage / Step filter、过滤后的业务数据集、跨组件 wafer drilldown
+- 外部业务状态：Stage / Step filter 与过滤后的业务数据集

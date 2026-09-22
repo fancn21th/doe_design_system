@@ -113,39 +113,9 @@ Out of scope during intake:
   multiple CP parameters in one cell. Cross-tab navigation from the prototype
   remains outside this Domain UI component.
 
-## 2026-09-22 Wafer Yield & CP Fail Analysis Addition
+## 2026-09-22 Composition Correction
 
-The user confirmed that `Wafer Yield & CP Fail Analysis` belongs to the
-`Split Table` report tab, not `Wafer Map`. The source was verified against:
-
-```text
-http://localhost:8888/DOE%20Workbench%20%E5%8D%95%E6%96%87%E4%BB%B6%E7%89%88.html
-```
-
-The current React/SVG implementation is intentionally retained for user
-acceptance. Direct source-code reuse remains a follow-up decision after that
-review; this correction changes composition ownership only.
-
-Observed chart behavior:
-
-- One shared 0–100% vertical scale is used for the green wafer-yield line and
-  the CP-fail percentage stacks.
-- CP-fail segments are visible only when their provided percentage is strictly
-  greater than the configured threshold; the prototype threshold is `2%`.
-- The legend contains only CP parameters visible after thresholding and keeps
-  their input-series order.
-- The x axis preserves injected wafer order, shows Condition vertically, Wafer
-  ID horizontally, and groups consecutive wafers under Step.
-- Pointer hover and keyboard focus disclose Wafer, Yield, visible CP-fail
-  percentage, and failed-die count. `Escape`, scroll, resize, pointer leave,
-  or blur closes the tooltip.
-- The chart panel has an independent expanded/collapsed display state.
-
-Domain boundary:
-
-- Yield, CP-fail percentages, failed-die counts, wafer order, Step, Condition,
-  threshold, and series order are UI-facing input facts.
-- The component does not fetch, filter the report data set, calculate CP fail
-  from raw die data, or infer a business assessment from Yield.
-- Thresholding, consecutive-Step grouping, tooltip display, and collapse are
-  local presentation behavior.
+User annotation review established that `Wafer Yield & CP Fail Analysis` is
+not part of the Split Table module. Split Table owns only its Stage / Step
+filters and grouped comparison table. The chart contract and implementation
+belong to `Report Yield Analysis`.

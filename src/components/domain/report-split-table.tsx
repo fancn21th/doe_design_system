@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
-import { WaferYieldCpFailAnalysis } from "@/components/domain/report-wafer-map"
 import {
   EmptyState,
   formatPercent,
@@ -224,7 +223,6 @@ export function ReportSplitTable({
   const scenarioInput = reportSplitTableScenarios.normal.input
   const parsedInput = reportSplitTableInputSchema.parse(input)
   const rows = parsedInput.rows ?? scenarioInput.rows ?? EMPTY_SPLIT_TABLE_ROWS
-  const yieldCpFailAnalysis = parsedInput.yieldCpFailAnalysis
   const stageOptions = React.useMemo(
     () =>
       toOptions(
@@ -285,9 +283,6 @@ export function ReportSplitTable({
   return (
     <div className={className}>
       <div className="domain-ui-typography grid gap-4 p-4">
-        {yieldCpFailAnalysis && (
-          <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
-        )}
         {rows.length === 0 && (
           <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
         )}
