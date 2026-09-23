@@ -248,6 +248,30 @@ _Avoid_: CP result, planned condition
 Wafer-level electrical test data used to evaluate final chip performance and parameter distributions.
 _Avoid_: Inline/SPC process data
 
+**CP × Inline Fit Evidence**:
+Evidence that compares source-provided Inline measurements and CP outcomes within one Step and factor scope at Condition or paired-Wafer grain. It preserves coverage and candidate-model boundaries without asserting causality or recommending process action.
+_Avoid_: Correlation verdict, root-cause result, process recommendation
+
+**Fit Grain**:
+The point population used for one CP × Inline fit candidate: Condition aggregation points or same-wafer paired points.
+_Avoid_: Chart mode, tab mode
+
+**Condition Aggregation**:
+A CP × Inline evidence population grouped by Condition, where Inline and CP retain their own valid wafer populations rather than imputing missing values.
+_Avoid_: Same-wafer fit, imputed population
+
+**Fit Candidate**:
+A linear or quadratic model available for RD comparison after its Condition-level gate is satisfied. It is not an automatically selected primary model.
+_Avoid_: Best fit, recommended model
+
+**Inline Control Window**:
+A read-only Inline interval that satisfies the supplied CP Target, LSL, or USL constraints within the stated observation domain. It is not a Recipe setpoint, production instruction, or release verdict.
+_Avoid_: Recommended process window, Recipe window
+
+**Coverage Status**:
+A CP × Inline evidence state distinguishing same-wafer paired (`PAIRED`), Inline-only (`INLINE_ONLY`), CP-only (`CP_ONLY`), and no-data (`NO_DATA`) populations.
+_Avoid_: Missing equals zero, all data paired
+
 **Final Bin**:
 Die-level final CP classification keyed by wafer and die coordinates.
 _Avoid_: Standalone pass/fail if source final-bin classification exists

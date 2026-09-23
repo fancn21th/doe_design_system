@@ -161,6 +161,9 @@
     --doe-component-preview-wide-width: 78rem;
     --doe-split-table-min-width: 111rem;
     --doe-report-split-table-min-width: 72rem;
+    --doe-cp-inline-table-min-width: 60rem;
+    --doe-cp-inline-chart-min-width: 60rem;
+    --doe-cp-inline-chart-height: 35rem;
     --doe-yield-matrix-min-width: 180rem;
     --doe-wafer-yield-chart-min-width: 68.75rem;
     --doe-wafer-yield-plot-height: 13.75rem;
@@ -376,6 +379,17 @@
   .domain-ui-report-split-table {
     min-width: var(--doe-report-split-table-min-width);
     table-layout: auto;
+  }
+
+  .domain-ui-cp-inline-table {
+    min-width: var(--doe-cp-inline-table-min-width);
+    table-layout: fixed;
+  }
+
+  .domain-ui-cp-inline-chart {
+    width: var(--doe-cp-inline-chart-min-width);
+    min-width: var(--doe-cp-inline-chart-min-width);
+    height: var(--doe-cp-inline-chart-height);
   }
 
   .domain-ui-typography .domain-ui-split-table[data-slot="table"] {

@@ -1,0 +1,135 @@
+---
+title: Report Tab Update SOP
+description: 在 DOE Domain UI 仓库内更新一个 Report tab 对应业务组件的自包含流程。
+---
+
+## Purpose
+
+本页是当前仓库更新单个 Report tab 的标准入口。它覆盖 DOE Domain UI 自己拥有的全部工作：tab baseline、领域组件边界、UI-facing schema、fixtures、scenarios、组件实现、MDX contract、consumer handoff 和验证。
+
+一个 Report tab 默认对应一个可独立消费的大业务组件，内部可以按可读性拆分实现，但不能把应用路由、请求、跨 tab workflow 或 Backend BFF 逻辑带进组件。本流程在当前仓库内可以独立执行；其他工程的 SOP 只管理它们自己的后续接入。
+
+## Start Prompt
+
+```text
+请按 DOE Report Tab Update SOP 更新一个 tab。
+
+1. Tab 名称或 tab id：
+2. 目标 docs 路由：
+3. 本次变化与验收目标：
+4. 新证据来源（用户说明、截图或原型 URL；没有可留空）：
+5. 需要保留的区域、控件和局部交互：
+6. 需要交给 App 的跨 tab、数据加载或业务事件：
+7. fixture 数据应标记为真实、脱敏真实、prototype-backed 还是 mock：
+```
+
+缺失信息优先从当前仓库的 contract、upstream 记录和 scenarios 中发现。只有用户明确要求重新核对原型，或现有记录无法回答本次变化时，才重新打开原型。
+
+## Ownership Boundary
+
+| 当前仓库拥有 | 只形成 consumer handoff |
+| --- | --- |
+| tab 对应领域组件及其内部组合 | 应用路由和 tab 导航 |
+| UI-facing schema 与 TypeScript type | Backend BFF、App Service、Gateway 和真实请求 |
+| fixtures、scenarios 和 Component Lab 预览 | 跨组件、跨 tab workflow 和页面状态机 |
+| 已确认的局部展示状态与 callback intent | 真实保存、提交、release、重试和轮询 |
+| DOE visual contract 与 shadcn primitive 组合 | 后端业务事实、Oracle/MES 集成和数据聚合 |
+
+跨边界行为必须表达为输入、callback intent 或明确的 out of scope。当前仓库不需要进入消费工程才能完成自己的 contract。
+
+## Execution Flow
+
+### 1. Lock The Tab Scope
+
+- 写明 tab 名称、目标 docs 路由、本次变化和验收目标。
+- 将一个 tab 视为一个大业务组件；只在 tab 内部存在稳定业务子边界时拆分子组件。
+- 列出预计涉及的 component、schema、fixture、scenario、MDX、public export 和 upstream 记录。
+- 把 App、BFF、真实数据接入和无关组件排除在本次仓库修改范围外。
+
+完成标准：每个预计修改文件都服务于目标 tab，所有仓库外行为都有明确边界。
+
+### 2. Establish The Domain UI Baseline
+
+按以下顺序读取事实：
+
+1. 对应 MDX `Contract`、UI-facing schema、fixtures 和 scenarios。
+2. `docs/upstream/components/<id>-<slug>/README.md` 中的原始证据与 post-intake notes。
+3. 最接近的领域组件和 `src/components/ui` primitive 用法。
+4. 仅在本次任务引入新事实、用户明确要求或现有合同缺失时，读取截图或原型。
+
+记录本次 baseline：可见区域、字段、控件、默认状态、局部交互、窄屏/溢出行为，以及 loading、empty、partial、error、readonly 等适用状态。若新证据改变已记录事实，先更新 upstream 记录，再改 contract。
+
+完成标准：每个验收目标都能追溯到现有 contract/scenario 或本次新增的 upstream 证据。
+
+### 3. Assign Every Capability
+
+为每个区域或交互确认一种归属：
+
+- **Domain UI render**：由输入数据决定的业务呈现。
+- **Local state**：tabs、展开、hover、局部排序、纯展示筛选等不改变外部数据集的状态。
+- **Callback intent**：选择、跳转或操作意图由组件发出，实际 workflow 由消费者处理。
+- **Consumer-owned data state**：会触发查询、改变注入数据集或跨 tab 联动的状态，由 App 输入。
+- **Upstream fact**：阈值、聚合结果、实际量测或状态事实由上游数据提供，组件不重新计算或猜测。
+
+过滤器不能按控件外观决定归属：只改变组件内已注入数据的展示时才是 local state；改变注入数据、触发请求或跨 tab 联动时是 consumer-owned state。
+
+完成标准：所有可见能力都有唯一归属；未解决项被写成 open question 或 consumer handoff，而不是藏进实现假设。
+
+### 4. Update The Component Contract Package
+
+按本次变化更新所需资产：
+
+1. UI-facing schema：只表达组件输入和本地 intent，不复制 backend DTO。
+2. Fixtures：承载 demo/test 数据，并标记 real、redacted-real、prototype-backed、derived 或 mock 来源。
+3. Scenarios：覆盖本次需要验证的 normal 和边界状态；已有 scenario 是后续小改动的事实源。
+4. Component：通过 props 接收 schema-shaped input，通过 callback 暴露外部意图。
+5. MDX：保留可执行 Preview，并在 `Contract` 中说明区域、数据语义、交互归属、响应式/溢出行为和 out of scope。
+6. Public export：新增稳定组件 API 时同步更新；fixtures、scenarios 和内部 helper 不作为消费 API。
+
+新增 tab 组件时，先建立 `docs/upstream/components/NNN-component-slug/`；已有组件只有在本次出现新证据或事实修订时才更新 upstream 记录。
+
+完成标准：schema、fixture、scenario、component 和 MDX 描述同一个 contract，没有组件内部硬编码的 demo 数据。
+
+### 5. Implement Within The Visual System
+
+- 视觉、token、layout 或 composition 决策从 `DESIGN.md` 路由到相关设计系统文档。
+- 基础控件组合 `src/components/ui` 的 shadcn primitives，并先检查当前仓库已有用法。
+- 来自 `/Users/fantianze/Vibe/g-working/g-doe/ui` 的参考实现按 [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor) 处理。
+- 保留数据诚实性：missing 不补成 `0`，planned 不冒充 actual，prototype-backed 或 derived 数据不描述成生产事实。
+
+完成标准：组件只承担 Domain UI 行为，并能由 scenario 在 Component Lab 中独立呈现。
+
+### 6. Write The Consumer Handoff
+
+在组件 MDX `Contract` 或 `Implementation Notes` 中记录消费者需要知道的边界：
+
+- 输入字段和数据语义；
+- callback 代表的用户意图；
+- 哪些筛选或选择必须由外部受控；
+- 哪些跨 tab 行为、请求、业务状态或上游字段仍未实现；
+- consumer 需要提供哪些 loading、empty、partial 或 failed 输入。
+
+这里只定义交接合同，不规定 DOE App 或 Backend BFF 的内部实现步骤。
+
+完成标准：消费方只读当前仓库的 public contract，就能判断如何提供输入、接收意图以及哪些能力不属于组件。
+
+### 7. Verify And Close
+
+1. 运行目标文件的 TypeScript 或 lint 检查。
+2. 运行相关组件/model 测试。
+3. 若交互或布局改变，在目标 docs 路由验证关键路径、窄屏或横向溢出行为。
+4. 实现完成后运行一次 full build。
+5. 将单组件事实补回 MDX/upstream，将可复用流程改进补回本 SOP。
+
+完成标准：检查结果有记录，Component Lab 预览与 contract/scenario 一致，仓库外未实现项已经形成明确 handoff。
+
+## Final Checklist
+
+- [ ] tab scope 和验收目标明确。
+- [ ] baseline 来自现有 contract/scenario 或已记录的新证据。
+- [ ] 每个交互都归属于 local state、callback intent 或 consumer-owned state。
+- [ ] schema、fixture、scenario、component、MDX 和 public export 保持一致。
+- [ ] App、BFF、真实请求和跨 tab workflow 没有进入 Domain UI。
+- [ ] visual changes 遵循 `DESIGN.md`，基础控件来自 `src/components/ui`。
+- [ ] consumer handoff 足以支持下游接入，不依赖下游 SOP 才能理解。
+- [ ] targeted checks、相关测试、浏览器关键路径和最终 build 已按变化范围完成。

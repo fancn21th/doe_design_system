@@ -3,23 +3,39 @@ title: cp-inline
 description: DOE Report CP x Inline 业务组件。
 ---
 
-import { ReportCpInline } from "@/components/domain/report-cp-inline"
-import { reportCpInlineScenarios } from "@/components/domain/report-cp-inline.scenarios"
+import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.preview"
 
 ## 预览 / Preview
 
 <div className="domain-ui-preview-wide">
-  <div className="not-prose overflow-hidden rounded-xl border">
-    <div className="border-b px-4 py-3 text-sm font-medium">CP × Inline</div>
-    <ReportCpInline input={reportCpInlineScenarios.normal.input} />
-  </div>
+  <ReportCpInlinePreview />
 </div>
 
 ## Contract
 
-`ReportCpInline` 展示 CP x Inline 的 condition aggregation 和 fit-readiness 证据。相关性、回归、因果判断不在当前占位版本内实现。
+`ReportCpInline` 是 DOE Report 的完整 CP × Inline 业务组件：
+
+- `CP x Inline 拟合`：受控的 Step、Inline Parameter 与 CP Parameter 选择。
+- `Condition 聚合`：受控的 Baseline / Split Wafer 选择，以及 Inline 与 CP 各自有效 population 的聚合表。
+- `拟合与定位`：受控的 Fit Grain、Inline metric、CP aggregation、extreme policy 与 Quadratic candidate；三张结果图分别呈现 CP Median、典型 Min 和典型 Max。
+- Linear / Quadratic 曲线、gate、阈值、roots、Control Window 与 provenance 都是上游注入的只读证据。组件不执行回归、求根或窗口推导，也不自动选择主模型。
+- Collapse、chart hover 和“拟合结果”详情开关属于组件本地展示状态；所有业务选择通过 callbacks 交给消费者。
+- Condition 聚合允许 Inline / CP 使用各自有效 Wafer；Wafer 粒度只消费同片配对 evidence。`PAIRED`、`INLINE_ONLY`、`CP_ONLY` 与 `NO_DATA` 不得合并为一个布尔状态。
+- Inline Control Window 标记为 `Source Provisional`，不是 Recipe setpoint、生产指令或 release verdict。
+- 宽表和图表在组件内部横向滚动；窄屏时 selector 和证据详情纵向堆叠。
+
+原型数据标记为 `prototype-backed`；configured-spec、coverage-mismatch、gate、partial、empty 和 dense 数据只用于场景验证。
 
 ## Scenarios
 
 - `normal`
+- `configured-spec`
+- `coverage-mismatch`
+- `insufficient-levels`
+- `partial`
 - `empty`
+- `dense`
+
+## Consumer Handoff
+
+消费者负责根据 callbacks 更新受控选择、重新请求或映射证据，并注入与新选择一致的 rows、fit panels、spec、roots 和 control windows。App routing、跨 tab workflow、Backend BFF、真实数据关联和统计计算均不属于本组件。

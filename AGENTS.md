@@ -16,7 +16,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Before the first Domain UI change in a task or session, read `CONTEXT.md` and `DESIGN.md`. If context was compacted, lost, or inherited from another task, read them again. For a visual, token, layout, or component-composition decision, then read only the relevant design-system document named by `DESIGN.md`; for a domain-behaviour decision, reread only the relevant ADR, component pattern, fixture, scenario, or local primitive source.
 
-For work that spans DOE Domain UI, DOE Backend BFF, and DOE App, use the shared SOP at `/Users/fantianze/Vibe/g-working/g-doe/doe-new-app/docs/refactor/three-upstream-development-sop.md`; this repository owns only the UI Upstream role-specific part described in `content/docs/sop/ai-coding.mdx`. For component updates based on `/Users/fantianze/Vibe/g-working/g-doe/ui`, follow `content/docs/sop/ui-reference-refactor.mdx`.
+For any task that creates or updates a report tab, follow `content/docs/sop/report-tab-update.mdx`; it is the self-contained workflow for this repository's Domain UI responsibility. Use `content/docs/sop/ai-coding.mdx` for general component creation, `content/docs/sop/component-refactor.mdx` for existing-component execution details, and `content/docs/sop/ui-reference-refactor.mdx` when the source is `/Users/fantianze/Vibe/g-working/g-doe/ui`. Cross-repository App or BFF work starts only after this repository's contract and consumer handoff are explicit; downstream repository SOPs do not replace or gate the Domain UI workflow recorded here.
 
 Hard rules:
 

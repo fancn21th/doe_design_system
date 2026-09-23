@@ -2,6 +2,7 @@
   "title": "SOP",
   "pages": [
     "index",
+    "report-tab-update",
     "ai-coding",
     "component-refactor",
     "ui-reference-refactor"

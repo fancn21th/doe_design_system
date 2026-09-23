@@ -7,7 +7,6 @@ import {
 } from "@/components/domain/wafer-map.fixtures"
 import type {
   ReportCpDataInput,
-  ReportCpInlineInput,
   ReportInlineDataInput,
   ReportOverviewInput,
   ReportParameterMedianInput,
@@ -1127,48 +1126,4 @@ export const reportInlineDataFixture: ReportInlineDataInput = {
   },
 }
 
-export const reportCpInlineFixture: ReportCpInlineInput = {
-  title: "CP x Inline",
-  subtitle: "Condition aggregation and fit-readiness evidence.",
-  sourceLabel: "REPORT SNAPSHOT",
-  step: "TR CD · BSL + 2 Condition",
-  inlineParameter: "AML-SN080724-TR-PH-ADI-69",
-  cpParameter: "BVDSS",
-  baselineWafers: ["W01", "W11", "W25"],
-  splitWafers: ["W02", "W03"],
-  rows: [
-    {
-      stage: "Etch",
-      condition: "BSL pooled",
-      role: "BSL",
-      inlineWafers: "W01 / W11 / W25",
-      cpWafers: "W01 / W11 / W25",
-      meanInline: 0.782822,
-      medianInline: 0.783511,
-      meanCp: 89.2337,
-      medianCp: 90.0434,
-    },
-    {
-      stage: "Etch",
-      condition: "0.75um",
-      role: "split-1",
-      inlineWafers: "W02",
-      cpWafers: "W02",
-      meanInline: 0.745379,
-      medianInline: 0.745306,
-      meanCp: 80.8915,
-      medianCp: 91.0559,
-    },
-    {
-      stage: "Etch",
-      condition: "0.83um",
-      role: "split-2",
-      inlineWafers: "W03",
-      cpWafers: "W03",
-      meanInline: 0.833782,
-      medianInline: 0.832165,
-      meanCp: 87.5814,
-      medianCp: 87.7626,
-    },
-  ],
-}
+export { reportCpInlineFixture } from "@/components/domain/report-cp-inline.fixtures"

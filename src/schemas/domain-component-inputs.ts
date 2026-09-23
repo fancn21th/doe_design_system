@@ -648,26 +648,158 @@ export const reportInlineDataInputSchema = z.object({
   }).optional(),
 })
 export const reportCpInlineRowSchema = z.object({
+  id: z.string(),
   stage: z.string(),
   condition: z.string(),
   role: z.string(),
-  inlineWafers: z.string(),
-  cpWafers: z.string(),
-  meanInline: z.number(),
-  medianInline: z.number(),
-  meanCp: z.number(),
-  medianCp: z.number(),
+  requestedWafers: z.array(z.string()),
+  inlineWafers: z.array(z.string()),
+  cpWafers: z.array(z.string()),
+  meanInline: z.number().finite().nullable(),
+  medianInline: z.number().finite().nullable(),
+  meanCp: z.number().finite().nullable(),
+  medianCp: z.number().finite().nullable(),
+})
+export const reportCpInlineOptionSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+  disabled: z.boolean().optional(),
+})
+export const reportCpInlineCoverageStatusSchema = z.enum([
+  "PAIRED",
+  "INLINE_ONLY",
+  "CP_ONLY",
+  "NO_DATA",
+])
+export const reportCpInlineWaferOptionSchema = reportCpInlineOptionSchema.extend({
+  coverageStatus: reportCpInlineCoverageStatusSchema,
+  coverageLabel: z.string(),
+  description: z.string().optional(),
+})
+export const reportCpInlineFitGrainSchema = z.enum(["condition", "wafer"])
+export const reportCpInlineMetricSchema = z.enum(["median", "mean"])
+export const reportCpInlineCpAggregationSchema = z.enum(["median", "mean"])
+export const reportCpInlineExtremePolicySchema = z.enum(["typical", "worst"])
+export const reportCpInlineFitPointSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  role: z.enum(["BSL", "SPLIT"]),
+  grain: z.enum(["CONDITION", "WAFER"]),
+  x: z.number().finite(),
+  y: z.number().finite(),
+  waferId: z.string().optional(),
+  inlineWafers: z.array(z.string()),
+  cpWafers: z.array(z.string()),
+})
+export const reportCpInlineSeriesPointSchema = z.object({
+  x: z.number().finite(),
+  y: z.number().finite(),
+})
+export const reportCpInlineFitModelSchema = z.object({
+  kind: z.enum(["linear", "quadratic"]),
+  label: z.string(),
+  status: z.enum(["available", "unavailable"]),
+  equation: z.string().nullable(),
+  diagnostic: z.string(),
+  r2: z.number().finite().nullable().optional(),
+  rmse: z.number().finite().nullable().optional(),
+  residualDf: z.number().int().nullable().optional(),
+  unavailableReason: z.string().optional(),
+  series: z.array(reportCpInlineSeriesPointSchema).default([]),
+})
+export const reportCpInlineFitGateSchema = z.object({
+  mode: z.enum(["NO_DATA", "REPEATABILITY", "FACTOR_REVIEW"]),
+  conditionLevelCount: z.number().int().nonnegative(),
+  linearAllowed: z.boolean(),
+  quadraticAllowed: z.boolean(),
+  reason: z.string(),
+})
+export const reportCpInlineThresholdKindSchema = z.enum([
+  "target",
+  "lsl",
+  "usl",
+])
+export const reportCpInlineRootSchema = z.object({
+  id: z.string(),
+  model: z.enum(["linear", "quadratic"]),
+  threshold: reportCpInlineThresholdKindSchema,
+  x: z.number().finite(),
+  y: z.number().finite(),
+  domainStatus: z.enum(["in-domain", "out-of-domain"]),
+})
+export const reportCpInlineFitPanelSchema = z.object({
+  id: z.enum(["median", "min", "max"]),
+  title: z.string(),
+  metricLabel: z.string(),
+  thresholdKind: reportCpInlineThresholdKindSchema,
+  thresholdRelation: z.enum([">=", "<="]),
+  points: z.array(reportCpInlineFitPointSchema).default([]),
+  models: z.array(reportCpInlineFitModelSchema).default([]),
+  roots: z.array(reportCpInlineRootSchema).default([]),
+  gate: reportCpInlineFitGateSchema,
+  unavailableReason: z.string().optional(),
+  provenance: z.string(),
+})
+export const reportCpInlineSpecSchema = z.object({
+  target: z.number().finite().nullable(),
+  lsl: z.number().finite().nullable(),
+  usl: z.number().finite().nullable(),
+  sourceLabel: z.string(),
+  classification: z.enum(["confirmed", "source-provisional", "unavailable"]),
+})
+export const reportCpInlineControlWindowSchema = z.object({
+  model: z.enum(["linear", "quadratic"]),
+  status: z.enum(["available", "unavailable"]),
+  domain: z.object({
+    min: z.number().finite(),
+    max: z.number().finite(),
+  }).nullable(),
+  intervals: z.array(z.object({
+    min: z.number().finite(),
+    max: z.number().finite(),
+  })).default([]),
+  basis: z.array(z.string()).default([]),
+  reason: z.string().optional(),
+  provenance: z.string(),
 })
 export const reportCpInlineInputSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   sourceLabel: z.string().optional(),
+  stepOptions: z.array(reportCpInlineOptionSchema).default([]),
   step: z.string().optional(),
+  inlineParameterOptions: z.array(reportCpInlineOptionSchema).default([]),
   inlineParameter: z.string().optional(),
+  cpParameterOptions: z.array(reportCpInlineOptionSchema).default([]),
   cpParameter: z.string().optional(),
+  baselineWaferOptions: z.array(reportCpInlineWaferOptionSchema).default([]),
   baselineWafers: z.array(z.string()).optional(),
+  splitWaferOptions: z.array(reportCpInlineWaferOptionSchema).default([]),
   splitWafers: z.array(z.string()).optional(),
-  rows: z.array(reportCpInlineRowSchema).optional(),
+  fitGrainOptions: z.array(reportCpInlineOptionSchema).default([]),
+  fitGrain: reportCpInlineFitGrainSchema.optional(),
+  inlineMetricOptions: z.array(reportCpInlineOptionSchema).default([]),
+  inlineMetric: reportCpInlineMetricSchema.optional(),
+  cpAggregationOptions: z.array(reportCpInlineOptionSchema).default([]),
+  cpAggregation: reportCpInlineCpAggregationSchema.optional(),
+  extremePolicyOptions: z.array(reportCpInlineOptionSchema).default([]),
+  extremePolicy: reportCpInlineExtremePolicySchema.optional(),
+  quadraticEnabled: z.boolean().default(true),
+  spec: reportCpInlineSpecSchema.optional(),
+  rows: z.array(reportCpInlineRowSchema).default([]),
+  fitPanels: z.array(reportCpInlineFitPanelSchema).default([]),
+  controlWindows: z.array(reportCpInlineControlWindowSchema).default([]),
+  provenance: z.object({
+    classification: z.enum([
+      "real",
+      "redacted-real",
+      "prototype-backed",
+      "derived",
+      "mock",
+    ]),
+    source: z.string(),
+    limitation: z.string().optional(),
+  }).optional(),
 })
 export const layoutShellNavItemSchema = z.object({
   id: z.string(),
@@ -804,6 +936,35 @@ export type ReportParameterMedianInput = z.infer<
 export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
 export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
 export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
+export type ReportCpInlineOption = z.infer<typeof reportCpInlineOptionSchema>
+export type ReportCpInlineCoverageStatus = z.infer<
+  typeof reportCpInlineCoverageStatusSchema
+>
+export type ReportCpInlineWaferOption = z.infer<
+  typeof reportCpInlineWaferOptionSchema
+>
+export type ReportCpInlineFitGrain = z.infer<
+  typeof reportCpInlineFitGrainSchema
+>
+export type ReportCpInlineMetric = z.infer<typeof reportCpInlineMetricSchema>
+export type ReportCpInlineCpAggregation = z.infer<
+  typeof reportCpInlineCpAggregationSchema
+>
+export type ReportCpInlineExtremePolicy = z.infer<
+  typeof reportCpInlineExtremePolicySchema
+>
+export type ReportCpInlineFitPoint = z.infer<
+  typeof reportCpInlineFitPointSchema
+>
+export type ReportCpInlineFitModel = z.infer<
+  typeof reportCpInlineFitModelSchema
+>
+export type ReportCpInlineFitPanel = z.infer<
+  typeof reportCpInlineFitPanelSchema
+>
+export type ReportCpInlineControlWindow = z.infer<
+  typeof reportCpInlineControlWindowSchema
+>
 export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
 export type LayoutShellNavItem = z.infer<typeof layoutShellNavItemSchema>
 export type LayoutShellInput = z.infer<typeof layoutShellInputSchema>
