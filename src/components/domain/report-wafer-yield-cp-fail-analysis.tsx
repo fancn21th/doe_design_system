@@ -180,38 +180,37 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
                             </g>
                           )
                         })}
-                        <polyline
-                          points={input.wafers
-                            .map(
-                              (wafer, index) =>
-                                `${(index + 0.5) * columnWidth},${
-                                  PLOT_HEIGHT -
-                                  (wafer.yield / 100) * PLOT_HEIGHT
-                                }`
-                            )
-                            .join(" ")}
-                          fill="none"
-                          stroke={YIELD_COLOR}
-                          strokeWidth={3}
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                        {input.wafers.map((wafer, index) => (
-                          <circle
-                            key={`${wafer.waferId}-yield`}
-                            cx={(index + 0.5) * columnWidth}
-                            cy={
-                              PLOT_HEIGHT -
-                              (wafer.yield / 100) * PLOT_HEIGHT
-                            }
-                            r={4.5}
-                            fill={YIELD_COLOR}
-                            stroke="var(--background)"
-                            strokeWidth={2}
-                            vectorEffect="non-scaling-stroke"
-                          />
-                        ))}
+                        {input.wafers.slice(1).map((wafer, index) => {
+                          const previous = input.wafers[index]
+                          if (previous.yield === null || wafer.yield === null) return null
+                          return (
+                            <line
+                              key={`${previous.waferId}-${wafer.waferId}-yield-line`}
+                              x1={(index + 0.5) * columnWidth}
+                              x2={(index + 1.5) * columnWidth}
+                              y1={PLOT_HEIGHT - (previous.yield / 100) * PLOT_HEIGHT}
+                              y2={PLOT_HEIGHT - (wafer.yield / 100) * PLOT_HEIGHT}
+                              stroke={YIELD_COLOR}
+                              strokeWidth={3}
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          )
+                        })}
+                        {input.wafers.map((wafer, index) =>
+                          wafer.yield === null ? null : (
+                            <circle
+                              key={`${wafer.waferId}-yield`}
+                              cx={(index + 0.5) * columnWidth}
+                              cy={PLOT_HEIGHT - (wafer.yield / 100) * PLOT_HEIGHT}
+                              r={4.5}
+                              fill={YIELD_COLOR}
+                              stroke="var(--background)"
+                              strokeWidth={2}
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          )
+                        )}
                       </svg>
                       <div
                         className="absolute inset-0 grid h-(--doe-wafer-yield-plot-height)"
@@ -418,12 +417,15 @@ function ChartTooltipCard({
       <strong className="mb-1.5 block text-sm">
         Wafer {tooltip.wafer.waferId.replace(/^W/i, "")}
       </strong>
-      <TooltipRow label="Yield" value={`${tooltip.wafer.yield.toFixed(2)}%`} />
+      <TooltipRow
+        label="Yield"
+        value={tooltip.wafer.yield === null ? "Unavailable" : `${tooltip.wafer.yield.toFixed(2)}%`}
+      />
       {fails.map((fail) => (
         <TooltipRow
           key={fail.parameter}
           label={fail.parameter}
-          value={`${fail.percent.toFixed(2)}% (${fail.failedDies.toLocaleString()} dies)`}
+          value={`${fail.percent?.toFixed(2)}% (${fail.failedDies === null ? "Unavailable" : fail.failedDies.toLocaleString()} dies)`}
         />
       ))}
     </div>
@@ -446,8 +448,7 @@ function chartWaferLabel(
   const fails = visibleCpFails(wafer, threshold)
     .map((fail) => `${fail.parameter} ${fail.percent.toFixed(2)}%`)
     .join(", ")
-  return `${wafer.waferId} Yield ${wafer.yield.toFixed(2)}%${
+  return `${wafer.waferId} Yield ${wafer.yield === null ? "Unavailable" : `${wafer.yield.toFixed(2)}%`}${
     fails ? `, ${fails}` : ""
   }`
 }
-

@@ -93,6 +93,14 @@ function formatCount(value: number) {
   return value.toLocaleString()
 }
 
+function formatOptionalPercent(value: number | null) {
+  return value === null ? "Unavailable" : formatPercent(value)
+}
+
+function formatOptionalCount(value: number | null) {
+  return value === null ? "Unavailable" : formatCount(value)
+}
+
 function useDisplayFilterValues(
   values: string[] | undefined,
   options: ComboboxOption[],
@@ -209,6 +217,7 @@ function MatrixTable({
             <TableHead className="w-52 bg-muted/30">Stage / Step / Seq</TableHead>
             <TableHead className="w-40 bg-muted/30">Condition</TableHead>
             <TableHead className="w-24 bg-muted/30">Yield</TableHead>
+            <TableHead className="w-28 bg-muted/30">Δ vs BSL</TableHead>
             <TableHead className="w-36 bg-muted/30">Pass / Tested Dies</TableHead>
             {matrixColumns.map((column) => (
               <TableHead key={column} className="w-24 text-right">
@@ -219,7 +228,7 @@ function MatrixTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.waferId}>
+            <TableRow key={row.rowId}>
               <TableCell className="sticky left-0 z-10 bg-background">
                 <b className="font-mono text-sky-700">{row.waferId}</b>
                 {row.role && (
@@ -237,21 +246,30 @@ function MatrixTable({
               <TableCell className="font-mono text-xs">{row.condition}</TableCell>
               <TableCell>
                 <ReportBadge tone={row.tone ?? "neutral"}>
-                  {formatPercent(row.yield)}
+                  {formatOptionalPercent(row.yield)}
                 </ReportBadge>
               </TableCell>
+              <TableCell className="font-mono text-xs" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
+                {row.deltaPp === null
+                  ? "Unavailable"
+                  : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
+              </TableCell>
               <TableCell className="font-mono text-xs">
-                {formatCount(row.passDies)} / {formatCount(row.testedDies)}
+                {formatOptionalCount(row.passDies)} / {formatOptionalCount(row.testedDies)}
               </TableCell>
               {matrixColumns.map((column) => {
-                const value = row.failCounts[column] ?? 0
+                const count = row.failCounts[column]
+                const rate = row.failRates[column]
 
                 return (
                   <TableCell
                     key={column}
                     className="text-right font-mono text-xs"
+                    title={count === undefined || count === null ? undefined : `${formatCount(count)} failed dies`}
                   >
-                    {value > 0 ? formatCount(value) : "-"}
+                    {rate === undefined || rate === null
+                      ? "Unavailable"
+                      : formatPercent(rate)}
                   </TableCell>
                 )
               })}
@@ -331,7 +349,7 @@ function ConditionYieldTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={`${row.stage}-${row.step}-${row.condition}`}>
+            <TableRow key={row.rowId}>
               <TableCell className="font-mono text-xs">
                 {row.waferIds.join(" / ")}
               </TableCell>
@@ -344,17 +362,17 @@ function ConditionYieldTable({
               <TableCell className="font-mono text-xs">{row.condition}</TableCell>
               <TableCell className="text-right">
                 <ReportBadge tone={row.tone}>
-                  {formatPercent(row.weightedYield)}
+                  {formatOptionalPercent(row.weightedYield)}
                 </ReportBadge>
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatPercent(row.medianYield)}
+                {formatOptionalPercent(row.medianYield)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatPercent(row.averageYield)}
+                {formatOptionalPercent(row.averageYield)}
               </TableCell>
               <TableCell className="text-right font-mono">
-                {formatPercent(row.minYield)} / {formatPercent(row.maxYield)}
+                {formatOptionalPercent(row.minYield)} / {formatOptionalPercent(row.maxYield)}
               </TableCell>
             </TableRow>
           ))}
@@ -371,30 +389,18 @@ export function ReportYieldAnalysis({
   onStepFilterChange,
   onDetailModeChange,
 }: ReportYieldAnalysisProps) {
-  const scenarioInput = reportYieldAnalysisScenarios.normal.input
   const parsedInput = reportYieldAnalysisInputSchema.parse(input)
-  const wafers = parsedInput.wafers ?? scenarioInput.wafers ?? EMPTY_WAFERS
-  const matrixRows =
-    parsedInput.matrixRows ?? scenarioInput.matrixRows ?? EMPTY_MATRIX_ROWS
-  const lossYieldRows =
-    parsedInput.lossYieldRows ??
-    scenarioInput.lossYieldRows ??
-    EMPTY_LOSS_ROWS
-  const conditionYieldRows =
-    parsedInput.conditionYieldRows ??
-    scenarioInput.conditionYieldRows ??
-    EMPTY_CONDITION_ROWS
+  const wafers = parsedInput.wafers ?? EMPTY_WAFERS
+  const matrixRows = parsedInput.matrixRows ?? EMPTY_MATRIX_ROWS
+  const lossYieldRows = parsedInput.lossYieldRows ?? EMPTY_LOSS_ROWS
+  const conditionYieldRows = parsedInput.conditionYieldRows ?? EMPTY_CONDITION_ROWS
   const yieldCpFailAnalysis = parsedInput.yieldCpFailAnalysis
   const detailModeOptions =
-    parsedInput.detailModeOptions ??
-    scenarioInput.detailModeOptions ??
-    DEFAULT_DETAIL_MODE_OPTIONS
-  const matrixColumns =
-    parsedInput.matrixColumns ?? scenarioInput.matrixColumns ?? []
+    parsedInput.detailModeOptions ?? DEFAULT_DETAIL_MODE_OPTIONS
+  const matrixColumns = parsedInput.matrixColumns ?? []
   const [localDetailMode, setLocalDetailMode] =
     React.useState<ReportYieldDetailMode>(
       parsedInput.selectedDetailMode ??
-        scenarioInput.selectedDetailMode ??
         "wafer-cp-matrix"
     )
   const selectedDetailMode =
@@ -403,22 +409,20 @@ export function ReportYieldAnalysis({
       : localDetailMode
   const stageOptions = toOptions(
     parsedInput.stageOptions ??
-      scenarioInput.stageOptions ??
       wafers.map((wafer) => wafer.stage ?? "")
   )
   const stepOptions = toOptions(
     parsedInput.stepOptions ??
-      scenarioInput.stepOptions ??
       wafers.map((wafer) => wafer.step ?? "")
   )
   const [selectedStageOptions, setSelectedStageOptions] =
     useDisplayFilterValues(
-      parsedInput.selectedStages ?? scenarioInput.selectedStages,
+      parsedInput.selectedStages,
       stageOptions,
       onStageFilterChange
     )
   const [selectedStepOptions, setSelectedStepOptions] = useDisplayFilterValues(
-    parsedInput.selectedSteps ?? scenarioInput.selectedSteps,
+    parsedInput.selectedSteps,
     stepOptions,
     onStepFilterChange
   )
@@ -431,7 +435,11 @@ export function ReportYieldAnalysis({
 
   return (
     <div className={className}>
-      {wafers.length === 0 ? (
+      {wafers.length === 0 &&
+      matrixRows.length === 0 &&
+      conditionYieldRows.length === 0 &&
+      stageOptions.length === 0 &&
+      stepOptions.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography grid gap-4 p-4">

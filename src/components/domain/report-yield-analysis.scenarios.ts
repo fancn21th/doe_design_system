@@ -1,6 +1,6 @@
 import {
   reportWaferYieldCpFailFixture,
-  reportYieldAnalysisFixture,
+  reportYieldAnalysisComparisonFixture,
 } from "@/components/domain/report.fixtures"
 import type { ReportYieldAnalysisInput } from "@/schemas/domain-component-inputs"
 
@@ -10,14 +10,14 @@ export const reportYieldAnalysisScenarios = {
   normal: {
     name: "normal",
     input: {
-      ...reportYieldAnalysisFixture,
+      ...reportYieldAnalysisComparisonFixture,
       yieldCpFailAnalysis: reportWaferYieldCpFailFixture,
     },
   },
   dense: {
     name: "dense",
     input: {
-      ...reportYieldAnalysisFixture,
+      ...reportYieldAnalysisComparisonFixture,
       yieldCpFailAnalysis: reportWaferYieldCpFailFixture,
     },
   },

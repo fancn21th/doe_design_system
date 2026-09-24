@@ -32,6 +32,7 @@ import {
   reportSplitTableInputSchema,
   type ReportSplitTableRow,
   type ReportSplitTableInput,
+  type ReportSplitTableStepFacet,
 } from "@/schemas/domain-component-inputs"
 
 type ReportSplitTableProps = {
@@ -43,6 +44,8 @@ type ReportSplitTableProps = {
 type ComboboxOption = {
   label: string
   value: string
+  sourceCount?: number
+  displayCount?: number
 }
 
 type ReportSplitTableDisplayRow = {
@@ -63,6 +66,30 @@ function unique(values: string[]) {
 
 function toOptions(values: string[] = []): ComboboxOption[] {
   return unique(values).map((value) => ({ label: value, value }))
+}
+
+export function getReportSplitTableStepOptions(
+  stepFacets: ReportSplitTableStepFacet[] | undefined,
+  fallbackValues: string[] = []
+): ComboboxOption[] {
+  if (!stepFacets?.length) return toOptions(fallbackValues)
+
+  // The facet sequence and both counts are authoritative BFF facts. Preserve
+  // them verbatim rather than deriving counts from the active display rows.
+  return stepFacets.map(({ step, sourceCount, displayCount }) => ({
+    label: step,
+    value: step,
+    sourceCount,
+    displayCount,
+  }))
+}
+
+function getOptionDescription(option: ComboboxOption) {
+  if (option.sourceCount === undefined || option.displayCount === undefined) {
+    return undefined
+  }
+
+  return `${option.sourceCount} facts / ${option.displayCount} displayed`
 }
 
 function findSelectedOptions(options: ComboboxOption[], values: string[] = []) {
@@ -182,9 +209,18 @@ function MultiFilterCombobox({
                   {selectedValue.map((item) => (
                     <ComboboxChip
                       key={item.value}
-                      aria-label={item.label}
+                      aria-label={
+                        getOptionDescription(item)
+                          ? `${item.label} · ${getOptionDescription(item)}`
+                          : item.label
+                      }
                     >
                       {item.label}
+                      {getOptionDescription(item) && (
+                        <span className="text-muted-foreground">
+                          {` · ${getOptionDescription(item)}`}
+                        </span>
+                      )}
                     </ComboboxChip>
                   ))}
                   <ComboboxChipsInput
@@ -203,7 +239,14 @@ function MultiFilterCombobox({
             <ComboboxList>
               {(option: ComboboxOption) => (
                 <ComboboxItem key={option.value} value={option}>
-                  <span>{option.label}</span>
+                  <span className="flex w-full items-center justify-between gap-4">
+                    <span>{option.label}</span>
+                    {getOptionDescription(option) && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {getOptionDescription(option)}
+                      </span>
+                    )}
+                  </span>
                 </ComboboxItem>
               )}
             </ComboboxList>
@@ -233,12 +276,13 @@ export function ReportSplitTable({
   )
   const stepOptions = React.useMemo(
     () =>
-      toOptions(
+      getReportSplitTableStepOptions(
+        parsedInput.stepFacets,
         parsedInput.stepOptions ??
           scenarioInput.stepOptions ??
           rows.map((row) => row.step)
       ),
-    [parsedInput.stepOptions, rows, scenarioInput.stepOptions]
+    [parsedInput.stepFacets, parsedInput.stepOptions, rows, scenarioInput.stepOptions]
   )
   const [selectedStageOptions, setSelectedStageOptions] = React.useState(
     () =>

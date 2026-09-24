@@ -14,6 +14,8 @@ import type {
   ReportWaferMapInput,
   ReportWaferYieldCpFail,
   ReportYieldAnalysisInput,
+  ReportYieldConditionRow,
+  ReportYieldMatrixRow,
 } from "@/schemas/domain-component-inputs"
 
 export const reportOverviewFixture: ReportOverviewInput = {
@@ -698,7 +700,22 @@ export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
     { waferId: "W23", role: "split-2", stage: "Wet Clean", step: "Mesa OX Wet Dip", seq: "seq-num-001", condition: "500A", yield: 99.76, passDies: 4089, testedDies: 4099, failCounts: {}, tone: "good" },
     { waferId: "W24", role: "split-1", stage: "Oxidation", step: "Screen OX", seq: "seq-num-001", condition: "1050C 550A", yield: 99.56, passDies: 4081, testedDies: 4099, failCounts: { IGSSP1: 1 }, tone: "good" },
     { waferId: "W25", role: "BSL", stage: "Baseline", step: "BSL", seq: "seq-num-001", condition: "BSL", yield: 97.15, passDies: 3982, testedDies: 4099, failCounts: { BVDSS: 1, IGSSP1: 42, Gate_Short: 3 }, tone: "watch" },
-  ],
+  ].map((row, index): ReportYieldMatrixRow => ({
+    ...row,
+    rowId: `fixture-row-${index + 1}`,
+    groupId: `fixture-group-${row.step}-${row.seq}`,
+    memberId: `fixture-member-${index + 1}`,
+    baselineWaferId: row.role === "BSL" ? row.waferId : "W01",
+    deltaPp: row.role === "BSL" ? null : row.yield - 99.63,
+    failCounts: row.failCounts as Record<string, number>,
+    failRates: Object.fromEntries(
+      Object.entries(row.failCounts as Record<string, number>).map(([parameter, count]) => [
+        parameter,
+        (count / row.testedDies) * 100,
+      ])
+    ),
+    tone: row.tone as ReportYieldMatrixRow["tone"],
+  })),
   lossYieldRows: [
     { rank: 1, parameter: "VGSTX1", failedDieCount: 4775, pareto: 59.87, yieldLoss: 4.66, cumulativeYieldLoss: 4.66, tone: "bad" },
     { rank: 2, parameter: "IGSSP1", failedDieCount: 3050, pareto: 38.24, yieldLoss: 2.98, cumulativeYieldLoss: 7.64, tone: "bad" },
@@ -722,7 +739,113 @@ export const reportYieldAnalysisFixture: ReportYieldAnalysisInput = {
     { waferIds: ["W07"], stage: "Etch", step: "TR Depth", seq: "seq-num-001", condition: "5.25um", weightedYield: 99.63, medianYield: 99.63, averageYield: 99.63, minYield: 99.63, maxYield: 99.63, tone: "good" },
     { waferIds: ["W08"], stage: "Clean", step: "Pre clean", seq: "seq-num-001", condition: "HF 30A", weightedYield: 99.66, medianYield: 99.66, averageYield: 99.66, minYield: 99.66, maxYield: 99.66, tone: "good" },
     { waferIds: ["W09"], stage: "Oxidation", step: "LOX", seq: "seq-num-001", condition: "3600A", weightedYield: 99.73, medianYield: 99.73, averageYield: 99.73, minYield: 99.73, maxYield: 99.73, tone: "good" },
-  ],
+  ].map((row, index): ReportYieldConditionRow => ({
+    ...row,
+    rowId: `fixture-condition-${index + 1}`,
+    groupId: `fixture-group-${row.step}-${row.seq}`,
+    tone: row.tone as ReportYieldConditionRow["tone"],
+  })),
+}
+
+const yieldComparisonFixtureGroups = [
+  { groupId: "Lithography-TR CD-seq-num-001", stage: "Lithography", step: "TR CD", seq: "seq-num-001", baselineWaferId: "W01", members: [["W01", "BSL", "0.79um"], ["W02", "split-1", "0.75um"], ["W03", "split-2", "0.83um"]] },
+  { groupId: "Etch-TR Depth-seq-num-001", stage: "Etch", step: "TR Depth", seq: "seq-num-001", baselineWaferId: "W01", members: [["W01", "BSL", "5um"], ["W04", "split-1", "4.5um"], ["W05", "split-2", "5.5um"]] },
+  { groupId: "Etch-TR Depth-seq-num-002", stage: "Etch", step: "TR Depth", seq: "seq-num-002", baselineWaferId: "W01", members: [["W01", "BSL", "5um"], ["W06", "split-1", "4.75um"], ["W07", "split-2", "5.25um"]] },
+  { groupId: "Clean-Pre clean-seq-num-001", stage: "Clean", step: "Pre clean", seq: "seq-num-001", baselineWaferId: "W01", members: [["W01", "BSL", "BOE 30A"], ["W08", "split-1", "HF 30A"]] },
+  { groupId: "Oxidation-LOX-seq-num-001", stage: "Oxidation", step: "LOX", seq: "seq-num-001", baselineWaferId: "W01", members: [["W01", "BSL", "3900A"], ["W09", "split-1", "3600A"], ["W10", "split-2", "4200A"]] },
+  { groupId: "Etch-SG1 ET Depth-seq-num-001", stage: "Etch", step: "SG1 ET Depth", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "1.18um"], ["W12", "split-1", "1.08um"], ["W13", "split-2", "1.28um"]] },
+  { groupId: "Etch-LOX PB-seq-num-001", stage: "Etch", step: "LOX PB", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "1500A"], ["W14", "split-1", "1200A"], ["W15", "split-2", "1000A"]] },
+  { groupId: "Etch-IPO_ET-seq-num-001", stage: "Etch", step: "IPO_ET", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "IPO Remain~2800A"], ["W16", "split-1", "IPO Remain~2500A"], ["W17", "split-2", "IPO Remain~3100A"]] },
+  { groupId: "Backside Process-Warpage-seq-num-001", stage: "Backside Process", step: "Warpage", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "5K + SPM 5min + SC1 5min"], ["W18", "split-1", "1K+Skip clean"], ["W19", "split-1", "1K+Skip clean"]] },
+  { groupId: "Etch-P2_ET-seq-num-001", stage: "Etch", step: "P2_ET", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "660A"], ["W20", "split-1", "BSL-10%"], ["W21", "split-2", "BSL+10%"]] },
+  { groupId: "Wet Clean-Mesa OX Wet Dip-seq-num-001", stage: "Wet Clean", step: "Mesa OX Wet Dip", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "600A"], ["W22", "split-1", "400A"], ["W23", "split-2", "500A"]] },
+  { groupId: "Oxidation-Screen OX-seq-num-001", stage: "Oxidation", step: "Screen OX", seq: "seq-num-001", baselineWaferId: "W11", members: [["W11", "BSL", "1000C 550A"], ["W24", "split-1", "1050C 550A"]] },
+  { groupId: "standalone-baseline", stage: "Baseline", step: "Post-run BSL", seq: "seq-num-001", baselineWaferId: "W25", members: [["W25", "BSL", "BSL"]] },
+] as const
+
+const yieldComparisonFixturePhysicalRows = new Map(
+  (reportYieldAnalysisFixture.matrixRows ?? []).map((row) => [row.waferId, row])
+)
+
+const yieldComparisonFixtureMatrixRows: ReportYieldMatrixRow[] =
+  yieldComparisonFixtureGroups.flatMap((group) => {
+    const baseline = yieldComparisonFixturePhysicalRows.get(group.baselineWaferId)
+    if (!baseline) throw new Error(`Missing fixture baseline ${group.baselineWaferId}`)
+    return group.members.map(([waferId, role, condition]) => {
+      const physical = yieldComparisonFixturePhysicalRows.get(waferId)
+      if (!physical) throw new Error(`Missing fixture wafer ${waferId}`)
+      return {
+        ...physical,
+        rowId: `${group.groupId}::${waferId}`,
+        memberId: `${group.groupId}::${waferId}`,
+        groupId: group.groupId,
+        role,
+        stage: group.stage,
+        step: group.step,
+        seq: group.seq,
+        condition,
+        baselineWaferId: group.baselineWaferId,
+        deltaPp:
+          role === "BSL" || physical.yield === null || baseline.yield === null
+            ? null
+            : physical.yield - baseline.yield,
+      }
+    })
+  })
+
+function fixtureMedian(values: number[]) {
+  const sorted = [...values].sort((left, right) => left - right)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle]
+}
+
+const yieldComparisonFixtureConditionGroups = new Map<string, ReportYieldMatrixRow[]>()
+yieldComparisonFixtureMatrixRows.forEach((row) => {
+  const key = `${row.groupId}::${row.condition}`
+  yieldComparisonFixtureConditionGroups.set(
+    key,
+    [...(yieldComparisonFixtureConditionGroups.get(key) ?? []), row]
+  )
+})
+
+const yieldComparisonFixtureConditionRows: ReportYieldConditionRow[] =
+  [...yieldComparisonFixtureConditionGroups.entries()].map(([rowId, rows]) => {
+    const tested = rows.reduce((sum, row) => sum + (row.testedDies ?? 0), 0)
+    const passed = rows.reduce((sum, row) => sum + (row.passDies ?? 0), 0)
+    const yields = rows.flatMap((row) => row.yield === null ? [] : [row.yield])
+    const weightedYield = tested > 0 ? (passed / tested) * 100 : null
+    return {
+      rowId,
+      groupId: rows[0].groupId,
+      waferIds: rows.map((row) => row.waferId),
+      stage: rows[0].stage,
+      step: rows[0].step,
+      seq: rows[0].seq,
+      condition: rows[0].condition,
+      weightedYield,
+      medianYield: yields.length > 0 ? fixtureMedian(yields) : null,
+      averageYield: yields.length > 0
+        ? yields.reduce((sum, value) => sum + value, 0) / yields.length
+        : null,
+      minYield: yields.length > 0 ? Math.min(...yields) : null,
+      maxYield: yields.length > 0 ? Math.max(...yields) : null,
+      tone:
+        weightedYield === null
+          ? "neutral"
+          : weightedYield >= 99.5
+            ? "good"
+            : weightedYield >= 90
+              ? "watch"
+              : "bad",
+    }
+  })
+
+export const reportYieldAnalysisComparisonFixture: ReportYieldAnalysisInput = {
+  ...reportYieldAnalysisFixture,
+  matrixRows: yieldComparisonFixtureMatrixRows,
+  conditionYieldRows: yieldComparisonFixtureConditionRows,
 }
 
 const waferYieldCpFailOrder = [
@@ -778,7 +901,9 @@ export const reportWaferYieldCpFailFixture: ReportWaferYieldCpFail = {
           ? [{
               parameter,
               failedDies,
-              percent: (failedDies / source.testedDies) * 100,
+              percent: source.testedDies === null
+                ? null
+                : (failedDies / source.testedDies) * 100,
             }]
           : []
       }),

@@ -20,6 +20,10 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 `ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
 组件由过滤区域和逐 wafer 的 Split Table 组成；
 过滤区域使用多选 Combobox 按 `stageOptions` / `stepOptions` 过滤，空选中表示 `全部`。
+当 consumer 提供 `stepFacets` 时，Step 选项和已选 chip 会显示 BFF 提供的
+`sourceCount facts / displayCount displayed`；前者是权威 assignment 事实数，后者是
+已注入 `rows` 的 active display 数。组件只用 `rows` 执行本地筛选，不会从表格行重新推导
+或覆盖 facet count。
 
 表格按 `Stage + Step + Seq` 形成对照组并合并首列。每组先展示 Baseline，再按不同
 `condition` 的首次出现顺序生成 `split-1`、`split-2` 等标签；同一 condition 的多个
@@ -44,6 +48,12 @@ App 通过 callback 承接。
 type ReportSplitTableInput = {
   stageOptions?: string[]
   stepOptions?: string[]
+  stepFacets?: Array<{
+    step: string
+    stepSequence?: number
+    sourceCount: number
+    displayCount: number
+  }>
   selectedStages?: string[]
   selectedSteps?: string[]
   rows?: ReportSplitTableRow[]
@@ -57,4 +67,5 @@ type ReportSplitTableInput = {
 
 - `normal`
 - `baseline-after-splits`
+- `authoritative-step-facets`
 - `empty`

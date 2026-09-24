@@ -119,3 +119,14 @@ User annotation review established that `Wafer Yield & CP Fail Analysis` is
 not part of the Split Table module. Split Table owns only its Stage / Step
 filters and grouped comparison table. The chart contract and implementation
 belong to `Report Yield Analysis`.
+
+## 2026-09-23 Step Facet Contract
+
+The Split Table has two intentionally separate source populations: authoritative
+assignment facts and active display rows. The optional `stepFacets` input carries
+the BFF-provided `step`, optional `stepSequence`, authoritative `sourceCount`, and active
+`displayCount` in BFF sequence order. When present, the Step combobox and its
+selected chips display both counts (for example, `CPX-S01 · 25 facts / 5
+displayed`) while the local filter continues to operate only on injected active
+`rows`. The component must not derive or substitute either count from those
+rows.

@@ -67,4 +67,15 @@ describe("report wafer yield and CP fail model", () => {
       { step: "LOX", startIndex: 1, count: 2 },
     ])
   })
+
+  it("preserves unavailable CP fail rates instead of treating them as zero", () => {
+    const wafer = {
+      ...input.wafers[0],
+      cpFails: [
+        { parameter: "VGSTX1", failedDies: null, percent: null },
+      ],
+    }
+
+    expect(visibleCpFails(wafer, 2)).toEqual([])
+  })
 })

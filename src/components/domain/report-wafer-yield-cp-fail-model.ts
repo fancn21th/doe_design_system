@@ -1,12 +1,16 @@
 import type { ReportWaferYieldCpFail } from "@/schemas/domain-component-inputs"
 
 export type WaferYieldCpFailRow = ReportWaferYieldCpFail["wafers"][number]
+type VisibleCpFail = WaferYieldCpFailRow["cpFails"][number] & { percent: number }
 
 export function visibleCpFails(
   wafer: WaferYieldCpFailRow,
   thresholdPercent: number
 ) {
-  return wafer.cpFails.filter((fail) => fail.percent > thresholdPercent)
+  return wafer.cpFails.filter(
+    (fail): fail is VisibleCpFail =>
+      fail.percent !== null && fail.percent > thresholdPercent
+  )
 }
 
 export function visibleCpFailParameters(input: ReportWaferYieldCpFail) {

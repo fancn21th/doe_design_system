@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  getReportSplitTableStepOptions,
   getReportSplitTableTopFails,
   groupReportSplitTableRows,
 } from "@/components/domain/report-split-table"
@@ -60,5 +61,17 @@ describe("ReportSplitTable grouping", () => {
     })
 
     expect(getReportSplitTableTopFails(input)).toEqual(input.topFails)
+  })
+
+  it("preserves authoritative Step facets instead of deriving counts from rows", () => {
+    expect(getReportSplitTableStepOptions(
+      [{ step: "CPX-S01", stepSequence: 1, sourceCount: 25, displayCount: 5 }],
+      ["fallback-step"]
+    )).toEqual([{
+      label: "CPX-S01",
+      value: "CPX-S01",
+      sourceCount: 25,
+      displayCount: 5,
+    }])
   })
 })

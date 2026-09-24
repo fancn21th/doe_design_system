@@ -15,4 +15,22 @@ describe("report analysis chart ownership", () => {
       "yieldCpFailAnalysis" in reportSplitTableScenarios.normal.input
     ).toBe(false)
   })
+
+  it("uses stable matrix identities independently of repeated physical wafer ids", () => {
+    const rows = reportYieldAnalysisScenarios.normal.input.matrixRows ?? []
+    const duplicateWafer = rows[0]
+    const repeatedRows = [
+      duplicateWafer,
+      { ...duplicateWafer, rowId: `${duplicateWafer.rowId}-repeat` },
+    ]
+
+    expect(new Set(repeatedRows.map((row) => row.rowId))).toHaveLength(2)
+    expect(new Set(repeatedRows.map((row) => row.waferId))).toHaveLength(1)
+  })
+
+  it("renders the accepted comparison fixture cardinalities", () => {
+    expect(reportYieldAnalysisScenarios.normal.input.wafers).toHaveLength(25)
+    expect(reportYieldAnalysisScenarios.normal.input.matrixRows).toHaveLength(35)
+    expect(reportYieldAnalysisScenarios.normal.input.conditionYieldRows).toHaveLength(34)
+  })
 })

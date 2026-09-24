@@ -430,6 +430,12 @@ export const reportSplitTableTopFailSchema = z.object({
   parameter: z.string(),
   count: z.number().int().nonnegative(),
 })
+export const reportSplitTableStepFacetSchema = z.object({
+  step: z.string(),
+  stepSequence: z.number().int().nonnegative().optional(),
+  sourceCount: z.number().int().nonnegative(),
+  displayCount: z.number().int().nonnegative(),
+})
 export const reportSplitTableRowSchema = z.object({
   waferId: z.string(),
   waferOrder: z.number().int().nonnegative().optional(),
@@ -461,6 +467,8 @@ export const reportSplitTableInputSchema = z.object({
   sourceLabel: z.string().optional(),
   stageOptions: z.array(z.string()).optional(),
   stepOptions: z.array(z.string()).optional(),
+  // BFF-owned audit and display populations. The component only filters rows.
+  stepFacets: z.array(reportSplitTableStepFacetSchema).optional(),
   selectedStages: z.array(z.string()).optional(),
   selectedSteps: z.array(z.string()).optional(),
   rows: z.array(reportSplitTableRowSchema).optional(),
@@ -470,7 +478,7 @@ export const reportYieldWaferSchema = z.object({
   stage: z.string().optional(),
   step: z.string().optional(),
   seq: z.string().optional(),
-  yield: z.number(),
+  yield: z.number().nullable(),
   role: z.string().optional(),
   condition: z.string().optional(),
   tone: reportToneSchema.default("neutral"),
@@ -485,16 +493,25 @@ export const reportYieldDetailModeOptionSchema = z.object({
   label: z.string(),
 })
 export const reportYieldMatrixRowSchema = z.object({
+  rowId: z.string(),
+  groupId: z.string(),
+  memberId: z.string(),
   waferId: z.string(),
   role: z.string().optional(),
   stage: z.string(),
   step: z.string(),
   seq: z.string(),
   condition: z.string(),
-  yield: z.number(),
-  passDies: z.number().int().nonnegative(),
-  testedDies: z.number().int().nonnegative(),
-  failCounts: z.record(z.string(), z.number().int().nonnegative()).default({}),
+  baselineWaferId: z.string().nullable(),
+  deltaPp: z.number().nullable(),
+  yield: z.number().nullable(),
+  passDies: z.number().int().nonnegative().nullable(),
+  testedDies: z.number().int().nonnegative().nullable(),
+  failCounts: z.record(
+    z.string(),
+    z.number().int().nonnegative().nullable()
+  ).default({}),
+  failRates: z.record(z.string(), z.number().nullable()).default({}),
   tone: reportToneSchema.default("neutral"),
 })
 export const reportYieldLossRowSchema = z.object({
@@ -507,16 +524,18 @@ export const reportYieldLossRowSchema = z.object({
   tone: reportToneSchema.default("neutral"),
 })
 export const reportYieldConditionRowSchema = z.object({
+  rowId: z.string(),
+  groupId: z.string(),
   waferIds: z.array(z.string()),
   stage: z.string(),
   step: z.string(),
   seq: z.string(),
   condition: z.string(),
-  weightedYield: z.number(),
-  medianYield: z.number(),
-  averageYield: z.number(),
-  minYield: z.number(),
-  maxYield: z.number(),
+  weightedYield: z.number().nullable(),
+  medianYield: z.number().nullable(),
+  averageYield: z.number().nullable(),
+  minYield: z.number().nullable(),
+  maxYield: z.number().nullable(),
   tone: reportToneSchema.default("neutral"),
 })
 export const reportYieldAnalysisInputSchema = z.object({
@@ -546,11 +565,11 @@ export const reportWaferYieldCpFailSchema = z.object({
     waferId: z.string(),
     step: z.string(),
     condition: z.string(),
-    yield: z.number().min(0).max(100),
+    yield: z.number().min(0).max(100).nullable(),
     cpFails: z.array(z.object({
       parameter: z.string(),
-      failedDies: z.number().int().nonnegative(),
-      percent: z.number().min(0).max(100),
+      failedDies: z.number().int().nonnegative().nullable(),
+      percent: z.number().min(0).max(100).nullable(),
     })),
   })),
 })
@@ -902,6 +921,9 @@ export type MeasurementInput = z.infer<typeof measurementInputSchema>
 export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>
 export type ReportSplitTableTopFail = z.infer<
   typeof reportSplitTableTopFailSchema
+>
+export type ReportSplitTableStepFacet = z.infer<
+  typeof reportSplitTableStepFacetSchema
 >
 export type ReportSplitTableRow = z.infer<typeof reportSplitTableRowSchema>
 export type ReportSplitTableInput = z.infer<typeof reportSplitTableInputSchema>
