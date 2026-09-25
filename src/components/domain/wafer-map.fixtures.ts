@@ -8,6 +8,7 @@ import {
 import type {
   WaferMapDefectWaferInput,
   WaferMapFinalBinWaferInput,
+  WaferMapMapState,
   WaferMapParameterWaferInput,
 } from "@/schemas/domain-component-inputs"
 
@@ -48,6 +49,16 @@ const geometry = {
 }
 
 const waferIds = Array.from({ length: 25 }, (_, index) => `W${String(index + 1).padStart(2, "0")}`)
+
+export function availableMapStates(
+  wafers: ReadonlyArray<{ mapId: string; waferId: string }>,
+): WaferMapMapState[] {
+  return wafers.map((wafer) => ({
+    mapId: wafer.mapId,
+    waferId: wafer.waferId,
+    availability: "available",
+  }))
+}
 const bins = ["1", "13", "10", "31", "19", "12", "9"] as const
 const binDescriptions: Record<string, string> = {
   "1": "PASS",
@@ -89,6 +100,7 @@ function finalBinWafer(waferId: string, waferIndex: number): WaferMapFinalBinWaf
     }))
 
   return {
+    mapId: `cp-final-bin:${waferId}`,
     waferId,
     geometry,
     dies,
@@ -128,7 +140,14 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
   })
   const summary = summaryFor(dies)
-  return { waferId, geometry, dies, summary, inspection: parameterInspection(summary.pass, summary.fail, waferIndex) }
+  return {
+    mapId: `cp-parameter:IDDQ:${waferId}`,
+    waferId,
+    geometry,
+    dies,
+    summary,
+    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+  }
 })
 
 export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -139,7 +158,14 @@ export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[
     return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
   })
   const summary = summaryFor(dies)
-  return { waferId, geometry, dies, summary, inspection: parameterInspection(summary.pass, summary.fail, waferIndex) }
+  return {
+    mapId: `cp-parameter:BVDSS_100u:${waferId}`,
+    waferId,
+    geometry,
+    dies,
+    summary,
+    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+  }
 })
 
 export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -173,6 +199,7 @@ export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferId
   })
   const defectDieCount = dies.filter((die) => die.defects.length > 0).length
   return {
+    mapId: `defect:M1:${waferId}`,
     waferId,
     geometry: { ...geometry, coordinateSystem: "DEFECT_INDEX_V1" as const },
     dies,

@@ -25,6 +25,8 @@ export type ReportWaferMapSelection = {
   primaryView: PrimaryView
   cpView: CpView
   parameterCode: string | null
+  defectLayerId?: string | null
+  defectTypeIds?: string[]
 }
 
 export type ReportWaferMapProps = {
@@ -38,10 +40,12 @@ export type ReportWaferMapProps = {
   onPrimaryViewChange?: (view: PrimaryView) => void
   onCpViewChange?: (view: CpView) => void
   onParameterChange?: (parameterCode: string | null) => void
+  onDefectLayerChange?: (layerId: string) => void
+  onDefectTypeChange?: (typeIds: string[]) => void
 }
 
-type PrimaryView = "cp" | "defect"
-type CpView = "final-bin" | "parameter"
+export type PrimaryView = "cp" | "defect" | "overlay"
+export type CpView = "final-bin" | "parameter"
 type CpParameterOption = { label: string; value: string }
 
 export function ReportWaferMap({
@@ -51,6 +55,8 @@ export function ReportWaferMap({
   onPrimaryViewChange,
   onCpViewChange,
   onParameterChange,
+  onDefectLayerChange,
+  onDefectTypeChange,
 }: ReportWaferMapProps) {
   const scenarioInput = reportWaferMapScenarios.normal.input
   const parsedInput = reportWaferMapInputSchema.parse(input)
@@ -63,9 +69,17 @@ export function ReportWaferMap({
   const [uncontrolledParameterCode, setUncontrolledParameterCode] = React.useState<string | null>(
     () => parameterViews[0]?.parameter.parameterCode ?? null
   )
+  const [uncontrolledDefectLayerId, setUncontrolledDefectLayerId] = React.useState<string | null>(
+    () => defectView?.selectedLayerId ?? null
+  )
+  const [uncontrolledDefectTypeIds, setUncontrolledDefectTypeIds] = React.useState<string[]>(
+    () => defectView?.selectedDefectTypeIds ?? []
+  )
   const primaryView = selection?.primaryView ?? uncontrolledPrimaryView
   const cpView = selection?.cpView ?? uncontrolledCpView
   const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const selectedDefectLayerId = selection?.defectLayerId ?? uncontrolledDefectLayerId ?? defectView?.selectedLayerId ?? null
+  const selectedDefectTypeIds = selection?.defectTypeIds ?? uncontrolledDefectTypeIds
   const parameterOptions = parsedInput.parameterOptions ?? parameterViews.map((view) => ({
     label: view.parameter.label,
     value: view.parameter.parameterCode,
@@ -77,17 +91,23 @@ export function ReportWaferMap({
   const finalBinState = findViewState(viewStates, "cp-final-bin")
   const parameterState = findViewState(viewStates, "cp-parameter")
   const defectState = findViewState(viewStates, "defect")
+  const overlayState = parsedInput.overlayState ?? findViewState(viewStates, "overlay")
   const hasCp = Boolean(finalBinView || parameterViews.length || finalBinState || parameterState)
   const hasDefect = Boolean(defectView || defectState)
   const selectedParameterView = parameterViews.find(
     (view) => view.parameter.parameterCode === selectedParameterCode
   )
+  const selectedDefectView = defectView && selectedDefectLayerId
+    ? { ...defectView, selectedLayerId: selectedDefectLayerId, selectedDefectTypeIds }
+    : defectView
 
-  const visibleMapView = primaryView === "defect"
-    ? defectView
-    : cpView === "parameter"
-      ? selectedParameterView
-      : finalBinView
+  const visibleMapView = resolveVisibleMapView({
+    primaryView,
+    cpView,
+    finalBinView,
+    selectedParameterView,
+    selectedDefectView,
+  })
 
   if (!hasCp && !hasDefect) {
     return <EmptyState>暂无 Report Wafer Map 数据</EmptyState>
@@ -105,7 +125,18 @@ export function ReportWaferMap({
     setUncontrolledParameterCode(nextParameterCode)
     onParameterChange?.(nextParameterCode)
   }
-  const visibleState = primaryView === "defect"
+  const selectDefectFilters = (nextFilters: { layerId: string; typeIds: string[] }) => {
+    const changes = emitDefectFilterChange(
+      { layerId: selectedDefectLayerId, typeIds: selectedDefectTypeIds },
+      nextFilters,
+      { onLayerChange: onDefectLayerChange, onTypeChange: onDefectTypeChange },
+    )
+    if (changes.layerChanged) setUncontrolledDefectLayerId(nextFilters.layerId)
+    if (changes.typeChanged) setUncontrolledDefectTypeIds(nextFilters.typeIds)
+  }
+  const visibleState = primaryView === "overlay"
+    ? overlayState
+    : primaryView === "defect"
     ? defectState
     : cpView === "parameter"
       ? parameterState
@@ -127,6 +158,7 @@ export function ReportWaferMap({
               {hasDefect && (
                 <TabsTrigger value="defect">Defect Map</TabsTrigger>
               )}
+              <TabsTrigger value="overlay">Overlay</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -163,6 +195,7 @@ export function ReportWaferMap({
           <WaferMapGallery
             input={visibleMapView}
             showParameterLegend={false}
+            onDefectFiltersChange={selectDefectFilters}
           />
         ) : visibleState ? (
           <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
@@ -173,9 +206,53 @@ export function ReportWaferMap({
     </section>
   )
 }
+
+type VisibleMapViewArgs = {
+  primaryView: PrimaryView
+  cpView: CpView
+  finalBinView?: WaferMapGalleryInput
+  selectedParameterView?: WaferMapGalleryInput
+  selectedDefectView?: WaferMapGalleryInput
+}
+
+/** Overlay intentionally has no map payload until a shared coordinate contract exists. */
+export function resolveVisibleMapView({
+  primaryView,
+  cpView,
+  finalBinView,
+  selectedParameterView,
+  selectedDefectView,
+}: VisibleMapViewArgs): WaferMapGalleryInput | undefined {
+  if (primaryView === "overlay") return undefined
+  if (primaryView === "defect") return selectedDefectView
+  return cpView === "parameter" ? selectedParameterView : finalBinView
+}
+
+type DefectFilterChange = { layerId: string | null; typeIds: string[] }
+type DefectFilterCallbacks = {
+  onLayerChange?: (layerId: string) => void
+  onTypeChange?: (typeIds: string[]) => void
+}
+
+/** Emits only the intent whose controlled value actually changed. */
+export function emitDefectFilterChange(
+  current: DefectFilterChange,
+  next: { layerId: string; typeIds: string[] },
+  callbacks: DefectFilterCallbacks,
+) {
+  const layerChanged = current.layerId !== next.layerId
+  const typeChanged = !sameIds(current.typeIds, next.typeIds)
+  if (layerChanged) callbacks.onLayerChange?.(next.layerId)
+  if (typeChanged) callbacks.onTypeChange?.(next.typeIds)
+  return { layerChanged, typeChanged }
+}
+
+function sameIds(left: string[], right: string[]) {
+  return left.length === right.length && left.every((item, index) => item === right[index])
+}
 function findViewState(
-  viewStates: Array<{ view: WaferMapGalleryInput["kind"]; status: "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
-  view: WaferMapGalleryInput["kind"],
+  viewStates: Array<{ view: WaferMapGalleryInput["kind"] | "overlay"; status: "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
+  view: WaferMapGalleryInput["kind"] | "overlay",
 ) {
   return viewStates.find((viewState) => viewState.view === view)
 }

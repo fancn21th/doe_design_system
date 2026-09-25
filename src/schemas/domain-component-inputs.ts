@@ -120,6 +120,33 @@ export const waferMapDataSchema = z.object({
   bounds: waferMapBoundsSchema,
 })
 export const waferMapStatusSchema = z.enum(["pending", "ready", "unavailable"])
+/**
+ * The authoritative coverage state for one physical wafer in one map identity.
+ * It is deliberately separate from the gallery request state above: an empty
+ * Defect map is a successful response, while an unavailable map has no
+ * coordinates to render.
+ */
+export const waferMapAvailabilitySchema = z.enum([
+  "available",
+  "empty",
+  "partial",
+  "unavailable",
+])
+export const waferMapMapStateSchema = z.object({
+  /** Stable identity, e.g. defect:EOL:W01; never use waferId as a React key. */
+  mapId: z.string().min(1),
+  waferId: z.string().min(1),
+  availability: waferMapAvailabilitySchema,
+  reason: z.string().min(1).optional(),
+}).superRefine((state, context) => {
+  if ((state.availability === "partial" || state.availability === "unavailable") && !state.reason) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["reason"],
+      message: `${state.availability} map state requires an authoritative reason.`,
+    })
+  }
+})
 export const waferMapCoordinateSystemSchema = z.enum([
   "CP_DIE_GRID_V1",
   "DEFECT_INDEX_V1",
@@ -133,7 +160,10 @@ export const waferMapFinalBinDieSchema = waferMapDieSchema.extend({
   finalBin: z.string(),
   pass: z.boolean(),
 })
-export const waferMapParameterDieSchema = waferMapFinalBinDieSchema.extend({
+export const waferMapParameterDieSchema = waferMapDieSchema.extend({
+  // Parameter L1 can provide value/validity without CP Final Bin facts.
+  finalBin: z.string().optional(),
+  pass: z.boolean().optional(),
   value: z.number().finite().nullable(),
   status: z.enum(["VALID", "MISSING", "NON_FINITE", "FAIL_SATURATION"]),
   clipped: z.enum(["low", "high"]).optional(),
@@ -190,11 +220,16 @@ export const waferMapDefectInspectionSchema = z.object({
   })),
 })
 export const waferMapFinalBinWaferSchema = z.object({
+  mapId: z.string().min(1),
   waferId: z.string(),
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapFinalBinDieSchema),
-  summary: waferMapSummarySchema,
-  inspection: waferMapFinalBinInspectionSchema,
+  /** Optional authoritative wafer totals; never recomputed from the map. */
+  summary: waferMapSummarySchema.nullable().optional(),
+  summaryUnavailableReason: z.string().min(1).optional(),
+  /** Optional BFF-owned statistics; never reconstructed from rendered dies. */
+  inspection: waferMapFinalBinInspectionSchema.optional(),
+  inspectionUnavailableReason: z.string().min(1).optional(),
 })
 export const waferMapParameterContextSchema = z.object({
   parameterCode: z.string(),
@@ -207,18 +242,28 @@ export const waferMapParameterContextSchema = z.object({
   }),
 })
 export const waferMapParameterWaferSchema = z.object({
+  mapId: z.string().min(1),
   waferId: z.string(),
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapParameterDieSchema),
-  summary: waferMapSummarySchema,
-  inspection: waferMapParameterInspectionSchema,
+  /** Selected-slice Parameter maps may not carry yield totals. */
+  summary: waferMapSummarySchema.nullable().optional(),
+  summaryUnavailableReason: z.string().min(1).optional(),
+  /** CP × Defect classifications are optional authoritative detail facts. */
+  inspection: waferMapParameterInspectionSchema.optional(),
+  inspectionUnavailableReason: z.string().min(1).optional(),
 })
 export const waferMapDefectWaferSchema = z.object({
+  mapId: z.string().min(1),
   waferId: z.string(),
   geometry: waferMapGeometrySchema,
   dies: z.array(waferMapDefectDieSchema),
-  summary: waferMapSummarySchema,
-  inspection: waferMapDefectInspectionSchema,
+  /** Defect maps retain their own authoritative summary boundary. */
+  summary: waferMapSummarySchema.nullable().optional(),
+  summaryUnavailableReason: z.string().min(1).optional(),
+  /** Type-level inspection remains optional when only point payload is supplied. */
+  inspection: waferMapDefectInspectionSchema.optional(),
+  inspectionUnavailableReason: z.string().min(1).optional(),
 })
 export const waferMapFilterOptionSchema = z.object({
   id: z.string(),
@@ -229,6 +274,8 @@ export const waferMapGalleryInputSchema = z.discriminatedUnion("kind", [
     kind: z.literal("cp-final-bin"),
     status: waferMapStatusSchema,
     wafers: z.array(waferMapFinalBinWaferSchema),
+    /** Full physical-wafer coverage. `wafers` contains only drawable maps. */
+    mapStates: z.array(waferMapMapStateSchema).optional(),
     palette: z.record(z.string(), z.string()).optional(),
   }),
   z.object({
@@ -236,6 +283,7 @@ export const waferMapGalleryInputSchema = z.discriminatedUnion("kind", [
     status: waferMapStatusSchema,
     parameter: waferMapParameterContextSchema,
     wafers: z.array(waferMapParameterWaferSchema),
+    mapStates: z.array(waferMapMapStateSchema).optional(),
   }),
   z.object({
     kind: z.literal("defect"),
@@ -245,8 +293,36 @@ export const waferMapGalleryInputSchema = z.discriminatedUnion("kind", [
     defectTypes: z.array(waferMapFilterOptionSchema),
     selectedDefectTypeIds: z.array(z.string()),
     wafers: z.array(waferMapDefectWaferSchema),
+    mapStates: z.array(waferMapMapStateSchema).optional(),
+    /** Provenance for the selected layer's coordinate/layout contract. */
+    coordinateContract: z.string().min(1).optional(),
   }),
-])
+]).superRefine((input, context) => {
+  const seenMapIds = new Set<string>()
+  for (const [index, wafer] of input.wafers.entries()) {
+    if (seenMapIds.has(wafer.mapId)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["wafers", index, "mapId"], message: "Map identities must be unique within a gallery." })
+    }
+    seenMapIds.add(wafer.mapId)
+  }
+  const stateMapIds = new Set<string>()
+  for (const [index, state] of (input.mapStates ?? []).entries()) {
+    if (stateMapIds.has(state.mapId)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["mapStates", index, "mapId"], message: "Map state identities must be unique within a gallery." })
+    }
+    stateMapIds.add(state.mapId)
+    const payload = input.wafers.find((wafer) => wafer.mapId === state.mapId)
+    if ((state.availability === "available" || state.availability === "partial") && !payload) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["mapStates", index], message: "Drawable map states require a wafer payload." })
+    }
+    if (payload && payload.waferId !== state.waferId) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["mapStates", index, "waferId"], message: "Map state waferId must match its drawable map identity." })
+    }
+    if ((state.availability === "empty" || state.availability === "unavailable") && payload) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["mapStates", index], message: "Empty or unavailable map states must not carry a drawable payload." })
+    }
+  }
+})
 export const waferDefectSourceKindSchema = z.enum([
   "spc",
   "dms",
@@ -579,10 +655,15 @@ export const reportWaferMapInputSchema = z.object({
   sourceLabel: z.string().optional(),
   mapViews: z.array(waferMapGalleryInputSchema).optional(),
   viewStates: z.array(z.object({
-    view: z.enum(["cp-final-bin", "cp-parameter", "defect"]),
+    view: z.enum(["cp-final-bin", "cp-parameter", "defect", "overlay"]),
     status: z.enum(["ready", "loading", "unavailable", "failed"]),
     reason: z.string().optional(),
   })).optional(),
+  /** Overlay has no render payload until CP and Defect share a coordinate contract. */
+  overlayState: z.object({
+    status: z.enum(["loading", "unavailable", "failed"]),
+    reason: z.string().min(1),
+  }).optional(),
   parameterOptions: z.array(z.object({
     label: z.string(),
     value: z.string(),
@@ -880,6 +961,8 @@ export type WaferCapabilityParameter = z.infer<
 export type WaferInput = z.infer<typeof waferInputSchema>
 export type WaferMapInput = z.infer<typeof waferMapDataSchema>
 export type WaferMapStatus = z.infer<typeof waferMapStatusSchema>
+export type WaferMapAvailability = z.infer<typeof waferMapAvailabilitySchema>
+export type WaferMapMapState = z.infer<typeof waferMapMapStateSchema>
 export type WaferMapGeometryInput = z.infer<typeof waferMapGeometrySchema>
 export type WaferMapFinalBinWaferInput = z.infer<
   typeof waferMapFinalBinWaferSchema

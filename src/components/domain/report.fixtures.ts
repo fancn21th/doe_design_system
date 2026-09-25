@@ -4,6 +4,7 @@ import {
   waferMapFinalBinOverviewFixture,
   waferMapParameterBvdssOverviewFixture,
   waferMapParameterOverviewFixture,
+  availableMapStates,
 } from "@/components/domain/wafer-map.fixtures"
 import type {
   ReportCpDataInput,
@@ -920,6 +921,7 @@ export const reportWaferMapFixture: ReportWaferMapInput = {
       kind: "cp-final-bin",
       status: "ready",
       wafers: waferMapFinalBinOverviewFixture,
+      mapStates: availableMapStates(waferMapFinalBinOverviewFixture),
     },
     {
       kind: "cp-parameter",
@@ -931,6 +933,7 @@ export const reportWaferMapFixture: ReportWaferMapInput = {
         scale: { domainMin: 0.7, median: 0.85, domainMax: 1 },
       },
       wafers: waferMapParameterOverviewFixture,
+      mapStates: availableMapStates(waferMapParameterOverviewFixture),
     },
     {
       kind: "cp-parameter",
@@ -942,6 +945,7 @@ export const reportWaferMapFixture: ReportWaferMapInput = {
         scale: { domainMin: 540, median: 582.5, domainMax: 625 },
       },
       wafers: waferMapParameterBvdssOverviewFixture,
+      mapStates: availableMapStates(waferMapParameterBvdssOverviewFixture),
     },
     {
       kind: "defect",
@@ -957,8 +961,14 @@ export const reportWaferMapFixture: ReportWaferMapInput = {
       ],
       selectedDefectTypeIds: ["particle", "scratch"],
       wafers: waferMapDefectOverviewFixture,
+      mapStates: availableMapStates(waferMapDefectOverviewFixture),
+      coordinateContract: "DEFECT_INDEX_V1",
     },
   ],
+  overlayState: {
+    status: "unavailable",
+    reason: "CP 与 Defect 坐标尚未对齐，不能可靠叠图。",
+  },
 }
 
 const reportParameterMedianWaferIds = Array.from(

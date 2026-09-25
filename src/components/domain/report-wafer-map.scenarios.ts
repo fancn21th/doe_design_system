@@ -16,6 +16,10 @@ export const reportWaferMapScenarios = {
         { view: "cp-parameter", status: "unavailable", reason: "等待 BFF 共同色阶与有效性事实" },
         { view: "defect", status: "loading" },
       ],
+      overlayState: {
+        status: "unavailable",
+        reason: "CP 与 Defect 坐标尚未对齐，不能可靠叠图。",
+      },
     },
   },
 } satisfies Record<string, ReportWaferMapScenario>
