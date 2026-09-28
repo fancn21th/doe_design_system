@@ -18,3 +18,4 @@ export { ReportParameterMedian } from "@/components/domain/report-parameter-medi
 export { ReportCpData } from "@/components/domain/report-cp-data"
 export { ReportInlineData } from "@/components/domain/report-inline-data"
 export { ReportCpInline } from "@/components/domain/report-cp-inline"
+export { ReportCpInlineCandidates } from "@/components/domain/report-cp-inline-candidates"

@@ -215,3 +215,15 @@ Recharts and Zod dependencies. No new runtime package is required.
 The target contract is approved. This record does not claim that the current
 component, schema, fixtures, scenarios, or preview already satisfy it; those
 changes belong to the next implementation step.
+
+## 2026-09-27 Candidate Ranking Addendum
+
+- New evidence: the real `RND_AF01112_CP_DEMO` 5173 surface and the reviewed
+  CP × Inline data map establish a generation-fixed Candidate Ranking before
+  the selected-pair analysis.
+- The ranking is a separate Domain UI asset because its filters, pagination,
+  Backend order, and loading lifecycle are independent from the selected fit.
+- `ReportCpInlineCandidates` renders Backend-supplied rows without recomputing
+  score or order. Filter, page, and `View fit` actions are callback intents.
+- The consumer composes the ranking above `ReportCpInline` and owns the handoff
+  from a candidate key to the selected analysis plus any scroll behavior.

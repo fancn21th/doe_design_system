@@ -760,6 +760,73 @@ export const reportCpInlineRowSchema = z.object({
   meanCp: z.number().finite().nullable(),
   medianCp: z.number().finite().nullable(),
 })
+export const reportCpInlineCandidateLevelSchema = z.enum([
+  "HIGH_TREND",
+  "MEDIUM_TREND",
+  "LOW",
+  "FILTERED",
+])
+export const reportCpInlineCandidateDirectionSchema = z.enum([
+  "POSITIVE",
+  "NEGATIVE",
+  "NONE",
+])
+export const reportCpInlineCandidateSchema = z.object({
+  experimentGroupId: z.string(),
+  stepLabel: z.string(),
+  factorLabel: z.string(),
+  cpParameter: z.string(),
+  inlineParameter: z.string(),
+  pairedCount: z.number().int().nonnegative(),
+  assignedWaferCount: z.number().int().nonnegative(),
+  pairedCoverage: z.number().finite().min(0).max(1),
+  direction: reportCpInlineCandidateDirectionSchema,
+  spearman: z.number().finite().nullable(),
+  rSquared: z.number().finite().nullable(),
+  cpResponse: z.number().finite().nullable(),
+  cpSpread: z.number().finite().nullable(),
+  score: z.number().finite().nullable(),
+  level: reportCpInlineCandidateLevelSchema,
+  sampleBand: z.string(),
+  filterReason: z.string().nullable(),
+  algorithmVersion: z.string(),
+})
+export const reportCpInlineCandidateFilterSchema = z.object({
+  cpParameter: z.string().nullable(),
+  inlineParameter: z.string().nullable(),
+  level: z.enum([
+    "RECOMMENDED",
+    "HIGH_TREND",
+    "MEDIUM_TREND",
+    "LOW",
+    "ALL",
+  ]),
+  direction: z.enum(["POSITIVE", "NEGATIVE"]).nullable(),
+  minN: z.number().int().nonnegative().nullable(),
+})
+export const reportCpInlineCandidatesInputSchema = z.object({
+  title: z.string().default("Recommended CP × Inline Candidates"),
+  subtitle: z.string().optional(),
+  cpParameterOptions: z.array(z.string()).default([]),
+  inlineParameterOptions: z.array(z.string()).default([]),
+  filters: reportCpInlineCandidateFilterSchema,
+  items: z.array(reportCpInlineCandidateSchema).default([]),
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  total: z.number().int().nonnegative(),
+  calculationVersion: z.string(),
+  provenance: z.object({
+    classification: z.enum([
+      "real",
+      "redacted-real",
+      "prototype-backed",
+      "derived",
+      "mock",
+    ]),
+    source: z.string(),
+    limitation: z.string().optional(),
+  }),
+})
 export const reportCpInlineOptionSchema = z.object({
   value: z.string(),
   label: z.string(),
@@ -1041,6 +1108,21 @@ export type ReportParameterMedianInput = z.infer<
 export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
 export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
 export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
+export type ReportCpInlineCandidateLevel = z.infer<
+  typeof reportCpInlineCandidateLevelSchema
+>
+export type ReportCpInlineCandidateDirection = z.infer<
+  typeof reportCpInlineCandidateDirectionSchema
+>
+export type ReportCpInlineCandidate = z.infer<
+  typeof reportCpInlineCandidateSchema
+>
+export type ReportCpInlineCandidateFilter = z.infer<
+  typeof reportCpInlineCandidateFilterSchema
+>
+export type ReportCpInlineCandidatesInput = z.infer<
+  typeof reportCpInlineCandidatesInputSchema
+>
 export type ReportCpInlineOption = z.infer<typeof reportCpInlineOptionSchema>
 export type ReportCpInlineCoverageStatus = z.infer<
   typeof reportCpInlineCoverageStatusSchema

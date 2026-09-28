@@ -4,8 +4,17 @@ description: DOE Report CP x Inline 业务组件。
 ---
 
 import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.preview"
+import { ReportCpInlineCandidatesPreview } from "@/components/domain/report-cp-inline-candidates.preview"
 
 ## 预览 / Preview
+
+### Recommended Candidates
+
+<div className="domain-ui-preview-wide">
+  <ReportCpInlineCandidatesPreview />
+</div>
+
+### Selected Pair Analysis
 
 <div className="domain-ui-preview-wide">
   <ReportCpInlinePreview />
@@ -13,7 +22,16 @@ import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.prev
 
 ## Contract
 
-`ReportCpInline` 是 DOE Report 的完整 CP × Inline 业务组件：
+CP × Inline 由两个独立消费的 Domain UI 资产组成。`ReportCpInlineCandidates`
+负责 generation-fixed Candidate Ranking；`ReportCpInline` 负责当前选中组合的分析证据。
+
+- `Recommended CP × Inline Candidates`：保留消费者提供的 Backend 顺序、筛选结果、
+  分页与算法版本；组件不重算 score 或重新排序。
+- Candidate Ranking 的 CP、Inline、Level、Direction、Min N 与分页均为受控输入，
+  通过 callbacks 表达查询意图。`View fit` 只发出选中组合，不在组件内加载分析。
+- Candidate 行的缺失统计值显示为不可用，不补成 `0`。
+
+`ReportCpInline` 是选中组合后的完整 CP × Inline 分析组件：
 
 - `CP x Inline 拟合`：受控的 Step、Inline Parameter 与 CP Parameter 选择。
 - `Condition 聚合`：受控的 Baseline / Split Wafer 选择，以及 Inline 与 CP 各自有效 population 的聚合表。
@@ -38,4 +56,10 @@ import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.prev
 
 ## Consumer Handoff
 
-消费者负责根据 callbacks 更新受控选择、重新请求或映射证据，并注入与新选择一致的 rows、fit panels、spec、roots 和 control windows。App routing、跨 tab workflow、Backend BFF、真实数据关联和统计计算均不属于本组件。
+消费者将 Candidate Ranking 放在选中分析之前，并负责把 `View fit` 的
+`experimentGroupId + cpParameter + inlineParameter` 变成下方分析范围。候选筛选/分页与
+分析选择是两个独立的数据生命周期。
+
+消费者还负责根据 `ReportCpInline` callbacks 更新受控选择、重新请求或映射证据，并注入
+与新选择一致的 rows、fit panels、spec、roots 和 control windows。App routing、滚动定位、
+跨组件 workflow、Backend BFF、真实数据关联和统计计算均不属于 Domain UI。
