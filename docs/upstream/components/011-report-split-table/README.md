@@ -130,3 +130,11 @@ selected chips display both counts (for example, `CPX-S01 · 25 facts / 5
 displayed`) while the local filter continues to operate only on injected active
 `rows`. The component must not derive or substitute either count from those
 rows.
+
+## 2026-09-29 Nullable Yield Contract
+
+Runtime evidence established that a Split Table assignment may not have a Yield
+observation. The report-specific snapshot therefore models `yield` as
+`number | null`: numeric zero remains a real `0.00%` observation, while `null`
+renders as `Unavailable` with neutral tone. Consumers and adapters must not
+coerce absent or null Yield to zero.

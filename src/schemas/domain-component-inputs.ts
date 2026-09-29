@@ -531,7 +531,7 @@ export const reportSplitTableRowSchema = z.object({
   isBaseline: z.boolean().optional(),
   excluded: z.boolean().optional(),
   coverageStatus: z.string().optional(),
-  yield: z.number(),
+  yield: z.number().nullable(),
   topFail: z.string(),
   topFailCount: z.number().int().nonnegative(),
   topFails: z.array(reportSplitTableTopFailSchema).optional(),

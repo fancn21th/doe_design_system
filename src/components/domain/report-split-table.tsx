@@ -101,10 +101,15 @@ function valuesFromOptions(options: ComboboxOption[]) {
   return options.map((option) => option.value)
 }
 
-function getRowTone(yieldValue: number): ReportSplitTableRow["tone"] {
+function getRowTone(yieldValue: number | null): ReportSplitTableRow["tone"] {
+  if (yieldValue === null) return "neutral"
   if (yieldValue < 90) return "bad"
   if (yieldValue < 99.5) return "watch"
   return "good"
+}
+
+export function formatSplitTableYield(yieldValue: number | null) {
+  return yieldValue === null ? "Unavailable" : formatPercent(yieldValue)
 }
 
 function isBaselineRow(row: ReportSplitTableRow) {
@@ -422,7 +427,7 @@ export function ReportSplitTable({
                               )
                             )}
                           >
-                            {formatPercent(row.yield)}
+                            {formatSplitTableYield(row.yield)}
                           </TableCell>
                           <TableCell className="whitespace-normal">
                             {onTopFailSelect && hasTopFail ? (

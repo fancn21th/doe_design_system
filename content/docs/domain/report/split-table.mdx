@@ -34,6 +34,10 @@ Wafer 共享同一个 split 标签。表格投影固定为 `Stage / Step / Seq`�
 多个 `CP Parameter · Count`；未提供时兼容单值 `topFail` / `topFailCount`。组件不从
 raw die data 推算阈值或 Top Fail，也不推断实际工艺事实。
 
+`Yield` 为 nullable snapshot fact：数字 `0` 表示真实的 `0.00%`，`null` 表示上游没有
+可用 Yield 证据并显示 `Unavailable`。组件不会把缺失值转换为零；缺失值使用 neutral
+视觉语义，也不参与 Yield 阈值分级。
+
 过滤区使用无外框的紧凑控制行，只保留控件自身边界；表格保持自己的单层中性边界
 与浅色结构表头。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
 预览壳。
@@ -68,4 +72,5 @@ type ReportSplitTableInput = {
 - `normal`
 - `baseline-after-splits`
 - `authoritative-step-facets`
+- `unavailable-yield`
 - `empty`

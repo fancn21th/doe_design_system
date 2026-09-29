@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatSplitTableYield,
   getReportSplitTableStepOptions,
   getReportSplitTableTopFails,
   groupReportSplitTableRows,
 } from "@/components/domain/report-split-table"
-import type { ReportSplitTableRow } from "@/schemas/domain-component-inputs"
+import {
+  reportSplitTableRowSchema,
+  type ReportSplitTableRow,
+} from "@/schemas/domain-component-inputs"
 
 function row(
   waferId: string,
@@ -30,6 +34,17 @@ function row(
 }
 
 describe("ReportSplitTable grouping", () => {
+  it("keeps unavailable Yield distinct from real zero", () => {
+    const unavailable = reportSplitTableRowSchema.parse(row("W01", "BSL", "BSL", {
+      yield: null,
+      tone: "neutral",
+    }))
+
+    expect(unavailable.yield).toBeNull()
+    expect(formatSplitTableYield(unavailable.yield)).toBe("Unavailable")
+    expect(formatSplitTableYield(0)).toBe("0.00%")
+  })
+
   it("groups by stage, step, and seq with baseline first and labels by condition", () => {
     const groups = groupReportSplitTableRows([
       row("W04", "candidate", "4.5um"),
