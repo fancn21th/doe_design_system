@@ -1,0 +1,118 @@
+import type {
+  ReportManagementItem,
+  ReportManagementListInput,
+  ReportVersionControlInput,
+} from "@/schemas/domain-component-inputs"
+
+const baseReports: ReportManagementItem[] = [
+  {
+    sourceId: "RND_AF01112_CP_DEMO",
+    label: "AF01112 DOE Split 试验",
+    lotId: "AF01112",
+    sourceKind: "SNAPSHOT",
+    status: "READY",
+    dataAsOf: "2026-09-22 14:32",
+    readOnly: false,
+    productName: "S0269A",
+    waferCount: 25,
+    currentVersion: "V3.2",
+    downloadAvailable: true,
+    regenerateAvailable: true,
+    deleteAvailable: true,
+  },
+  {
+    sourceId: "RND_AE01590_INLINE",
+    label: "AE01590 Inline DOE Report",
+    lotId: "AE01590",
+    sourceKind: "TRIAL_WORKSPACE",
+    status: "PARTIAL",
+    dataAsOf: "2026-09-21 09:15",
+    readOnly: true,
+    productName: "P0134B",
+    waferCount: 18,
+    currentVersion: "V1.4",
+    downloadAvailable: true,
+    regenerateAvailable: false,
+    regenerateUnavailableReason: "只读报告不能重新生成",
+    deleteAvailable: false,
+    deleteUnavailableReason: "只读报告不能删除",
+  },
+  {
+    sourceId: "RND_BX02018_PENDING",
+    label: "BX02018 Etch Window",
+    lotId: "BX02018",
+    sourceKind: "TRIAL_WORKSPACE",
+    status: "UNAVAILABLE",
+    readOnly: false,
+    downloadAvailable: false,
+    downloadUnavailableReason: "报告制品尚未生成",
+    regenerateAvailable: false,
+    regenerateUnavailableReason: "重新生成能力尚未接入",
+    deleteAvailable: false,
+    deleteUnavailableReason: "删除能力尚未接入",
+  },
+]
+
+export const reportManagementItemsFixture: ReportManagementItem[] = [
+  ...baseReports,
+  ...Array.from({ length: 9 }, (_, index): ReportManagementItem => ({
+    sourceId: `RND_DEMO_${String(index + 4).padStart(2, "0")}`,
+    label: `DOE Report ${index + 4}`,
+    lotId: `LOT${String(index + 4).padStart(4, "0")}`,
+    sourceKind: index % 2 === 0 ? "SNAPSHOT" : "TRIAL_WORKSPACE",
+    status: index % 3 === 0 ? "PARTIAL" : "READY",
+    dataAsOf: `2026-09-${String(20 - index).padStart(2, "0")} 10:00`,
+    readOnly: true,
+    productName: index % 4 === 0 ? undefined : `PRODUCT-${index + 4}`,
+    waferCount: index % 5 === 0 ? undefined : 25,
+    currentVersion: index % 4 === 0 ? undefined : `V1.${index}`,
+    downloadAvailable: true,
+    regenerateAvailable: false,
+    regenerateUnavailableReason: "只读报告不能重新生成",
+    deleteAvailable: false,
+    deleteUnavailableReason: "只读报告不能删除",
+  })),
+]
+
+export const reportManagementListFixture: ReportManagementListInput = {
+  title: "报告管理",
+  description: "按 Lot 与 Product 查找报告，选择后在右侧查看不可变版本快照。",
+  status: "ready",
+  reports: reportManagementItemsFixture,
+  selectedSourceId: undefined,
+  readonly: false,
+  initialPageSize: 10,
+}
+
+export const reportVersionControlFixture: ReportVersionControlInput = {
+  status: "ready",
+  versions: [
+    {
+      versionId: "rptv_20260922_143200",
+      versionLabel: "V3.2",
+      generatedAt: "2026-09-22 14:32",
+      generatedBy: "李绍华",
+      note: "按 Split Table Version-5 重新生成",
+      isCurrent: true,
+      downloadAvailable: true,
+    },
+    {
+      versionId: "rptv_20260920_101500",
+      versionLabel: "V3.1",
+      generatedAt: "2026-09-20 10:15",
+      generatedBy: "王工",
+      note: "补充 Inline 数据",
+      isCurrent: false,
+      downloadAvailable: true,
+    },
+    {
+      versionId: "rptv_20260918_091000",
+      versionLabel: "V3.0",
+      generatedAt: "2026-09-18 09:10",
+      isCurrent: false,
+      downloadAvailable: false,
+      downloadUnavailableReason: "该历史制品不可用",
+    },
+  ],
+  selectedVersionId: "rptv_20260922_143200",
+}

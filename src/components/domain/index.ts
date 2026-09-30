@@ -7,6 +7,13 @@ export { WaferMap } from "@/components/domain/wafer-map"
 export { Measurement } from "@/components/domain/measurement"
 export { LayoutShell } from "@/components/domain/layout-shell"
 export { ReportWorkspaceLayout } from "@/components/domain/report-workspace-layout"
+export { ReportManagementList } from "@/components/domain/report-management-list"
+export {
+  ReportManagementWorkspace,
+  type ReportPreviewMode,
+} from "@/components/domain/report-management-workspace"
+export { ReportVersionControl } from "@/components/domain/report-version-control"
+export { StageDashboardPanel } from "@/components/domain/stage-dashboard-panel"
 export { LayoutSidebarShell } from "@/components/domain/layout-sidebar-shell"
 export { WaferDefect } from "@/components/domain/wafer-defect"
 export { RunCardHistory } from "@/components/domain/runcard-history"

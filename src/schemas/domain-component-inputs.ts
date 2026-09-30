@@ -1,10 +1,22 @@
 import { z } from "zod"
 
 export const experimentInputSchema = z.object({})
-export const lotInputSchema = z.object({})
-export const stepAssignmentSchema = z.enum(["B", "V", "↔", "E"])
+export const lotInputSchema = z.object({
+  lotId: z.string(),
+  productName: z.string(),
+  experimentName: z.string(),
+  experimentDescription: z.string(),
+  stepCount: z.number().int().nonnegative(),
+  waferCount: z.number().int().nonnegative(),
+  waferIds: z.array(z.string()),
+  sourceLabel: z.string().optional(),
+  sourceStatus: z.enum(["available", "partial", "unavailable"]).optional(),
+})
+export const stepAssignmentSchema = z.enum(["B", "V", "↔", "E", "—"])
 export const stepRowSchema = z.object({
   id: z.string(),
+  stepId: z.string().optional(),
+  stageId: z.string().optional(),
   stage: z.string(),
   step: z.string(),
   seq: z.string(),
@@ -38,6 +50,7 @@ export const runCardGroupSchema = z.object({
 export const runCardInputSchema = z.object({
   steps: z.array(runCardReleaseStepSchema).optional(),
   runCards: z.array(runCardGroupSchema).optional(),
+  releaseStatus: z.enum(["known", "unknown"]).optional(),
   releasedStepIds: z.array(z.string()).optional(),
   selectedStepIds: z.array(z.string()).optional(),
 })
@@ -63,8 +76,11 @@ export const stepsInputSchema = z.object({
   rows: z.array(stepRowSchema).optional(),
   candidates: z.array(stepCandidateSchema).optional(),
   waferCount: z.number().int().positive().optional(),
+  dashboardStageIds: z.array(z.string()).optional(),
   release: runCardInputSchema.optional(),
   releaseHistory: runCardHistoryInputSchema.optional(),
+  readonly: z.boolean().optional(),
+  sourceNote: z.string().optional(),
 })
 export const waferCapabilitySpecSchema = z.object({
   lsl: z.number(),
@@ -377,6 +393,68 @@ export const waferDefectInputSchema = z.object({
   wafers: z.array(waferDefectSummarySchema).optional(),
   selectedWaferId: z.string().optional(),
   readonly: z.boolean().optional(),
+})
+
+export const reportSourceStatusSchema = z.enum([
+  "READY",
+  "PARTIAL",
+  "UNAVAILABLE",
+  "FAILED",
+  "UNKNOWN",
+])
+export const reportManagementItemSchema = z.object({
+  sourceId: z.string(),
+  label: z.string(),
+  lotId: z.string(),
+  sourceKind: z.enum(["TRIAL_WORKSPACE", "SNAPSHOT", "UNKNOWN"]),
+  status: reportSourceStatusSchema,
+  dataAsOf: z.string().optional(),
+  readOnly: z.boolean(),
+  productName: z.string().optional(),
+  waferCount: z.number().int().nonnegative().optional(),
+  currentVersion: z.string().optional(),
+  downloadAvailable: z.boolean().default(false),
+  downloadUnavailableReason: z.string().optional(),
+  regenerateAvailable: z.boolean().default(false),
+  regenerateUnavailableReason: z.string().optional(),
+  deleteAvailable: z.boolean().default(false),
+  deleteUnavailableReason: z.string().optional(),
+})
+export const reportManagementListInputSchema = z.object({
+  title: z.string().default("报告管理"),
+  description: z.string().optional(),
+  status: z.enum(["ready", "loading", "error"]).default("ready"),
+  errorMessage: z.string().optional(),
+  reports: z.array(reportManagementItemSchema).default([]),
+  selectedSourceId: z.string().optional(),
+  readonly: z.boolean().default(false),
+  initialPageSize: z.union([z.literal(10), z.literal(20), z.literal(50)]).default(10),
+})
+export const reportVersionSummarySchema = z.object({
+  versionId: z.string(),
+  versionLabel: z.string(),
+  generatedAt: z.string(),
+  generatedBy: z.string().optional(),
+  note: z.string().optional(),
+  isCurrent: z.boolean(),
+  downloadAvailable: z.boolean().default(false),
+  downloadUnavailableReason: z.string().optional(),
+})
+export const reportVersionControlInputSchema = z.object({
+  status: z.enum(["ready", "loading", "error"]).default("ready"),
+  errorMessage: z.string().optional(),
+  versions: z.array(reportVersionSummarySchema).default([]),
+  selectedVersionId: z.string().optional(),
+})
+export const stageDashboardPanelInputSchema = z.object({
+  state: z.enum(["loading", "ready", "empty", "error"]),
+  stageId: z.string().optional(),
+  stageLabel: z.string().optional(),
+  eyebrow: z.string().default("Stage Dashboard"),
+  message: z.string().optional(),
+  errorMessage: z.string().optional(),
+  downloadAvailable: z.boolean().default(false),
+  downloadUnavailableReason: z.string().optional(),
 })
 
 export const reportToneSchema = z.enum(["good", "watch", "bad", "neutral"])
@@ -1058,6 +1136,18 @@ export type WaferDefectEvidence = z.infer<typeof waferDefectEvidenceSchema>
 export type WaferDefectPoint = z.infer<typeof waferDefectPointSchema>
 export type WaferDefectSummary = z.infer<typeof waferDefectSummarySchema>
 export type WaferDefectInput = z.infer<typeof waferDefectInputSchema>
+export type ReportSourceStatus = z.infer<typeof reportSourceStatusSchema>
+export type ReportManagementItem = z.infer<typeof reportManagementItemSchema>
+export type ReportManagementListInput = z.infer<
+  typeof reportManagementListInputSchema
+>
+export type ReportVersionSummary = z.infer<typeof reportVersionSummarySchema>
+export type ReportVersionControlInput = z.infer<
+  typeof reportVersionControlInputSchema
+>
+export type StageDashboardPanelInput = z.infer<
+  typeof stageDashboardPanelInputSchema
+>
 export type ReportTone = z.infer<typeof reportToneSchema>
 export type ReportMetric = z.infer<typeof reportMetricSchema>
 export type ReportListItem = z.infer<typeof reportListItemSchema>

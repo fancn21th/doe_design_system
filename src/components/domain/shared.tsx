@@ -75,6 +75,8 @@ export function AssignmentBadge({ value }: { value: string }) {
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : value === "↔"
         ? "border-violet-200 bg-violet-50 text-violet-700"
+        : value === "—"
+          ? "border-border bg-background text-muted-foreground"
         : value === "E"
           ? "border-muted bg-muted text-muted-foreground"
           : "border-sky-200 bg-sky-50 text-sky-700"

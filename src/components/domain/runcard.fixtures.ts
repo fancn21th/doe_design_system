@@ -69,6 +69,7 @@ export const runCardGroupsFixture: RunCardGroup[] = [
 export const runCardFixture: Required<RunCardInput> = {
   steps: runCardReleaseStepsFixture,
   runCards: runCardGroupsFixture,
+  releaseStatus: "known",
   releasedStepIds: [],
   selectedStepIds: [],
 }
@@ -87,6 +88,7 @@ export const runCardWithUnassignedFixture: Required<RunCardInput> = {
       collapsed: false,
     },
   ],
+  releaseStatus: "known",
   releasedStepIds: [],
   selectedStepIds: [],
 }

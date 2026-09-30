@@ -1,0 +1,46 @@
+---
+title: report-management
+description: Report Center 目录、预览工作区与版本控制组件。
+---
+
+import { ReportManagementPreview } from "@/components/domain/report-management.preview"
+
+## 预览 / Preview
+
+<div className="not-prose overflow-hidden rounded-xl border">
+  <ReportManagementPreview />
+</div>
+
+## Contract
+
+`ReportManagementList` 接收报告目录数据，在组件内完成 Lot ID / Product Name 纯展示筛选与 10/20/50 分页，并发出选择、下载、重新生成、删除 intent。组件不请求服务、不伪造缺失字段，也不把 disabled command 显示为成功。
+
+`ReportManagementWorkspace` 复用 `LayoutShell` 与 shadcn `Resizable`。无 `selectedReportId` 时列表全宽；有选中项时桌面端显示可拖拽的列表 + 预览，窄屏只显示预览；全屏与关闭均为受控 intent，不写 URL。
+
+`ReportVersionControl` 完全受控。历史版本选择只发出 `versionId`；选择当前版本发出 `onCurrentVersionSelect`，由消费者清除 URL 中的 `version`。消费者必须重新加载同一 source/version 的不可变 bootstrap 与 module 数据。只切换 Badge 或提示文字不满足合同。
+
+## Shadcn Components
+
+- `Table`
+- `Input`
+- `Select`
+- `Button`
+- `DropdownMenu`
+- `Badge`
+- `Tooltip`
+- `Skeleton`
+- `ResizablePanelGroup`
+- `ResizablePanel`
+- `ResizableHandle`
+
+## Consumer Handoff
+
+- App owns `sourceId + tab + version` URL、XState、service/gateway/adapter 和缓存清理。
+- Backend owns目录摘要、稳定 `versionId`、不可变快照、真实下载、重生成、删除、鉴权和错误语义。
+- Product、Wafer 数量、当前版本缺失时传 `undefined`，组件展示 `—`。
+- command 未接入时传 `*Available=false` 与 unavailable reason；组件保持 disabled。
+
+## Scenarios
+
+- list: `normal / loading / empty / error / readonly`
+- version: `current / historical / loading / empty / error`

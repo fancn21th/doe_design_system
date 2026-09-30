@@ -1,11 +1,11 @@
 ---
 title: UI Reference Refactor SOP
-description: 基于 /Users/fantianze/Vibe/g-working/g-doe/ui 参考实现改造 DOE Domain UI 组件的流程。
+description: 基于用户提供且当前环境可访问的外部 UI 参考实现改造 DOE Domain UI 组件的流程。
 ---
 
 ## Purpose
 
-这页用于把 `/Users/fantianze/Vibe/g-working/g-doe/ui` 项目中的参考实现，按当前 DOE Domain UI 的组件合同、schema、fixture、scenario 和 MDX 文档体系落地。
+这页用于把用户提供且当前环境可访问的外部 UI 项目中的参考实现，按当前 DOE Domain UI 的组件合同、schema、fixture、scenario 和 MDX 文档体系落地。其他机器留下的历史绝对路径不构成当前环境的依赖；路径不存在时停止外部同步，改用本仓已确认的 contract、scenario、upstream notes 与 shadcn primitives，不创建或猜测缺失目录。
 
 `ui` 是本项目 shadcn 设计语言的本地上游：布局组合、primitive 用法、字体层级、间距、尺寸、圆角、色彩 token 和响应式节奏都以它为优先参考。业务示例中的文案、图表数据、账户和产品概念只用于理解页面结构，不是 DOE 业务事实。
 
@@ -49,10 +49,10 @@ description: 基于 /Users/fantianze/Vibe/g-working/g-doe/ui 参考实现改造 
    优先使用 `rg` 搜索组件名、primitive 名、示例名和可见文案。参考项目常见路径：
 
    ```text
-   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/ui/
-   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/internal/
-   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/blocks/
-   /Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/content/docs/components/
+   <ui-reference-root>/apps/v4/registry/new-york-v4/ui/
+   <ui-reference-root>/apps/v4/registry/new-york-v4/internal/
+   <ui-reference-root>/apps/v4/registry/new-york-v4/blocks/
+   <ui-reference-root>/apps/v4/content/docs/components/
    ```
 
 4. 收窄参考来源。
@@ -90,9 +90,9 @@ description: 基于 /Users/fantianze/Vibe/g-working/g-doe/ui 参考实现改造 
 - 目标路由：`/docs/domain/shared/layout-shell`
 - 当前组件：`src/components/domain/layout-shell.tsx`
 - 当前 upstream：`docs/upstream/components/019-layout-shell/README.md`
-- 主参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/ui/sidebar.tsx`
-- 辅助参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/content/docs/components/base/sidebar.mdx`
-- 示例参考：`/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/internal/sidebar-*.tsx`
+- 主参考：`<ui-reference-root>/apps/v4/registry/new-york-v4/ui/sidebar.tsx`
+- 辅助参考：`<ui-reference-root>/apps/v4/content/docs/components/base/sidebar.mdx`
+- 示例参考：`<ui-reference-root>/apps/v4/registry/new-york-v4/internal/sidebar-*.tsx`
 
 改造目标是吸收 sidebar 体系中可复用的布局、可折叠状态、trigger、inset 和 menu 组合方式，同时保持 `LayoutShell` 是 DOE 的 layout-only domain asset。
 

@@ -1,0 +1,33 @@
+---
+title: stage-dashboard-panel
+description: Stage Dashboard 的四态、下载、全屏与关闭面板。
+---
+
+import { StageDashboardPanelPreview } from "@/components/domain/stage-dashboard-panel.preview"
+
+## 预览 / Preview
+
+<StageDashboardPanelPreview />
+
+## Contract
+
+`StageDashboardPanel` 统一呈现 `loading / ready / empty / error`。调用方注入真实 Stage 内容并拥有查询、retry、下载、关闭和 fullscreen 状态；组件只呈现状态并发出 intent。
+
+关闭按钮始终位于操作区最右侧。全屏通过 shadcn `Dialog` 复用同一个 panel surface 和同一个 children slot，不复制第二份 Stage 内容树。
+
+组件不生成 MES、Inline、Defect 或 Wafer 事实。`ready` children 必须来自消费者注入；缺失事实必须使用 empty/error 或不可用说明。
+
+## Shadcn Components
+
+- `Button`
+- `Badge`
+- `Skeleton`
+- `Dialog`
+- `Tooltip`
+
+## Scenarios
+
+- `loading`
+- `ready`
+- `empty`
+- `error`

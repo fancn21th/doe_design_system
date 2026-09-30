@@ -10,6 +10,10 @@ import { stepsScenarios } from "@/components/domain/steps.scenarios"
 
 <Steps input={stepsScenarios.normal.input} />
 
+## 只读真实上下文 / Read-only Context
+
+<Steps input={stepsScenarios.readonlyUnknownAssignments.input} />
+
 ## Shadcn Components
 
 - `Card`
@@ -26,10 +30,12 @@ import { stepsScenarios } from "@/components/domain/steps.scenarios"
 ## Schema
 
 ```ts
-export const stepAssignmentSchema = z.enum(["B", "V", "↔", "E"])
+export const stepAssignmentSchema = z.enum(["B", "V", "↔", "E", "—"])
 
 export const stepRowSchema = z.object({
   id: z.string(),
+  stepId: z.string().optional(),
+  stageId: z.string().optional(),
   stage: z.string(),
   step: z.string(),
   seq: z.string(),
@@ -54,7 +60,43 @@ export const stepsInputSchema = z.object({
   rows: z.array(stepRowSchema).optional(),
   candidates: z.array(stepCandidateSchema).optional(),
   waferCount: z.number().int().positive().optional(),
+  dashboardStageIds: z.array(z.string()).optional(),
   release: runCardInputSchema.optional(),
   releaseHistory: runCardHistoryInputSchema.optional(),
+  readonly: z.boolean().optional(),
+  sourceNote: z.string().optional(),
 })
 ```
+
+## Read-only and source honesty
+
+- `readonly` 隐藏新增、模板、行操作与下发入口，并禁用 Baseline 编辑。
+- 表格遵循最终工作台原型的可见列：`Stage / Step / Baseline / Condition / Recipe / Wafer`；`Factor` 仍保留在输入合同中供后续配置流程使用，但不在当前 Split Table 中重复展示。
+- `—` 表示上游没有提供本行的 Wafer assignment；它不同于明确排除的 `E`。
+- 只读真实上下文的图例收敛为 `B / V / —`，不展示当前来源没有提供的 `↔ / E` 状态。
+- 显式传入 `input` 后，缺少的 `rows`、`release` 或 `releaseHistory` 不再回退正常 fixture。
+- `sourceNote` 用于记录权威来源和缺失事实边界，组件不从 Wafer 顺序、Recipe options 或 release 缺省值推断业务状态。
+
+## Stage Dashboard intent
+
+`dashboardStageIds` 是真实 Stage 查询服务返回的稳定 Stage identity 列表。传入该字段后，Stage Dashboard 的可点击性只由该列表决定，与 MES release 状态解耦，因此 `WAITING / RUNNING / PARTIAL / COMPLETE` 都可以打开并展示各自真实生命周期状态。
+
+为兼容未接入 Stage 列表的旧消费者，未传 `dashboardStageIds` 时仍沿用原 release gate：
+
+`release.releaseStatus` 表示消费者是否拥有权威 Step release 事实：
+
+- `known` 且稳定 `stepId` 位于 `releasedStepIds`：Stage 显示为可点击入口并发出 `onStageSelect`。
+- `known` 且不在集合：显示“待下发”，不发事件。
+- `unknown`：显示“下发状态未接入”，不发事件。
+
+`StepRow.id` 是表格行 identity；当同一个 Step 有多个 Variant 行时，消费者应提供相同的稳定 `stepId`，不要用行 identity 代替 release 事实。
+
+`StepRow.stageId` 是 Stage 查询使用的稳定 identity，`stage` 只是展示标签。组件触发 `onStageSelect` 时优先发送 `stageId`；仅为兼容没有该字段的既有 fixture，才回退到 `stage`。
+
+## Scenarios
+
+- `allReleased`
+- `mixedRelease`
+- `allUnreleased`
+- `releaseStatusUnknown`
+- `readonlyUnknownAssignments`

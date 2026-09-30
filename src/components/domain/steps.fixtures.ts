@@ -43,6 +43,7 @@ export const stepCandidatesFixture: StepCandidate[] = [
 export const stepRowsFixture: StepRow[] = [
   {
     id: "oxide-baseline",
+    stepId: "step-01",
     stage: "OXIDE_ETCH",
     step: "MAIN",
     seq: "seq-num-001",
@@ -56,6 +57,7 @@ export const stepRowsFixture: StepRow[] = [
   },
   {
     id: "oxide-variant",
+    stepId: "step-01",
     stage: "",
     step: "MAIN",
     seq: "seq-num-001",
@@ -69,6 +71,7 @@ export const stepRowsFixture: StepRow[] = [
   },
   {
     id: "clean-variant",
+    stepId: "step-02",
     stage: "CLEAN",
     step: "MAIN",
     seq: "seq-num-002",
@@ -86,15 +89,19 @@ export const stepsFixture: Required<StepsInput> = {
   rows: stepRowsFixture,
   candidates: stepCandidatesFixture,
   waferCount,
+  dashboardStageIds: ["OXIDE_ETCH", "CLEAN"],
   release: runCardFixture,
   releaseHistory: {
     events: [],
   },
+  readonly: false,
+  sourceNote: "",
 }
 
 export function createStepRowFromCandidate(candidate: StepCandidate, count = waferCount): StepRow {
   return {
     id: `added-${candidate.id}`,
+    stepId: candidate.id,
     stage: candidate.stage,
     step: candidate.step,
     seq: candidate.seq,

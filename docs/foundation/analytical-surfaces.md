@@ -34,9 +34,8 @@ named data, status, or evidence meaning.
 
 ## Evidence
 
-- Dashboard 01 Metric Snapshot source:
-  `/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/blocks/dashboard-01/components/section-cards.tsx`
-- Dashboard 01 Analysis Panel source:
-  `/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/blocks/dashboard-01/components/chart-area-interactive.tsx`
-- Shared upstream Card primitive:
-  `/Users/fantianze/Vibe/g-working/g-doe/ui/apps/v4/registry/new-york-v4/ui/card.tsx`
+The original Dashboard 01 files were inspected on another machine and are not
+available in the current workspace. They remain historical evidence only. The
+rules recorded above and the current repository's shadcn Card implementation
+are the active sources for ongoing work; do not recreate or guess the former
+absolute paths.

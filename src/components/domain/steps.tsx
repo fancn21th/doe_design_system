@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { ChevronUp, Clock3, MoreHorizontal, Plus, Send } from "lucide-react"
 
 import { createStepRowFromCandidate } from "@/components/domain/steps.fixtures"
@@ -60,33 +60,82 @@ type StepsProps = {
   onStageSelect?: (stageId: string) => void
 }
 
+export type StageReleaseState = "released" | "pending" | "unknown"
+
+export function getStageReleaseState(
+  releaseStatus: "known" | "unknown",
+  releasedStepIds: ReadonlySet<string>,
+  stepId: string
+): StageReleaseState {
+  if (releaseStatus === "unknown") {
+    return "unknown"
+  }
+
+  return releasedStepIds.has(stepId) ? "released" : "pending"
+}
+
+export function getStageIntentId(
+  stageId: string | undefined,
+  stageLabel: string
+): string {
+  return stageId?.trim() || stageLabel
+}
+
+export function isStageDashboardAvailable(
+  dashboardStageIds: readonly string[] | undefined,
+  stageIntentId: string,
+  releaseState: StageReleaseState
+): boolean {
+  if (dashboardStageIds) {
+    return dashboardStageIds.includes(stageIntentId)
+  }
+  return releaseState === "released"
+}
+
 export function Steps({
   input = stepsScenarios.normal.input,
   selectedStageId,
   onStageSelect,
 }: StepsProps) {
-  const scenarioInput = stepsScenarios.normal.input
   const parsedInput = stepsInputSchema.parse(input)
-  const releaseInput = parsedInput.release ?? scenarioInput.release
-  const [rows, setRows] = useState<StepRow[]>(
-    parsedInput.rows ?? scenarioInput.rows ?? []
-  )
+  const releaseInput = parsedInput.release
+  const readonly = parsedInput.readonly ?? false
+  const [rows, setRows] = useState<StepRow[]>(parsedInput.rows ?? [])
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [releaseOpen, setReleaseOpen] = useState(false)
+  const [releaseStatus, setReleaseStatus] = useState<"known" | "unknown">(
+    releaseInput?.releaseStatus ?? "unknown"
+  )
   const [releasedStepIds, setReleasedStepIds] = useState<string[]>(
     releaseInput?.releasedStepIds ?? []
   )
   const [historyEvents, setHistoryEvents] = useState(
-    parsedInput.releaseHistory?.events ?? scenarioInput.releaseHistory?.events ?? []
+    parsedInput.releaseHistory?.events ?? []
   )
   const [releaseMessage, setReleaseMessage] = useState("")
-  const candidates = parsedInput.candidates ?? scenarioInput.candidates ?? []
-  const waferCount = parsedInput.waferCount ?? scenarioInput.waferCount ?? 25
+  const candidates = parsedInput.candidates ?? []
+  const waferCount = parsedInput.waferCount ?? 25
   const currentReleaseInput = createReleaseInputFromRows(rows, releaseInput)
   const releaseSteps = currentReleaseInput?.steps ?? []
   const allReleaseStepsReleased =
+    releaseStatus === "known" &&
     releaseSteps.length > 0 &&
     releaseSteps.every((step) => releasedStepIds.includes(step.id))
+  const releasedStepSet = new Set(releasedStepIds)
+  const dashboardStageIds = parsedInput.dashboardStageIds
+  const legendItems = readonly
+    ? [
+        ["B", "Baseline"],
+        ["V", "Variant"],
+        ["—", "未分配 / 未提供"],
+      ]
+    : [
+        ["B", "Baseline"],
+        ["V", "Variant"],
+        ["↔", "Assigned to another Variant"],
+        ["E", "Excluded"],
+        ["—", "未分配 / 未提供"],
+      ]
 
   const waferColumns = Array.from({ length: waferCount }, (_, index) => index + 1)
 
@@ -114,6 +163,7 @@ export function Steps({
   }
 
   function confirmRunCardRelease(payload: RunCardReleasePayload) {
+    setReleaseStatus("known")
     setReleasedStepIds(payload.releasedStepIds)
     setHistoryEvents(runCardEventsFixture)
     setReleaseMessage(`已提交 ${payload.selectedStepIds.length} 个Step至MES`)
@@ -123,8 +173,9 @@ export function Steps({
   return (
     <div className="domain-ui-related-stack domain-ui-split-table-stack">
       <DomainSection title="Step × Wafer Split Table">
-        <div className="space-y-5 p-6">
-          <div className="flex items-center justify-between gap-3">
+        <div className="space-y-4 p-4">
+          {!readonly ? (
+            <div className="flex items-center justify-between gap-3">
             <DropdownMenu open={addMenuOpen} onOpenChange={setAddMenuOpen}>
               <DropdownMenuTrigger
                 render={
@@ -154,7 +205,13 @@ export function Steps({
                     className="px-3 py-3"
                     onClick={() => addCandidate(candidate)}
                   >
-                    <span className={index === 1 ? "font-semibold text-primary" : "font-semibold"}>
+                    <span
+                      className={
+                        index === 1
+                          ? "font-semibold text-primary"
+                          : "font-semibold"
+                      }
+                    >
                       {candidate.stage}
                       <span className="mx-2 text-muted-foreground">/</span>
                       <span className="font-mono">{candidate.step}</span>
@@ -167,18 +224,30 @@ export function Steps({
             <Button variant="outline" size="lg">
               选择模板
             </Button>
-          </div>
+            </div>
+          ) : null}
 
-        <div className="domain-ui-split-table-shell">
-          <Table className="domain-ui-split-table">
+          <div className="domain-ui-split-table-shell">
+            <Table
+              className="domain-ui-split-table domain-ui-split-table-authoritative"
+              style={
+                {
+                  "--doe-split-table-min-width": `${Math.max(
+                    60,
+                    48 + (readonly ? 0 : 5) + waferCount * 2
+                  )}rem`,
+                } as CSSProperties
+              }
+            >
             <colgroup>
               <col className="w-[var(--doe-split-table-stage-column)]" />
               <col className="w-[var(--doe-split-table-step-column)]" />
               <col className="w-[var(--doe-split-table-baseline-column)]" />
               <col className="w-[var(--doe-split-table-condition-column)]" />
-              <col className="w-[var(--doe-split-table-factor-column)]" />
               <col className="w-[var(--doe-split-table-recipe-column)]" />
-              <col className="w-[var(--doe-split-table-action-column)]" />
+              {!readonly ? (
+                <col className="w-[var(--doe-split-table-action-column)]" />
+              ) : null}
               {waferColumns.map((index) => (
                 <col
                   key={index}
@@ -188,11 +257,12 @@ export function Steps({
             </colgroup>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {["Stage", "Step / Seq", "Baseline", "Condition", "Factor", "Recipe", "操作"].map((head) => (
+                {["Stage", "Step / Seq", "Baseline", "Condition", "Recipe"].map((head) => (
                   <TableHead key={head}>
                     {head}
                   </TableHead>
                 ))}
+                {!readonly ? <TableHead>操作</TableHead> : null}
                 {waferColumns.map((index) => (
                   <TableHead key={index} className="text-center">
                     #{index}
@@ -201,27 +271,63 @@ export function Steps({
               </TableRow>
             </TableHeader>
             <TableBody>
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5 + (readonly ? 0 : 1) + waferColumns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    暂无可展示的 Step / Split 配置
+                  </TableCell>
+                </TableRow>
+              ) : null}
               {rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="font-semibold text-primary">
-                    {row.stage ? (
-                      onStageSelect ? (
+                  <TableCell className="font-semibold">
+                    {row.stage ? (() => {
+                      const releaseState = getStageReleaseState(
+                        releaseStatus,
+                        releasedStepSet,
+                        row.stepId ?? row.id
+                      )
+                      const stageIntentId = getStageIntentId(row.stageId, row.stage)
+                      return isStageDashboardAvailable(
+                        dashboardStageIds,
+                        stageIntentId,
+                        releaseState
+                      ) && onStageSelect ? (
                         <Button
                           size="xs"
                           variant="ghost"
-                          aria-pressed={selectedStageId === row.stage}
+                          aria-pressed={
+                            selectedStageId === stageIntentId
+                          }
                           className={cn(
                             "-ml-2 justify-start px-2 font-semibold text-primary",
-                            selectedStageId === row.stage && "bg-sky-50 text-sky-700"
+                            selectedStageId === stageIntentId &&
+                              "bg-sky-50 text-sky-700"
                           )}
-                          onClick={() => onStageSelect(row.stage)}
+                          onClick={() =>
+                            onStageSelect(stageIntentId)
+                          }
                         >
                           {row.stage}
                         </Button>
                       ) : (
-                        row.stage
+                        <div className="grid gap-1">
+                          <span>{row.stage}</span>
+                          {!readonly && releaseState === "unknown" ? (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              下发状态未接入
+                            </span>
+                          ) : releaseState === "pending" ? (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              待下发
+                            </span>
+                          ) : null}
+                        </div>
                       )
-                    ) : null}
+                    })() : null}
                   </TableCell>
                   <TableCell>
                     <div className="flex min-w-44 items-center gap-3">
@@ -240,10 +346,14 @@ export function Steps({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Checkbox defaultChecked={row.baseline} aria-label={`${row.id} baseline`} />
+                    <Checkbox
+                      defaultChecked={row.baseline}
+                      disabled={readonly || !row.editable}
+                      aria-label={`${row.id} baseline`}
+                    />
                   </TableCell>
                   <TableCell>
-                    {row.editable ? (
+                    {row.editable && !readonly ? (
                       <Input
                         value={row.condition}
                         placeholder="Condition"
@@ -257,21 +367,7 @@ export function Steps({
                     )}
                   </TableCell>
                   <TableCell>
-                    {row.editable ? (
-                      <Input
-                        value={row.factor}
-                        placeholder="Factor"
-                        className="min-w-24"
-                        onChange={(event) =>
-                          updateRow(row.id, { factor: event.target.value })
-                        }
-                      />
-                    ) : (
-                      <span>{row.factor}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {row.editable ? (
+                    {row.editable && !readonly ? (
                       <Select
                         value={row.recipe || recipePlaceholderValue}
                         onValueChange={(recipe) =>
@@ -301,32 +397,36 @@ export function Steps({
                       <span>{row.recipe}</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="icon-sm" variant="ghost">
-                        <Plus />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button size="icon-sm" variant="ghost">
-                              <MoreHorizontal />
-                            </Button>
-                          }
-                        />
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <Send />
-                            下发step
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>AddTime</DropdownMenuItem>
-                          <DropdownMenuItem>SPEC配置</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive">删除</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
+                  {!readonly ? (
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button size="icon-sm" variant="ghost">
+                          <Plus />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button size="icon-sm" variant="ghost">
+                                <MoreHorizontal />
+                              </Button>
+                            }
+                          />
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>
+                              <Send />
+                              下发step
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>AddTime</DropdownMenuItem>
+                            <DropdownMenuItem>SPEC配置</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive">
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  ) : null}
                   {row.assignments.map((assignment, index) => (
                     <TableCell key={`${row.id}-${index}`} className="text-center">
                       <AssignmentBadge value={assignment} />
@@ -335,17 +435,12 @@ export function Steps({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
-        </div>
+            </Table>
+          </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              {[
-                ["B", "Baseline"],
-                ["V", "Variant"],
-                ["↔", "Assigned to another Variant"],
-                ["E", "Excluded"],
-              ].map(([value, label]) => (
+              {legendItems.map(([value, label]) => (
                 <span key={value} className="flex items-center gap-2">
                   <AssignmentBadge value={value} />
                   {label}
@@ -358,7 +453,7 @@ export function Steps({
                   {releaseMessage}
                 </Badge>
               )}
-              {!allReleaseStepsReleased && currentReleaseInput && (
+              {!readonly && !allReleaseStepsReleased && currentReleaseInput && (
                 <Dialog open={releaseOpen} onOpenChange={setReleaseOpen}>
                   <DialogTrigger
                     render={
@@ -375,6 +470,7 @@ export function Steps({
                     <RunCard
                       input={{
                         ...currentReleaseInput,
+                        releaseStatus,
                         releasedStepIds,
                       }}
                       onCancel={() => setReleaseOpen(false)}
@@ -385,6 +481,11 @@ export function Steps({
               )}
             </div>
           </div>
+          {parsedInput.sourceNote ? (
+            <p className="text-xs leading-5 text-muted-foreground">
+              {parsedInput.sourceNote}
+            </p>
+          ) : null}
         </div>
       </DomainSection>
       {historyEvents.length > 0 && (
@@ -429,12 +530,12 @@ function createReleaseStepFromRow(
   if (baseStep && !row.editable) {
     return {
       ...baseStep,
-      id: row.id,
+      id: row.stepId ?? row.id,
     }
   }
 
   return {
-    id: row.id,
+    id: row.stepId ?? row.id,
     stage: row.stage,
     name: row.step,
     seq: `Seq ${index + 1}`,
@@ -452,7 +553,9 @@ function createRunCardGroupsForRows(
   return [
     {
       id: primaryRunCard?.id ?? "RC-001",
-      stepIds: assignedRows.map((row) => row.id),
+      stepIds: Array.from(
+        new Set(assignedRows.map((row) => row.stepId ?? row.id))
+      ),
       collapsed: primaryRunCard?.collapsed ?? false,
     },
     {

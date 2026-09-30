@@ -4,21 +4,42 @@ description: 实验 / Lot 基础信息组件。
 ---
 
 import { Lot } from "@/components/domain/lot"
+import { lotScenarios } from "@/components/domain/lot.scenarios"
 
 ## 预览 / Preview
 
-<Lot />
+<Lot input={lotScenarios.normal.input} />
+
+## 部分数据 / Partial
+
+<Lot input={lotScenarios.partial.input} />
 
 ## Shadcn Components
 
-- `Card`
-- `Collapsible`
 - `Button`
-- `DropdownMenu`
+- `Collapsible`
 - `Badge`
 
 ## Schema
 
 ```ts
-export const lotInputSchema = z.object({})
+export const lotInputSchema = z.object({
+  lotId: z.string(),
+  productName: z.string(),
+  experimentName: z.string(),
+  experimentDescription: z.string(),
+  stepCount: z.number().int().nonnegative(),
+  waferCount: z.number().int().nonnegative(),
+  waferIds: z.array(z.string()),
+  sourceLabel: z.string().optional(),
+  sourceStatus: z.enum(["available", "partial", "unavailable"]).optional(),
+})
 ```
+
+## Contract
+
+- `Lot` 只展示注入的 Lot / Round 基础上下文，不在组件内部读取生产 fixture。
+- 基础信息按最终工作台原型的双列阅读顺序呈现；`waferIds` 由数量入口在卡片内展开，没有 Wafer 时入口保持禁用。
+- 空字符串按不可用值显示为 `—`，组件不推断 Product、试验描述或 Round 事实。
+- `sourceLabel` / `sourceStatus` 保留为输入元数据，但组件不再增加原型之外的常驻来源脚注。
+- fixture/scenario 仅用于 Component Lab；DOE App 必须传入 BFF 映射后的真实 input。

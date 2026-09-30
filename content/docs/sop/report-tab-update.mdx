@@ -94,7 +94,7 @@ description: 在 DOE Domain UI 仓库内更新一个 Report tab 对应业务组�
 
 - 视觉、token、layout 或 composition 决策从 `DESIGN.md` 路由到相关设计系统文档。
 - 基础控件组合 `src/components/ui` 的 shadcn primitives，并先检查当前仓库已有用法。
-- 来自 `/Users/fantianze/Vibe/g-working/g-doe/ui` 的参考实现按 [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor) 处理。
+- 用户提供且当前环境可访问的外部 UI 参考实现按 [UI Reference Refactor SOP](/docs/sop/ui-reference-refactor) 处理；历史绝对路径不存在时，不把它当作施工前置条件，也不猜测其内容。
 - 保留数据诚实性：missing 不补成 `0`，planned 不冒充 actual，prototype-backed 或 derived 数据不描述成生产事实。
 
 完成标准：组件只承担 Domain UI 行为，并能由 scenario 在 Component Lab 中独立呈现。

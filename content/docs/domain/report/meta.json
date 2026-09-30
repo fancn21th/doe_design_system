@@ -1,6 +1,7 @@
 {
   "title": "报告 / Report",
   "pages": [
+    "report-management",
     "overview",
     "split-table",
     "yield-analysis",

@@ -102,3 +102,12 @@ Out of scope during intake:
   wafer assignment cell component used by it?
 - Is the collapsible card frame part of this component or a separate domain
   layout component?
+
+## Post-intake Note: Release-gated Stage intent
+
+2026-09-28 的最终原型映射确认：Stage 入口必须由权威 Step release 事实门禁。
+
+- `releaseStatus="known"` 且稳定 Step ID 位于 `releasedStepIds` 时，Stage 才可点击并发出 `onStageSelect`。
+- `known` 但未下发时显示“待下发”。
+- `unknown` 时显示“下发状态未接入”，不得把缺失事实解释为已下发或未下发。
+- `StepRow.id` 仍是行 identity；新增可选 `stepId` 承载稳定 Step identity，避免一个 Step 的多个 Variant 行被误认为不同 release 事实。
