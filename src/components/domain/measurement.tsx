@@ -215,7 +215,8 @@ function PointPopover({ group, metric, point, width }: { group: MeasurementGroup
     ["Source Status", point.point.sourceStatus],
     ["Final Bin", point.point.finalBin ?? "—"],
     ["Die Result", point.point.result ?? "UNKNOWN"],
-    ["Cpk", formatValue(group.capability?.cpk)],
+    [group.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "Cpk", formatValue(group.capability?.cpk)],
+    ...(group.capability?.status ? [["CPK 状态", group.capability.status]] : []),
     ["CPU", formatValue(group.capability?.cpu)],
     ["CPL", formatValue(group.capability?.cpl)],
   ]

@@ -6,5 +6,6 @@ type ReportCpDataScenario = { name: string; input: ReportCpDataInput }
 
 export const reportCpDataScenarios = {
   normal: { name: "normal", input: reportCpDataFixture },
+  cleared: { name: "cleared", input: { parameterOptions: reportCpDataFixture.parameterOptions, selectedParameterId: "" } },
   empty: { name: "empty", input: { parameterOptions: [], measurement: measurementEmptyFixture } },
 } satisfies Record<string, ReportCpDataScenario>

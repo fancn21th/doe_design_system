@@ -6,6 +6,14 @@ type ReportWaferMapScenario = { name: string; input: ReportWaferMapInput }
 export const reportWaferMapScenarios = {
   normal: { name: "normal", input: reportWaferMapFixture },
   empty: { name: "empty", input: { mapViews: [] } },
+  parameterIdle: {
+    name: "parameterIdle",
+    input: {
+      mapViews: [],
+      parameterOptions: [{ label: "BVDSS", value: "BVDSS" }],
+      viewStates: [{ view: "cp-parameter", status: "idle" }],
+    },
+  },
   controlledPartial: {
     name: "controlledPartial",
     input: {

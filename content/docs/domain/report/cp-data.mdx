@@ -23,7 +23,16 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
 
 `Measurement` 使用单层中性 Analytical Surface：标题、范围、图例与分布证据按顺序呈现；画布宽度超出容器时在图表内部横向滚动。
 
+## Consumer handoff · POC
+
+受控 `selection.parameterCode: null` 显示“请选择 CP Parameter”，参数控件仍可重新选择，旧图不会保留。
+显式输入未提供 `measurement` 时绝不回退 scenario 数据；选中参数但无内容显示空态。
+`measurement.groups[].capability` 接受 SOURCE CPK 及 `status` / `specSource`；提示消费 Backend 的 CPK 与不可计算状态，`cpu / cpl` 可选，组件不补算。
+
 ## Scenarios
 
 - `normal`
+- `cleared`（控件可重新选择，不显示旧图或 fixture）
 - `empty`
+
+<ReportCpData input={reportCpDataScenarios.cleared.input} selection={{ parameterCode: null }} />

@@ -41,7 +41,7 @@ type ReportWaferMapInput = {
   mapViews?: WaferMapGalleryInput[]
   viewStates?: Array<{
     view: "cp-final-bin" | "cp-parameter" | "defect" | "overlay"
-    status: "ready" | "loading" | "unavailable" | "failed"
+    status: "idle" | "ready" | "loading" | "unavailable" | "failed"
     reason?: string
   }>
   overlayState?: {
@@ -90,11 +90,20 @@ Surface，保持单层边界、无装饰性阴影与无渐变填色。map canvas
 客户端重新聚合或补造统计。Overlay 永远没有 map payload；组件只显示 `overlayState` 的
 权威不可用原因。
 
+## Consumer handoff · POC states
+
+受控 `selection.parameterCode: null` 必须保持未选，不能退回旧参数或 scenario；未选参数优先显示选择提示，loading / failed / unavailable 不显示旧缓存地图。
+`selection.focusedWaferId` 将目标卡片滚入可见区域并高亮，完整 gallery 范围不变；全屏仍由用户主动打开。
+Defect 的 `summary.pass / fail` 是现有传输形状，业务语义为无缺陷 / 有缺陷 Die；卡片和全屏按 kind 使用这两个标签，不表示 CP Pass / Fail。
+
 ## Scenarios
 
 - `normal`
 - `empty`
 - `controlledPartial`
+- `parameterIdle`（未选参数，区别于请求 loading）
+
+<ReportWaferMap input={reportWaferMapScenarios.parameterIdle.input} selection={{ primaryView: "cp", cpView: "parameter", parameterCode: null }} />
 
 Shared `WaferMapGallery` additionally has `defect-selected-layer-coverage`（2 available +
 23 empty，无伪造坐标）和 `partial-map-payload`（partial / unavailable）scenarios，供

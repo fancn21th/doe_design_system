@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest"
+import * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { describe, expect, it, vi } from "vitest"
 
 import {
+  ReportSplitTable,
+  ReportSplitTableWaferLink,
   formatSplitTableYield,
   getReportSplitTableStepOptions,
   getReportSplitTableTopFails,
@@ -34,6 +38,18 @@ function row(
 }
 
 describe("ReportSplitTable grouping", () => {
+  it("renders a wafer action in the real table and invokes it with full assignment context", () => {
+    const inputRow = row("W01", "BSL", "5um")
+    const callback = vi.fn()
+    const action = ReportSplitTableWaferLink({ row: inputRow, onWaferSelect: callback })
+    expect(action.type).toBe("button")
+    action.props.onClick()
+    expect(callback).toHaveBeenCalledExactlyOnceWith(inputRow)
+    const html = renderToStaticMarkup(React.createElement(ReportSplitTable, { input: { rows: [inputRow] }, onWaferSelect: callback }))
+    expect(html).toContain('title="查看 W01 Yield Analysis"')
+    expect(ReportSplitTableWaferLink({ row: inputRow }).type).toBe("b")
+  })
+
   it("keeps unavailable Yield distinct from real zero", () => {
     const unavailable = reportSplitTableRowSchema.parse(row("W01", "BSL", "BSL", {
       yield: null,

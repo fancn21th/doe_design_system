@@ -39,15 +39,14 @@ export function ReportCpData({
   selection,
   onParameterChange,
 }: ReportCpDataProps) {
-  const scenarioInput = reportCpDataScenarios.normal.input
   const parsedInput = reportCpDataInputSchema.parse(input)
   const parameterOptions =
-    parsedInput.parameterOptions ?? scenarioInput.parameterOptions ?? []
-  const measurement = parsedInput.measurement ?? scenarioInput.measurement
+    parsedInput.parameterOptions ?? []
+  const measurement = parsedInput.measurement
   const [uncontrolledParameterCode, setUncontrolledParameterCode] = React.useState<string | null>(
     parsedInput.selectedParameterId ?? parameterOptions[0]?.value ?? null,
   )
-  const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const selectedParameterCode = selection ? selection.parameterCode : uncontrolledParameterCode
 
   const selectParameter = (parameterCode: string | null) => {
     if (!selection) setUncontrolledParameterCode(parameterCode)
@@ -56,7 +55,7 @@ export function ReportCpData({
 
   return (
     <div className={className}>
-      {parameterOptions.length === 0 || !measurement ? (
+      {parameterOptions.length === 0 ? (
         <EmptyState>暂无 CP Data 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography grid gap-4 p-4">
@@ -65,7 +64,7 @@ export function ReportCpData({
             value={selectedParameterCode}
             onValueChange={selectParameter}
           />
-          <Measurement input={measurement} />
+          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <Measurement input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
         </div>
       )}
     </div>

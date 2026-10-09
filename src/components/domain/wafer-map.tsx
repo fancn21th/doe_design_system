@@ -292,8 +292,8 @@ export function WaferMapCard({ input, wafer, mapState, className, onDieSelect, o
       <CardContent className="px-3"><WaferMapCore input={input} wafer={wafer} onDieSelect={onDieSelect} /></CardContent>
       {mapState?.availability === "partial" && <MapStateNote state={mapState} />}
       <CardFooter className="grid grid-cols-2 gap-2 bg-transparent px-3 py-2 text-xs">
-        <Metric label="Pass" value={wafer.summary?.pass} />
-        <Metric label="Fail" value={wafer.summary?.fail} />
+        <Metric label={input.kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary?.pass} />
+        <Metric label={input.kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary?.fail} />
         {!wafer.summary && <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="col-span-2" />}
       </CardFooter>
     </Card>
@@ -309,11 +309,18 @@ export type WaferMapGalleryProps = {
   className?: string
   onDieSelect?: (waferId: string, die: DieData) => void
   onDefectFiltersChange?: (filters: { layerId: string; typeIds: string[] }) => void
+  focusedWaferId?: string | null
   showParameterLegend?: boolean
 }
 
-export function WaferMapGallery({ input, className, onDieSelect, onDefectFiltersChange, showParameterLegend = true }: WaferMapGalleryProps) {
+export function WaferMapGallery({ input, className, onDieSelect, onDefectFiltersChange, focusedWaferId, showParameterLegend = true }: WaferMapGalleryProps) {
   const parsedInput = waferMapGalleryInputSchema.parse(input)
+  const galleryRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!focusedWaferId) return
+    const target = Array.from(galleryRef.current?.querySelectorAll<HTMLElement>("[data-wafer-id]") ?? []).find((element) => element.dataset.waferId === focusedWaferId)
+    target?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [focusedWaferId, input])
   const [localDefectFilters, setLocalDefectFilters] = useState<{ layerId: string; typeIds: string[] } | null>(null)
   const [expandedWaferId, setExpandedWaferId] = useState<string | null>(null)
   // A parent callback makes filters controlled. Standalone gallery previews may
@@ -331,18 +338,19 @@ export function WaferMapGallery({ input, className, onDieSelect, onDefectFilters
   }
 
   return (
-    <section className={cn("not-prose domain-ui-typography grid gap-3", className)} aria-label="Wafer map gallery">
+    <section ref={galleryRef} className={cn("not-prose domain-ui-typography grid gap-3", className)} aria-label="Wafer map gallery">
       {(galleryInput.kind !== "cp-parameter" || showParameterLegend) && <GalleryLegend input={galleryInput} onDefectFiltersChange={changeDefectFilters} />}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {galleryMaps.map((map) => map.wafer ? (
+          <div key={map.mapId} data-wafer-id={map.wafer.waferId} className={cn("rounded-lg", focusedWaferId === map.wafer.waferId && "ring-2 ring-primary")}>
           <WaferMapCard
-            key={map.mapId}
             input={galleryInput}
             wafer={map.wafer}
             mapState={map}
             onDieSelect={onDieSelect}
             onExpand={setExpandedWaferId}
           />
+          </div>
         ) : (
           <WaferMapStateCard key={map.mapId} map={map} />
         ))}
@@ -518,7 +526,7 @@ function WaferMapInspectionDialog({
           <aside className="min-h-0 overflow-auto rounded-2xl border bg-background" aria-label={`${wafer.waferId} Wafer 明细`}>
             <SelectedDiePanel input={input} wafer={wafer} selectedDieId={selectedDieId} />
             <Separator />
-            <WaferSummaryPanel wafer={wafer} />
+            <WaferSummaryPanel wafer={wafer} kind={input.kind} />
             <Separator />
             <InspectionStatistics input={input} wafer={wafer} />
           </aside>
@@ -671,12 +679,12 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
   return null
 }
 
-function WaferSummaryPanel({ wafer }: { wafer: AnyWafer }) {
+function WaferSummaryPanel({ wafer, kind }: { wafer: AnyWafer; kind: WaferMapGalleryInput["kind"] }) {
   if (!wafer.summary) return <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="m-4" />
   return (
     <section className="grid grid-cols-2 gap-2 p-4" aria-label="Wafer 汇总">
-      <InspectionMetric label="Pass" value={wafer.summary.pass.toLocaleString()} />
-      <InspectionMetric label="Fail" value={wafer.summary.fail.toLocaleString()} />
+      <InspectionMetric label={kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary.pass.toLocaleString()} />
+      <InspectionMetric label={kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary.fail.toLocaleString()} />
     </section>
   )
 }
@@ -684,7 +692,7 @@ function WaferSummaryPanel({ wafer }: { wafer: AnyWafer }) {
 function SummaryUnavailable({ reason, className }: { reason?: string; className?: string }) {
   return (
     <p className={cn("text-xs text-muted-foreground", className)}>
-      {reason ?? "Wafer 汇总不可用；组件不会从 Die 数据推导 Pass / Fail。"}
+      {reason ?? "当前晶圆暂无汇总统计。"}
     </p>
   )
 }
@@ -694,7 +702,7 @@ function DetailStatisticsUnavailable({ reason }: { reason?: string }) {
     <section className="grid gap-2 p-4" aria-label="统计明细不可用">
       <h4 className="text-sm font-medium">统计明细不可用</h4>
       <p className="text-xs text-muted-foreground">
-        {reason ?? "当前 Map 未提供权威 inspection 统计；组件不会由 Die、CP 或 Defect 数据推导分类或汇总。"}
+        {reason ?? "当前地图暂无分类统计明细。"}
       </p>
     </section>
   )

@@ -176,6 +176,12 @@ function ParameterCell({
       <span className="font-mono text-xs font-semibold text-sky-700">
         {formatParameterValue(cell.value)}
       </span>
+      {(cell.capability || cell.cpk !== undefined) && (
+        <span className="font-mono text-xs text-muted-foreground" title={cell.capability ? `正式规格 · ${cell.capability.status} · LSL ${formatParameterValue(cell.capability.lsl)} / USL ${formatParameterValue(cell.capability.usl)}` : "场景提供的 CPK"}>
+          {cell.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "CPK"}: {formatParameterValue(cell.capability ? cell.capability.cpk : cell.cpk)}
+          {cell.capability?.cpk === null && <span className="ml-1 font-sans">({cell.capability.status})</span>}
+        </span>
+      )}
       <span className="flex items-center gap-1.5 text-[10px] leading-none text-muted-foreground">
         {cell.oos && (
           <span className="rounded bg-amber-600 px-1 py-0.5 text-[9px] font-bold text-white">

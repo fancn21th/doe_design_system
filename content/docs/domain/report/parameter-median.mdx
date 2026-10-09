@@ -27,7 +27,19 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 
 查询区使用无外框的紧凑控制行，只保留 CP Parameter、OOS 开关、结果数与控件自身边界；不重复展示标题、描述、状态图例或查询摘要。矩阵以自身边界和局部双向滚动作为唯一内容壳，其固定首列与表头只服务于宽表检视。
 
+## Consumer handoff · SOURCE CPK
+
+每个 cell 可携带 `capability: {cpk, status, specSource, lsl, usl, mean, sampleSigma, n}`。
+正式规格 `specSource: "SOURCE"` 的 CPK 与现有 Mock OOS 分开显示；CPK 不参与现有 OOS / Yield context 判色。NULL CPK 显示缺值及输入状态，0、负数保留数值。
+公式、样本范围、正式规格读取和状态判断均属于 Backend；组件只格式化输入，不能由 Median 推导 CPK。
+`onParameterSelect(parameter)` 和 `onWaferCellSelect({parameter, waferId, cell})` 由 App 接到 CP Data / Parameter Map，组件不拥有跨 Tab 路由。
+
+<div className="domain-ui-preview-wide">
+  <ReportParameterMedian input={reportParameterMedianScenarios.sourceCapability.input} />
+</div>
+
 ## Scenarios
 
 - `normal`
+- `sourceCapability`（明确 SOURCE CPK、Mock OOS 与不可计算状态分离）
 - `empty`

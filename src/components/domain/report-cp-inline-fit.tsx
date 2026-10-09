@@ -55,7 +55,7 @@ export function ReportCpInlineFit({ input, className, showHeader = true }: {
           {parsed.fitPanels.length === 0 && <p className="py-6 text-center text-muted-foreground">暂无散点与拟合证据。</p>}
         </div>
       </FitSection>
-      {parsed.provenance && <p className="text-xs text-muted-foreground">{parsed.provenance.classification} · {parsed.provenance.source}{parsed.provenance.limitation ? ` · ${parsed.provenance.limitation}` : ""}</p>}
+      {parsed.provenance?.limitation && <p className="text-xs text-muted-foreground">{parsed.provenance.limitation}</p>}
     </div>
   )
 }
@@ -78,7 +78,6 @@ function FitResultPanel({ panel, input }: { panel: ReportCpInlineFitPanel; input
           {panel.models.length === 0 && <p className="text-xs text-muted-foreground">未提供拟合结果。</p>}
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t pt-3 text-sm"><dt>Pearson r</dt><dd className="font-mono font-semibold">{formatReportCpInlineValue(panel.pearson, 2)}</dd><dt>Spearman ρ</dt><dd className="font-mono font-semibold">{formatReportCpInlineValue(panel.spearman, 2)}</dd></dl>
           <Collapsible className="border-t pt-2"><CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 py-2 text-left text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring">Fit × Spec 交点坐标<ChevronDown className="size-4 transition-transform group-data-panel-open:rotate-180" /></CollapsibleTrigger><CollapsibleContent keepMounted><div className="grid gap-2 pb-2 text-xs">{specs.length > 0 ? <p className="text-muted-foreground">{specs.map(({ kind, value }) => `${kind.toUpperCase()} ${formatReportCpInlineValue(value)}`).join(" · ")}{input.spec?.classification === "source-provisional" ? " · source-provisional" : ""}</p> : <p className="text-muted-foreground">未提供 CP 规格。</p>}{panel.roots.map((root) => <div key={root.id} className="rounded-(--doe-radius-cell) border p-2"><span className="font-semibold">{root.model === "linear" ? "Linear" : "Quadratic"} × {root.threshold.toUpperCase()}</span><span className="ml-2 text-muted-foreground">{root.domainStatus === "in-domain" ? "观测域内" : "观测域外"}</span><span className="mt-1 block font-mono">X {formatReportCpInlineValue(root.x)} · Y {formatReportCpInlineValue(root.y)}</span></div>)}{panel.roots.length === 0 && <p className="text-muted-foreground">未提供交点。</p>}</div></CollapsibleContent></Collapsible>
-          <p className="text-xs text-muted-foreground">{panel.provenance}</p>
         </div>
       </CardContent>
     </Card>
@@ -91,7 +90,7 @@ function ModelEvidence({ model, visible, onToggle }: { model: ReportCpInlineFitM
     <section className="grid min-w-0 gap-2 border-b border-dashed pb-3">
       <div className="flex items-center justify-between gap-2"><h4 className="flex items-center gap-2 text-sm font-semibold"><span className="h-0.5 w-4" style={{ backgroundColor: REPORT_CP_INLINE_MODEL_COLORS[model.kind] }} />{model.kind === "linear" ? "Linear Fit" : "Quadratic Fit"}</h4><Button variant="ghost" size="xs" aria-label={`${visible ? "隐藏" : "显示"} ${model.kind === "linear" ? "Linear" : "Quadratic"} Fit 曲线`} aria-pressed={available && visible} disabled={!available} onClick={onToggle}>{available ? visible ? "隐藏曲线" : "显示曲线" : "不可用"}</Button></div>
       {available ? <><p className="rounded-(--doe-radius-cell) bg-muted/50 p-2 font-mono text-xs font-semibold break-words">{model.equation ?? "未提供拟合方程。"}</p><div className="flex flex-wrap gap-1"><Badge variant="secondary">R² {formatReportCpInlineValue(model.r2)}</Badge><Badge variant="secondary">RMSE {formatReportCpInlineValue(model.rmse)}</Badge><Badge variant="secondary">Residual N {formatReportCpInlineValue(model.residualN, 0)}</Badge><Badge variant="secondary">df {formatReportCpInlineValue(model.residualDf, 0)}</Badge></div></> : <p className="text-xs text-muted-foreground">{model.unavailableReason ?? "上游未提供可用拟合。"}</p>}
-      {model.diagnostic && <p className="text-xs text-muted-foreground">{model.diagnostic}</p>}
+      {model.diagnostic && <p className="text-xs text-muted-foreground">{model.diagnostic === "Backend 提供的拟合证据。" ? "当前数据的拟合结果。" : model.diagnostic}</p>}
     </section>
   )
 }

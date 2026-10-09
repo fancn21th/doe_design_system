@@ -38,6 +38,7 @@ import {
 type ReportSplitTableProps = {
   input?: ReportSplitTableInput
   className?: string
+  onWaferSelect?: (row: ReportSplitTableRow) => void
   onTopFailSelect?: (row: ReportSplitTableRow) => void
 }
 
@@ -262,10 +263,20 @@ function MultiFilterCombobox({
   )
 }
 
+export function ReportSplitTableWaferLink({ row, onWaferSelect }: {
+  row: ReportSplitTableRow
+  onWaferSelect?: (row: ReportSplitTableRow) => void
+}) {
+  return onWaferSelect ? (
+    <button type="button" title={`查看 ${row.waferId} Yield Analysis`} className="font-mono font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => onWaferSelect(row)}>{row.waferId}</button>
+  ) : <b className="font-mono font-medium">{row.waferId}</b>
+}
+
 export function ReportSplitTable({
   input = reportSplitTableScenarios.normal.input,
   className,
   onTopFailSelect,
+  onWaferSelect,
 }: ReportSplitTableProps) {
   const scenarioInput = reportSplitTableScenarios.normal.input
   const parsedInput = reportSplitTableInputSchema.parse(input)
@@ -402,9 +413,7 @@ export function ReportSplitTable({
                           )}
                           <TableCell>
                             <div className="flex flex-col items-start gap-1">
-                              <b className="font-mono font-medium">
-                                {row.waferId}
-                              </b>
+                              <ReportSplitTableWaferLink row={row} onWaferSelect={onWaferSelect} />
                               <Badge
                                 variant="outline"
                                 className="h-6 rounded-full px-2 font-normal text-muted-foreground"

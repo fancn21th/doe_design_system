@@ -27,6 +27,17 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
 
 筛选区使用无外框的紧凑控制行，只保留控件自身边界；组合图继续使用单层中性 Analytical Surface。明细分析使用无 Card 的轻量标题 / Tabs 工具栏，矩阵表以自身的边界和局部横向滚动作为唯一可读壳，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
+## Consumer handoff · POC
+
+`onWaferSelect(waferId)` 表达 Matrix / Condition 表的 Wafer 下钻意图，路由与目标选择由 App 负责。
+`input.focusedWaferId` 只定位并高亮该 Wafer，不删除其比较组或 Baseline。Matrix 以 `groupId` 合并分组信息；局部“组内按 Yield 排序”保持成员身份、Baseline 和组序不变，缺 Yield 排到组尾，恢复按钮使用输入成员顺序。
+
+`stepOptions` 是 consumer 按已选 Stage 提供的范围，Stage 改变后无效 Step 的清理属于外部状态。
+`goodDies` 独立承载冻结 GOOD 事实，Matrix 的 Good / Tested Dies 只读该字段；缺失显示 `—`。旧 `passDies` 是 SBIN PASS 事实，绝不作为 GOOD 的回退。
+Baseline 的 NULL Delta 显示 `—`，非 Baseline 的比较对象或有效 Yield 缺失单独说明。失败率 0 显示 `—`，缺记录显示“缺少数据”，不能互换。
+
+Matrix 在本地双向滚动区域保留表头；Loss 列名明确为 Cumulative Yield Loss。Condition 列顺序为 Stage / Step / Seq、Condition、Wafers、四类 Yield，公式及排序数据仍由 consumer 提供。
+
 ## Scenarios
 
 - `normal`

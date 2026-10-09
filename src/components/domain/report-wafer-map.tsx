@@ -24,6 +24,7 @@ import {
 export type ReportWaferMapSelection = {
   primaryView: PrimaryView
   cpView: CpView
+  focusedWaferId?: string | null
   parameterCode: string | null
   defectLayerId?: string | null
   defectTypeIds?: string[]
@@ -77,7 +78,7 @@ export function ReportWaferMap({
   )
   const primaryView = selection?.primaryView ?? uncontrolledPrimaryView
   const cpView = selection?.cpView ?? uncontrolledCpView
-  const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const selectedParameterCode = selection ? selection.parameterCode : uncontrolledParameterCode
   const selectedDefectLayerId = selection?.defectLayerId ?? uncontrolledDefectLayerId ?? defectView?.selectedLayerId ?? null
   const selectedDefectTypeIds = selection?.defectTypeIds ?? uncontrolledDefectTypeIds
   const parameterOptions = parsedInput.parameterOptions ?? parameterViews.map((view) => ({
@@ -191,10 +192,15 @@ export function ReportWaferMap({
           />
         )}
 
-        {visibleMapView ? (
+        {primaryView === "cp" && cpView === "parameter" && !selectedParameterCode ? (
+          <EmptyState>请选择 CP Parameter</EmptyState>
+        ) : visibleState && visibleState.status !== "ready" ? (
+          <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
+        ) : visibleMapView ? (
           <WaferMapGallery
             input={visibleMapView}
             showParameterLegend={false}
+            focusedWaferId={selection?.focusedWaferId}
             onDefectFiltersChange={selectDefectFilters}
           />
         ) : visibleState ? (
@@ -251,14 +257,15 @@ function sameIds(left: string[], right: string[]) {
   return left.length === right.length && left.every((item, index) => item === right[index])
 }
 function findViewState(
-  viewStates: Array<{ view: WaferMapGalleryInput["kind"] | "overlay"; status: "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
+  viewStates: Array<{ view: WaferMapGalleryInput["kind"] | "overlay"; status: "idle" | "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
   view: WaferMapGalleryInput["kind"] | "overlay",
 ) {
   return viewStates.find((viewState) => viewState.view === view)
 }
 
-function viewStateMessage(status: "ready" | "loading" | "unavailable" | "failed", reason?: string) {
+function viewStateMessage(status: "idle" | "ready" | "loading" | "unavailable" | "failed", reason?: string) {
   if (reason) return reason
+  if (status === "idle") return "请选择参数或视图"
   if (status === "loading") return "正在读取 Wafer Map 数据"
   if (status === "unavailable") return "当前视图暂不可用"
   if (status === "failed") return "读取 Wafer Map 数据失败"
