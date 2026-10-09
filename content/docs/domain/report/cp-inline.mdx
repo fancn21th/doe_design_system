@@ -33,6 +33,10 @@ import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.prev
   <ReportCpInlinePreview />
 </div>
 
+import { ReportCpInlineCandidates } from "@/components/domain/report-cp-inline-candidates"
+import { reportCpInlineCandidatesScenarios } from "@/components/domain/report-cp-inline-candidates.scenarios"
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 ### Candidates
@@ -116,3 +120,13 @@ kelvinS Wafer 摘要来自 `cp_x_inline.ipynb`；拟合曲线和交点在 fixtur
 
 App routing、Backend BFF、真实数据库关联、请求与统计算法都在本仓库之外；
 Domain UI 不用原型阈值重新解释旧分类，也不决定小样本是否允许拟合。
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportCpInlineCandidates input={reportCpInlineCandidatesScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。

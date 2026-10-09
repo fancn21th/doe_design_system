@@ -4,9 +4,9 @@ import * as React from "react"
 
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
 import {
-  EmptyState,
   formatPercent,
 } from "@/components/domain/report-parts"
+import { ReportState } from "@/components/domain/report-state"
 import { Badge } from "@/components/ui/badge"
 import {
   Combobox,
@@ -343,7 +343,7 @@ export function ReportSplitTable({
     <div className={className}>
       <div className="domain-ui-typography grid gap-4 p-4">
         {rows.length === 0 && (
-          <EmptyState>暂无 Wafer Split Table 数据</EmptyState>
+          <ReportState title="暂无 Split Table 数据" description="当前报告暂无可展示的 Wafer Split Table 数据。" />
         )}
         {rows.length > 0 && (
           <div className="flex flex-col gap-3 md:flex-row">
@@ -364,7 +364,7 @@ export function ReportSplitTable({
           </div>
         )}
         {rows.length > 0 && (filteredRows.length === 0 ? (
-            <EmptyState>当前筛选条件下暂无 Wafer Split Table 数据</EmptyState>
+            <ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" />
           ) : (
             <div className="domain-ui-split-table-shell">
               <Table className="domain-ui-split-table domain-ui-report-split-table">

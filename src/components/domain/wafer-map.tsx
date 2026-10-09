@@ -305,6 +305,8 @@ function Metric({ label, value }: { label: string; value?: number | null }) {
 }
 
 export type WaferMapGalleryProps = {
+  /** Report consumers may provide the missing-map body; available maps stay intact. */
+  renderMissingMap?: (state: WaferMapMapState) => React.ReactNode
   input: WaferMapGalleryInput
   className?: string
   onDieSelect?: (waferId: string, die: DieData) => void
@@ -313,7 +315,7 @@ export type WaferMapGalleryProps = {
   showParameterLegend?: boolean
 }
 
-export function WaferMapGallery({ input, className, onDieSelect, onDefectFiltersChange, focusedWaferId, showParameterLegend = true }: WaferMapGalleryProps) {
+export function WaferMapGallery({ renderMissingMap, input, className, onDieSelect, onDefectFiltersChange, focusedWaferId, showParameterLegend = true }: WaferMapGalleryProps) {
   const parsedInput = waferMapGalleryInputSchema.parse(input)
   const galleryRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -352,7 +354,7 @@ export function WaferMapGallery({ input, className, onDieSelect, onDefectFilters
           />
           </div>
         ) : (
-          <WaferMapStateCard key={map.mapId} map={map} />
+          <WaferMapStateCard key={map.mapId} map={map} renderMissingMap={renderMissingMap} />
         ))}
       </div>
       <WaferMapInspectionDialog
@@ -392,12 +394,12 @@ function createGalleryMaps(input: WaferMapGalleryInput): GalleryMap[] {
   return maps
 }
 
-function WaferMapStateCard({ map }: { map: GalleryMap }) {
+function WaferMapStateCard({ map, renderMissingMap }: { map: GalleryMap; renderMissingMap?: WaferMapGalleryProps["renderMissingMap"] }) {
   return (
-    <Card size="sm" className="gap-2 border border-dashed ring-0 shadow-none">
+    <Card size="sm" className={cn("gap-2 border ring-0 shadow-none", !renderMissingMap && "border-dashed")}>
       <CardHeader className="px-3"><CardTitle className="font-mono">{map.waferId}</CardTitle></CardHeader>
       <CardContent className="px-3 pb-3">
-        <MapStateNote state={map} className="min-h-40 items-center justify-center text-center" />
+        {renderMissingMap?.(map) ?? <MapStateNote state={map} className="min-h-40 items-center justify-center text-center" />}
       </CardContent>
     </Card>
   )

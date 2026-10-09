@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
 import { WaferMapGallery } from "@/components/domain/wafer-map"
+import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
 import {
   Combobox,
@@ -195,16 +196,23 @@ export function ReportWaferMap({
         {primaryView === "cp" && cpView === "parameter" && !selectedParameterCode ? (
           <EmptyState>请选择 CP Parameter</EmptyState>
         ) : visibleState && visibleState.status !== "ready" ? (
-          <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
+          <ReportState status={visibleState.status === "loading" ? "loading" : "empty"} title={viewStateMessage(visibleState.status, visibleState.reason)} />
+        ) : visibleMapView?.status === "pending" ? (
+          <ReportState status="loading" />
+        ) : visibleMapView?.status === "unavailable" ? (
+          <EmptyState>当前 Wafer Map 数据不可用</EmptyState>
+        ) : visibleMapView && visibleMapView.wafers.length === 0 && !visibleMapView.mapStates?.length ? (
+          <EmptyState>当前视图暂无可渲染数据</EmptyState>
         ) : visibleMapView ? (
           <WaferMapGallery
             input={visibleMapView}
+            renderMissingMap={(state) => <ReportState className="min-h-40" title={state.availability === "empty" ? "当前 Wafer 无此 Map 数据" : "当前 Wafer Map 不可用"} description={state.reason} />}
             showParameterLegend={false}
             focusedWaferId={selection?.focusedWaferId}
             onDefectFiltersChange={selectDefectFilters}
           />
         ) : visibleState ? (
-          <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
+          <ReportState status={visibleState.status === "loading" ? "loading" : "empty"} title={viewStateMessage(visibleState.status, visibleState.reason)} />
         ) : primaryView === "cp" && cpView === "parameter" ? (
           <EmptyState>请选择 CP Parameter</EmptyState>
         ) : null}

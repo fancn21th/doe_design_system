@@ -138,3 +138,11 @@ observation. The report-specific snapshot therefore models `yield` as
 `number | null`: numeric zero remains a real `0.00%` observation, while `null`
 renders as `Unavailable` with neutral tone. Consumers and adapters must not
 coerce absent or null Yield to zero.
+
+## 2026-10-09 Loading / Empty Pilot
+
+User requested the supplied shadcn Spinner / Empty screenshot without Cancel.
+The approved first slice is Split Table only. Loading uses a muted rounded icon
+background, arc spinner, Chinese title and description; no data and filtered
+empty use only centered text. Consumer request state remains outside the
+component. See the Split Table MDX contract and its three status previews.

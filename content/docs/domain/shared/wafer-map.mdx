@@ -119,3 +119,10 @@ The gallery input extends this geometry with rendering-specific die metadata. Th
 - `parameterOverview`
 - `defectOverview`
 - `pending`
+
+## Consumer missing-map presentation
+
+`WaferMapGallery.renderMissingMap(state)` optionally supplies the body of an
+explicitly empty or unavailable map slot. ReportWaferMap uses ReportState with
+the source reason and 160px minimum height. Available/partial map rendering,
+summary facts, standalone gallery fallbacks and data semantics remain intact.

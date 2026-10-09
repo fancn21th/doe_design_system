@@ -20,3 +20,5 @@ export { ReportInlineData } from "@/components/domain/report-inline-data"
 export { ReportCpInline } from "@/components/domain/report-cp-inline"
 export { ReportCpInlineFit } from "@/components/domain/report-cp-inline-fit"
 export { ReportCpInlineCandidates } from "@/components/domain/report-cp-inline-candidates"
+
+export { ReportState } from "@/components/domain/report-state"

@@ -15,6 +15,8 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
   </div>
 </div>
 
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 `ReportParameterMedian` 展示 CP parameter median 与 CPK matrix。
@@ -43,3 +45,13 @@ import { reportParameterMedianScenarios } from "@/components/domain/report-param
 - `normal`
 - `sourceCapability`（明确 SOURCE CPK、Mock OOS 与不可计算状态分离）
 - `empty`
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportParameterMedian input={reportParameterMedianScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。

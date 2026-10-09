@@ -3,6 +3,7 @@ title: split-table
 description: DOE Report Split Table 业务组件。
 ---
 
+import { ReportState } from "@/components/domain/report-state"
 import { ReportSplitTable } from "@/components/domain/report-split-table"
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
 
@@ -78,3 +79,36 @@ type ReportSplitTableInput = {
 ## POC consumer handoff
 
 `onWaferSelect(row)` 表达从当前 Assignment 进入 Yield Analysis 的意图；`onTopFailSelect(row)` 表达进入 Final Bin Map 的意图。App 接收完整行以保留 Wafer 和分配上下文；组件不负责 URL 或跨 Tab 工作流。
+
+## Split Table 状态样式试点 — 2026-10-09
+
+参考用户截图和 [shadcn Spinner / Empty](https://ui.shadcn.com/docs/components/base/spinner#empty)。
+Split Table 试点已获用户确认，此样式现同步到全部 Report tabs。
+
+`ReportState` 接收 `status: "loading" | "empty"`（默认 `empty`）及可选 `title`、`description`、`className`。
+三个状态都以无外框、居中的 Empty Header 展示标题和说明，最小高度 320px。
+加载时在文字上方展示 48px 浅灰圆角底座和 24px arc Spinner；标题为「正在加载报告数据」，
+说明为「请稍候，数据加载完成后将自动显示。」。空数据和筛选无结果只显示相应文字，
+不显示图标、Spinner 或按钮。较窄宽度时说明自然换行。使用现有中性色与 shadcn Empty
+文字层级，不新增全局 DOE token；减少动画偏好停止 Spinner 旋转，但保留加载文案。
+
+App 在读取 Report Source、Bootstrap 或 Split Table 请求时（全部 Report tabs）
+使用 loading 状态；请求生命周期、失败重试与数据事实仍由 consumer 拥有。
+`ReportSplitTable` 的空 rows 和本地筛选无结果使用对应的文字状态。
+
+### Loading preview
+
+<div className="not-prose"><ReportState status="loading" /></div>
+
+### No data preview
+
+<div className="not-prose"><ReportSplitTable input={reportSplitTableScenarios.empty.input} /></div>
+
+### Filtered empty preview
+
+<div className="not-prose"><ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" /></div>
+
+Primitive 源码同步自本地 `ui/apps/v4/styles/base-nova/ui/{empty,spinner}.tsx`，
+上游 revision `7c9eaba1c0a6404c990c144a654792e3313c650d`。仅将 `cn` 导入适配为本工程
+`@/lib/utils`；Spinner 保留上游 Loader2Icon。按已确认的截图适配为较大媒体和
+18px 标题，删除 Cancel 并采用中文文案。

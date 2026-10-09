@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 
+import { Measurement, type MeasurementProps } from "@/components/domain/measurement"
+import { ReportState } from "@/components/domain/report-state"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -86,12 +88,22 @@ export function MetricGrid({ metrics }: { metrics: ReportMetric[] }) {
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
+  return <ReportState title={children} />
+}
+
+/** Measurement decides whether evidence is drawable; Report owns its fallback. */
+export function ReportMeasurement(props: MeasurementProps) {
   return (
-    <div className="p-6">
-      <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-        {children}
-      </div>
-    </div>
+    <Measurement
+      {...props}
+      renderState={(status) => (
+        <ReportState
+          className={props.className}
+          status={status === "pending" ? "loading" : "empty"}
+          title={status === "unavailable" ? "测量数据当前不可用" : "暂无测量数据"}
+        />
+      )}
+    />
   )
 }
 

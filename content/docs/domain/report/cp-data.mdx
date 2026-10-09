@@ -15,6 +15,8 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
   </div>
 </div>
 
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 `ReportCpData` 负责 CP Data report tab 的业务内容组合：可搜索的 CP Parameter 控制面与 shared `Measurement`。它以 `selection.parameterCode` 接收可选的 App 受控选择，并以 `onParameterChange` 发出选择意图；组件不请求数据，也不拥有 BFF、重试或路由工作流。未传入 `selection` 时，Component Lab scenario 可使用本地展示状态。
@@ -36,3 +38,13 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
 - `empty`
 
 <ReportCpData input={reportCpDataScenarios.cleared.input} selection={{ parameterCode: null }} />
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportCpData input={reportCpDataScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。

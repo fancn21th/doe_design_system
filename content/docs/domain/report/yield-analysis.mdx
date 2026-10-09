@@ -15,6 +15,8 @@ import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-a
   </div>
 </div>
 
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 `ReportYieldAnalysis` 展示 Yield Analysis tab 的三段式结构：
@@ -43,3 +45,13 @@ Matrix 在本地双向滚动区域保留表头；Loss 列名明确为 Cumulative
 - `normal`
 - `dense`（25-wafer 组合图，验证 Condition / Wafer / Step 轴与局部横向滚动）
 - `empty`
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportYieldAnalysis input={reportYieldAnalysisScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。

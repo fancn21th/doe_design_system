@@ -41,6 +41,8 @@ type CanvasLayerProps = {
 }
 
 export type MeasurementProps = {
+  /** A consumer may supply fallback presentation without changing evidence state. */
+  renderState?: (status: "pending" | "unavailable" | "empty") => React.ReactNode
   /** The UI-facing rendering contract. Apps adapt their upstream DTO before passing it here. */
   input: MeasurementInput
   /** Reports a whole wafer-column click without creating a persistent visual selection. */
@@ -51,6 +53,7 @@ export type MeasurementProps = {
 }
 
 export function Measurement({
+  renderState,
   input,
   onGroupSelect,
   headerAction,
@@ -106,13 +109,13 @@ export function Measurement({
   const metricLabel = `${parsedInput.metric.label}${parsedInput.metric.unit ? ` (${parsedInput.metric.unit})` : ""}`
 
   if (parsedInput.status === "pending") {
-    return <MeasurementState className={className} label="Measurement 数据加载中" />
+    return renderState?.("pending") ?? <MeasurementState className={className} label="Measurement 数据加载中" />
   }
   if (parsedInput.status === "unavailable") {
-    return <MeasurementState className={className} label="Measurement 数据当前不可用" />
+    return renderState?.("unavailable") ?? <MeasurementState className={className} label="Measurement 数据当前不可用" />
   }
   if (!parsedInput.groups.length || !domain) {
-    return <MeasurementState className={className} label="暂无 Measurement 数据" />
+    return renderState?.("empty") ?? <MeasurementState className={className} label="暂无 Measurement 数据" />
   }
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {

@@ -15,6 +15,8 @@ import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.sc
   </div>
 </div>
 
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 `ReportWaferMap` 是 report tab 的业务内容组件，组合 shared `WaferMapGallery` 的三种
@@ -109,3 +111,13 @@ Shared `WaferMapGallery` additionally has `defect-selected-layer-coverage`（2 a
 23 empty，无伪造坐标）和 `partial-map-payload`（partial / unavailable）scenarios，供
 consumer 对齐 coverage-state 行为；`map-without-inspection-statistics` 用于验证不完整
 detail facts 的全屏空态；`map-without-wafer-summary` 用于验证未提供 yield totals 时不回算。
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportWaferMap input={reportWaferMapScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。

@@ -2,6 +2,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon } from "lucide-react"
 
+import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -76,7 +77,7 @@ export function ReportCpInlineCandidates({
               <CandidateSelect label="Inline Parameter" value={parsed.filters.inlineParameter} allLabel="All Inline Parameters" options={parsed.inlineParameterOptions} onChange={(inlineParameter) => patchFilters({ inlineParameter })} />
             </div>
             {parsed.status === "loading" ? (
-              <div role="status"><EmptyState>正在加载候选组合…</EmptyState></div>
+              <ReportState status="loading" />
             ) : parsed.status === "error" ? (
               <div role="alert"><EmptyState>{parsed.errorMessage ?? "候选组合加载失败。"}</EmptyState></div>
             ) : parsed.items.length === 0 ? (

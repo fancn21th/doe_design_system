@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { ChartNoAxesColumnIncreasingIcon, Table2Icon } from "lucide-react"
 
-import { Measurement } from "@/components/domain/measurement"
 import { reportInlineDataScenarios } from "@/components/domain/report-inline-data.scenarios"
 import {
   EmptyState,
   ReportBadge,
+  ReportMeasurement,
 } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
 import {
@@ -166,7 +166,7 @@ export function ReportInlineData({
                 <ReportBadge tone="neutral">Wafer: {selectedWaferId}</ReportBadge>
               </div>
             )}
-            <Measurement input={measurement} onGroupSelect={selectWafer} />
+            <ReportMeasurement input={measurement} onGroupSelect={selectWafer} />
           </div>
         </div>
       )}

@@ -60,3 +60,11 @@ Every group supplies its complete physical point cloud. `summary.count` must equ
 - `empty`
 - `pending`
 - `unavailable`
+
+## Consumer state presentation
+
+Optional `renderState(status)` receives `pending`, `unavailable`, or `empty` only
+when Measurement cannot display a chart. The component continues to decide
+that state from its parsed input and drawable domain. Report assets compose
+this slot with ReportState via ReportMeasurement; other consumers retain their
+existing default fallback. No statistics or evidence availability are redefined.

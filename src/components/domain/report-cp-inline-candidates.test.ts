@@ -57,7 +57,7 @@ describe("ReportCpInlineCandidates contract", () => {
   })
 
   it("replaces stale rows with loading and error states", () => {
-    expect(render({ ...reportCpInlineCandidatesFixture, status: "loading" })).toContain("正在加载候选组合")
+    expect(render({ ...reportCpInlineCandidatesFixture, status: "loading" })).toContain("正在加载报告数据")
     const html = render({ ...reportCpInlineCandidatesFixture, status: "error", errorMessage: "Candidate request failed" })
     expect(html).toContain('role="alert"')
     expect(html).toContain("Candidate request failed")

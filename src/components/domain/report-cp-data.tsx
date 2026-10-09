@@ -2,9 +2,8 @@
 
 import * as React from "react"
 
-import { Measurement } from "@/components/domain/measurement"
 import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenarios"
-import { EmptyState } from "@/components/domain/report-parts"
+import { EmptyState, ReportMeasurement } from "@/components/domain/report-parts"
 import {
   Combobox,
   ComboboxContent,
@@ -64,7 +63,7 @@ export function ReportCpData({
             value={selectedParameterCode}
             onValueChange={selectParameter}
           />
-          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <Measurement input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
+          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <ReportMeasurement input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
         </div>
       )}
     </div>

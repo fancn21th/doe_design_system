@@ -4,6 +4,7 @@ import { useState } from "react"
 import { XIcon } from "lucide-react"
 
 import { ReportCpInlineCandidates } from "@/components/domain/report-cp-inline-candidates"
+import { ReportState } from "@/components/domain/report-state"
 import { ReportCpInlineFit } from "@/components/domain/report-cp-inline-fit"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
@@ -40,7 +41,7 @@ export function ReportCpInline({ input, onFiltersChange, onPageChange, onOpenCan
             <DrawerClose render={<Button variant="ghost" size="icon-sm" aria-label="关闭 Fit" />}><XIcon /></DrawerClose>
           </DrawerHeader>
           <div className="min-h-0 flex-1 overflow-y-auto p-(--doe-module-padding)">
-            {parsed.fitStatus === "error" ? <p role="alert" className="py-8 text-muted-foreground">{parsed.fitError ?? "Fit 证据加载失败。"}</p> : parsed.fitStatus === "loading" || !matchingFit ? <p role="status" className="py-8 text-muted-foreground">正在等待所选组合的 Fit 证据…</p> : <ReportCpInlineFit key={JSON.stringify([matchingFit.experimentGroupId, matchingFit.cpParameter, matchingFit.inlineParameter])} input={matchingFit} showHeader={false} />}
+            {parsed.fitStatus === "error" ? <p role="alert" className="py-8 text-muted-foreground">{parsed.fitError ?? "Fit 证据加载失败。"}</p> : parsed.fitStatus === "loading" || !matchingFit ? <ReportState status="loading" /> : <ReportCpInlineFit key={JSON.stringify([matchingFit.experimentGroupId, matchingFit.cpParameter, matchingFit.inlineParameter])} input={matchingFit} showHeader={false} />}
           </div>
         </DrawerContent>
       </Drawer>

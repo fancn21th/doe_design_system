@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react"
 import { useState, type ReactNode } from "react"
 
+import { ReportState } from "@/components/domain/report-state"
 import { ReportCpInlineFitChart, REPORT_CP_INLINE_MODEL_COLORS } from "@/components/domain/report-cp-inline-fit-chart"
 import {
   formatReportCpInlineValue,
@@ -45,14 +46,14 @@ export function ReportCpInlineFit({ input, className, showHeader = true }: {
           <TableHeader className="bg-muted/50"><TableRow><TableHead>Wafer ID</TableHead><TableHead>Condition</TableHead><TableHead>Inline Median X</TableHead><TableHead>CP Median Y</TableHead><TableHead>CP Min</TableHead><TableHead>CP Max</TableHead></TableRow></TableHeader>
           <TableBody>
             {parsed.waferPairs.map((pair) => <TableRow key={pair.waferId}><TableCell><span className="mr-2 text-primary">{pair.waferId}</span><Badge variant="outline">{pair.role}</Badge>{pair.coverageStatus !== "PAIRED" && <span className="mt-1 block text-xs text-muted-foreground">{COVERAGE_LABELS[pair.coverageStatus]}</span>}</TableCell><TableCell>{pair.condition}</TableCell><TableCell className="font-mono">{formatReportCpInlineValue(pair.inlineMedian, pair.inlineMedian != null && Math.abs(pair.inlineMedian) < 10 ? 6 : 1)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMedian)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMin)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMax)}</TableCell></TableRow>)}
-            {parsed.waferPairs.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">暂无 Wafer 明细。</TableCell></TableRow>}
+            {parsed.waferPairs.length === 0 && <TableRow><TableCell colSpan={6} className="p-0"><ReportState title="暂无 Wafer 明细。" className="min-h-40" /></TableCell></TableRow>}
           </TableBody>
         </Table>
       </FitSection>
       <FitSection title="Wafer Scatter & Fits">
         <div className="grid min-w-0 gap-(--doe-section-gap) p-(--doe-module-padding)">
           {parsed.fitPanels.map((panel) => <FitResultPanel key={`${parsed.experimentGroupId}:${parsed.cpParameter}:${parsed.inlineParameter}:${panel.id}`} panel={panel} input={parsed} />)}
-          {parsed.fitPanels.length === 0 && <p className="py-6 text-center text-muted-foreground">暂无散点与拟合证据。</p>}
+          {parsed.fitPanels.length === 0 && <ReportState title="暂无散点与拟合证据。" />}
         </div>
       </FitSection>
       {parsed.provenance?.limitation && <p className="text-xs text-muted-foreground">{parsed.provenance.limitation}</p>}
@@ -71,7 +72,7 @@ function FitResultPanel({ panel, input }: { panel: ReportCpInlineFitPanel; input
     <Card className="@container gap-0 py-0">
       <CardHeader className="border-b py-3"><CardTitle>{panel.title}</CardTitle></CardHeader>
       <CardContent className="grid min-w-0 gap-4 p-4 @min-[48rem]:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        {panel.points.length > 0 ? <ReportCpInlineFitChart panel={panel} spec={input.spec} visibility={visibility} inlineParameter={input.inlineParameter} cpParameter={input.cpParameter} cpUnit={input.cpUnit} /> : <div className="flex min-h-48 items-center justify-center rounded-(--doe-radius-control) border p-4 text-center text-muted-foreground">{panel.unavailableReason ?? "暂无可用 Wafer 散点。"}</div>}
+        {panel.points.length > 0 ? <ReportCpInlineFitChart panel={panel} spec={input.spec} visibility={visibility} inlineParameter={input.inlineParameter} cpParameter={input.cpParameter} cpUnit={input.cpUnit} /> : <ReportState title="暂无可用 Wafer 散点" description={panel.unavailableReason} />}
         <div className="grid min-w-0 content-start gap-3">
           {panel.unavailableReason && panel.points.length > 0 && <p className="text-xs text-muted-foreground">{panel.unavailableReason}</p>}
           {panel.models.map((model) => <ModelEvidence key={model.kind} model={model} visible={visibility[model.kind]} onToggle={() => setVisibility((current) => ({ ...current, [model.kind]: !current[model.kind] }))} />)}
