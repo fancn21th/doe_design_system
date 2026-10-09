@@ -1,20 +1,33 @@
 ---
 title: cp-inline
-description: DOE Report CP x Inline 业务组件。
+description: Candidates 与 Fit 两个独立组件及 non-modal Drawer 组合。
 ---
 
-import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.preview"
 import { ReportCpInlineCandidatesPreview } from "@/components/domain/report-cp-inline-candidates.preview"
+import { ReportCpInlineFitPreview } from "@/components/domain/report-cp-inline-fit.preview"
+import { ReportCpInlinePreview } from "@/components/domain/report-cp-inline.preview"
 
-## 预览 / Preview
+## Candidates
 
-### Recommended Candidates
+三个页签展示现有候选分类。筛选、列头精确数量/原因过滤和分页由消费者提供结果。
 
 <div className="domain-ui-preview-wide">
   <ReportCpInlineCandidatesPreview />
 </div>
 
-### Selected Pair Analysis
+## Fit
+
+独立的 Wafer Pair 明细与三张 Wafer Scatter & Fits。默认 scenario 对齐第二层截图；
+`normal` 展示 notebook 的 kelvinS Wafer 摘要及离线派生的拟合证据。
+
+<div className="domain-ui-preview-wide">
+  <ReportCpInlineFitPreview />
+</div>
+
+## Candidates + Fit
+
+点击可用的 CP Parameter 打开右侧 non-modal Drawer。`dense` 场景验证分页与切换实验组；
+`detail-loading` / `detail-error` 验证详情加载状态。外部操作不会因 Drawer 打开而被阻止。
 
 <div className="domain-ui-preview-wide">
   <ReportCpInlinePreview />
@@ -22,44 +35,84 @@ import { ReportCpInlineCandidatesPreview } from "@/components/domain/report-cp-i
 
 ## Contract
 
-CP × Inline 由两个独立消费的 Domain UI 资产组成。`ReportCpInlineCandidates`
-负责 generation-fixed Candidate Ranking；`ReportCpInline` 负责当前选中组合的分析证据。
+### Candidates
 
-- `Recommended CP × Inline Candidates`：保留消费者提供的 Backend 顺序、筛选结果、
-  分页与算法版本；组件不重算 score 或重新排序。
-- Candidate Ranking 的 CP、Inline、Level、Direction、Min N 与分页均为受控输入，
-  通过 callbacks 表达查询意图。`View fit` 只发出选中组合，不在组件内加载分析。
-- Candidate 行的缺失统计值显示为不可用，不补成 `0`。
+`ReportCpInlineCandidates` 是独立候选列表。输入 `ReportCpInlineCandidatesInput` 包含
+已筛选的当前页 `items`、总数、页码、选项、状态、算法版本与 provenance。
 
-`ReportCpInline` 是选中组合后的完整 CP × Inline 分析组件：
+- `recommended`：现有算法保存的 HIGH_TREND / MEDIUM_TREND，且无过滤原因。
+- `insufficient`：现有 `INSUFFICIENT_SAMPLE` 记录。
+- `filtered`：其余非推荐记录，包括 INLINE_CONSTANT、CP_CONSTANT，以及无过滤原因的 LOW。
+- 以上映射由上游/消费者提供；组件不分类、不重算评分、不改变输入顺序。
+- 旧评分和推荐分类继续有效；8888 原型的 40% Inline Spread + 35% Spearman + 25% R² **未迁入**。
+- Step、CP、Inline、view、精确 `pairedN`、reason 与分页均为受控输入；callbacks 只表达查询意图。
+- 切换 view 重置列头 N/原因筛选；消费者重置 page=1，并注入同一查询的 rows 与 total。
+- Paired Wafers 表示有效同片配对数 / 实验组分配数；`pairedN` 精确匹配，不代表 Min N。
+- 推荐表六列；其他两层五列。原因保留现有算法语义，不伪装成新原型的 LOW_FIT 等原因。
+- CP/Inline 点击发出 `onOpenCandidate`；`detailAvailable=false` 保留数据展示并禁用详情入口。
+- 候选身份始终是 `experimentGroupId + cpParameter + inlineParameter`；不能只按参数对去重。
+  Step / Factor / 实验组在入口 title 中可查看。Rank 是当前上游排序下的分页位置。
+- 正向 Spearman 使用绿色、负向使用紫色，符号始终同时展示。缺失值显示 `—`。
 
-- `CP x Inline 拟合`：受控的 Step、Inline Parameter 与 CP Parameter 选择。
-- `Condition 聚合`：受控的 Baseline / Split Wafer 选择，以及 Inline 与 CP 各自有效 population 的聚合表。
-- `拟合与定位`：受控的 Fit Grain、Inline metric、CP aggregation、extreme policy 与 Quadratic candidate；三张结果图分别呈现 CP Median、典型 Min 和典型 Max。
-- Linear / Quadratic 曲线、gate、阈值、roots、Control Window 与 provenance 都是上游注入的只读证据。组件不执行回归、求根或窗口推导，也不自动选择主模型。
-- Collapse、chart hover 和“拟合结果”详情开关属于组件本地展示状态；所有业务选择通过 callbacks 交给消费者。
-- Condition 聚合允许 Inline / CP 使用各自有效 Wafer；Wafer 粒度只消费同片配对 evidence。`PAIRED`、`INLINE_ONLY`、`CP_ONLY` 与 `NO_DATA` 不得合并为一个布尔状态。
-- Inline Control Window 标记为 `Source Provisional`，不是 Recipe setpoint、生产指令或 release verdict。
-- 宽表和图表在组件内部横向滚动；窄屏时 selector 和证据详情纵向堆叠。
+### Fit
 
-原型数据标记为 `prototype-backed`；configured-spec、coverage-mismatch、gate、partial、empty 和 dense 数据只用于场景验证。
+`ReportCpInlineFit` 独立接收 `ReportCpInlineFitInput`，没有候选查询、Drawer 或业务选择状态。
 
-## Scenarios
+- Wafer Pair 表包含 Wafer、BSL/SPLIT、Condition、Inline Median、CP Median、CP Min/Max。
+  Condition 是分配条件，不冒充实际量测；覆盖状态保持 PAIRED / INLINE_ONLY / CP_ONLY / NO_DATA。
+- 三张图分别比较 Inline Median 与 CP Median、CP Min、CP Max；仅消费提供的同片 Wafer 点。
+- 模型状态、方程、曲线、R²、RMSE、Residual N、df、每图 Pearson/Spearman、规格与交点均为上游只读证据。
+  组件不回归、不求根，也不按 N 或 Condition levels 自行判断拟合可用性。
+- 两个业务区默认展开；每图 Linear/Quadratic 曲线显隐、hover 和交点坐标展开属于本地展示状态。
+  曲线显隐不移除右侧统计证据。域外交点保留标签，图中只画域内交点。
+- 未提供 spec / roots / model 时明确展示不可用；missing 不补零。科学计数法保留完整指数，防止小量级值归零。
+- 窄屏图与证据纵向堆叠；表格仅在自身横向滚动，图表随证据列宽调整。
+- Condition 聚合、拟合配置选择、Control Window 与 Leave-One-Out Stability 不属于新版 Fit。
 
-- `normal`
-- `configured-spec`
-- `coverage-mismatch`
-- `insufficient-levels`
-- `partial`
-- `empty`
-- `dense`
+### Scoped visual contract
+
+仅 CP × Inline 使用局部语义色：accent / Target 为蓝色 `#0071e3`，Linear 为青色
+`#007c78`，Quadratic / 负向 Spearman 为紫色 `#8550dc`，Wafer / 正向 Spearman
+为绿色 `#079e68`，LSL / USL 为红色 `#d22f3b`。曲线标签、线型与相关系数符号同时保留，
+颜色只区分证据含义，不表示通过、失败或因果关系。上述变量随 Candidates / Fit 根节点消费，
+不改全局 shadcn 或文档配色。
+
+### Composition
+
+`ReportCpInline` 组合上述两个组件，接收 `ReportCpInlineInput`：`candidates`、`fit`、
+`fitStatus` 和可选 `fitError`，继续暴露候选列表 callbacks。
+
+- 对齐本地 `ui/apps/v4/examples/base/drawer-non-modal.tsx` 的
+  `modal={false} disablePointerDismissal swipeDirection="right"`，使用当前仓库 Drawer primitive。
+- Drawer 不遮罩/锁定外部交互；外部点击保持打开。关闭按钮或 Escape 关闭；点击另一候选切换内容。
+- 打开/关闭和当前点击候选属于组合本地展示状态；消费者收到 `onOpenCandidate` 后提供相应 Fit。
+- 新候选的三字段身份必须与 Fit 一致；不匹配时保留等待状态，不把上一候选证据显示给新候选。
+- Drawer 宽度使用 DOE Fit inspection token 并受 viewport 限制；内容区域独立纵向滚动。
+
+## Scenarios and Data
+
+- Candidates：normal、filtered、insufficient-sample、dense、loading、error、empty。
+- Fit：normal、prototype-backed、configured-spec、coverage-mismatch、partial、
+  upstream-unavailable、upstream-available-small-sample、empty。
+- 组合：normal、dense、detail-loading、detail-error。
+
+normal 候选仅转录 Generation 13 的三条已保存记录，总数显示为此演示子集的 3；
+原始快照推荐总数 4,126 不冒充此预览页的完整可分页数据。只有 kelvinS 的真实明细已转录，
+其余两条明确标记详情不可用。
+
+kelvinS Wafer 摘要来自 `cp_x_inline.ipynb`；拟合曲线和交点在 fixture 制作时离线计算，
+标记 `derived`。QG_QgTOT2 独立 Fit 来自原型转录，标记 `prototype-backed`。
+边界与密集分页场景为 `mock`，不代表新增测量或真实推荐。Component Lab 只在预览消费者中
+筛选这些有限 fixtures，不在产品组件中加载或计算数据。
 
 ## Consumer Handoff
 
-消费者将 Candidate Ranking 放在选中分析之前，并负责把 `View fit` 的
-`experimentGroupId + cpParameter + inlineParameter` 变成下方分析范围。候选筛选/分页与
-分析选择是两个独立的数据生命周期。
+这是旧 CP × Inline 分析合同的替换：消费方应分别采用 Candidates、Fit，或使用组合组件，
+迁移旧 Level / Direction / Min N 选择及 Condition 配置输入。
 
-消费者还负责根据 `ReportCpInline` callbacks 更新受控选择、重新请求或映射证据，并注入
-与新选择一致的 rows、fit panels、spec、roots 和 control windows。App routing、滚动定位、
-跨组件 workflow、Backend BFF、真实数据关联和统计计算均不属于 Domain UI。
+消费者负责同一 snapshot / CP slice 内的查询、三层映射、分页、实验组范围、完整 Wafer 身份、
+数据版本一致性和模型证据计算。候选点击后更新 `fitStatus`，加载对应三字段身份的 Fit；
+切换候选时清除旧 error 并提供新 loading 状态，失败时注入 `fitError`。
+
+App routing、Backend BFF、真实数据库关联、请求与统计算法都在本仓库之外；
+Domain UI 不用原型阈值重新解释旧分类，也不决定小样本是否允许拟合。

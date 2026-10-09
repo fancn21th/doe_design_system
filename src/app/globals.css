@@ -162,8 +162,8 @@
     --doe-split-table-min-width: 111rem;
     --doe-report-split-table-min-width: 72rem;
     --doe-cp-inline-table-min-width: 60rem;
-    --doe-cp-inline-chart-min-width: 60rem;
-    --doe-cp-inline-chart-height: 35rem;
+    --doe-cp-inline-chart-height: 20rem;
+    --doe-cp-inline-drawer-width: 70rem;
     --doe-yield-matrix-min-width: 180rem;
     --doe-wafer-yield-chart-min-width: 68.75rem;
     --doe-wafer-yield-plot-height: 13.75rem;
@@ -387,8 +387,8 @@
   }
 
   .domain-ui-cp-inline-chart {
-    width: var(--doe-cp-inline-chart-min-width);
-    min-width: var(--doe-cp-inline-chart-min-width);
+    width: 100%;
+    min-width: 0;
     height: var(--doe-cp-inline-chart-height);
   }
 
@@ -616,4 +616,13 @@ body:has(#nd-page[data-full="true"]) #nd-page {
   max-width: none;
   min-height: 100dvh;
   padding: 0;
+}
+
+/* CP × Inline scoped evidence colours; component contract owns their meaning. */
+.domain-ui-cp-inline {
+  --doe-cp-inline-accent: #0071e3;
+  --doe-cp-inline-linear: #007c78;
+  --doe-cp-inline-quadratic: #8550dc;
+  --doe-cp-inline-wafer: #079e68;
+  --doe-cp-inline-limit: #d22f3b;
 }

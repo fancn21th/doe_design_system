@@ -15,3 +15,7 @@
 - Established token, Pattern, Domain, and reference-distillation entry points.
 - Migrated legacy design-system documentation to pointer pages so it no longer
   duplicates visual rules.
+
+## 2026-10-09 — CP × Inline evidence colours
+
+Candidates and Fit record scoped blue emphasis/Target, teal Linear, purple Quadratic/negative correlation, green Wafer/positive correlation, and red specification limits in their [component contract](../../content/docs/domain/report/cp-inline.mdx). These distinguish evidence identities alongside labels and signs; they do not change generic chart tokens or imply statistical validity.

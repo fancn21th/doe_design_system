@@ -43,9 +43,9 @@ shell tokens are outside this scope.
 | `--doe-related-component-gap` | `16px` | Related local-result stack |
 | `--doe-split-table-min-width` | `1776px` | Step × Wafer readable width |
 | `--doe-report-split-table-min-width` | `1152px` | Grouped read-only report split assignment width |
-| `--doe-cp-inline-table-min-width` | `960px` | CP × Inline condition aggregation table readable width |
-| `--doe-cp-inline-chart-min-width` | `960px` | CP × Inline fit evidence chart readable width |
-| `--doe-cp-inline-chart-height` | `560px` | CP × Inline fit evidence chart height |
+| `--doe-cp-inline-table-min-width` | `960px` | CP × Inline Candidates and Wafer Pair table readable width |
+| `--doe-cp-inline-chart-height` | `320px` | Responsive Wafer fit plot height; width follows the evidence column |
+| `--doe-cp-inline-drawer-width` | `1120px` | Non-modal Fit inspection width, capped at viewport minus 32px |
 | `--doe-yield-matrix-min-width` | `2880px` | Yield analysis wafer × CP inspection width |
 | `--doe-wafer-yield-chart-min-width` | `1100px` | Wafer yield × CP fail chart readable width |
 | `--doe-wafer-yield-plot-height` | `220px` | Wafer yield × CP fail shared percentage plot |

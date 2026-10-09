@@ -1,31 +1,9 @@
-import {
-  reportCpInlineConfiguredSpecFixture,
-  reportCpInlineCoverageMismatchFixture,
-  reportCpInlineDenseFixture,
-  reportCpInlineEmptyFixture,
-  reportCpInlineFixture,
-  reportCpInlineInsufficientLevelsFixture,
-  reportCpInlinePartialFixture,
-} from "@/components/domain/report-cp-inline.fixtures"
+import { reportCpInlineCandidatesScenarios } from "@/components/domain/report-cp-inline-candidates.scenarios"
 import type { ReportCpInlineInput } from "@/schemas/domain-component-inputs"
 
-type ReportCpInlineScenario = { name: string; input: ReportCpInlineInput }
-
 export const reportCpInlineScenarios = {
-  normal: { name: "normal", input: reportCpInlineFixture },
-  configuredSpec: {
-    name: "configured-spec",
-    input: reportCpInlineConfiguredSpecFixture,
-  },
-  coverageMismatch: {
-    name: "coverage-mismatch",
-    input: reportCpInlineCoverageMismatchFixture,
-  },
-  insufficientLevels: {
-    name: "insufficient-levels",
-    input: reportCpInlineInsufficientLevelsFixture,
-  },
-  partial: { name: "partial", input: reportCpInlinePartialFixture },
-  empty: { name: "empty", input: reportCpInlineEmptyFixture },
-  dense: { name: "dense", input: reportCpInlineDenseFixture },
-} satisfies Record<string, ReportCpInlineScenario>
+  normal: { name: "normal", input: { candidates: reportCpInlineCandidatesScenarios.normal.input, fit: null, fitStatus: "ready" } },
+  dense: { name: "dense", input: { candidates: reportCpInlineCandidatesScenarios.dense.input, fit: null, fitStatus: "ready" } },
+  detailLoading: { name: "detail-loading", input: { candidates: reportCpInlineCandidatesScenarios.normal.input, fit: null, fitStatus: "loading" } },
+  detailError: { name: "detail-error", input: { candidates: reportCpInlineCandidatesScenarios.normal.input, fit: null, fitStatus: "error", fitError: "所选组合的 Fit 证据暂时不可用。" } },
+} satisfies Record<string, { name: string; input: ReportCpInlineInput }>

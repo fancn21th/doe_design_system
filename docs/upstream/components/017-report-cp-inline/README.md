@@ -227,3 +227,18 @@ changes belong to the next implementation step.
   score or order. Filter, page, and `View fit` actions are callback intents.
 - The consumer composes the ranking above `ReportCpInline` and owns the handoff
   from a candidate key to the selected analysis plus any scroll behavior.
+
+## 2026-10-09 Candidates / Fit Revision (Supersedes Previous Anatomy)
+
+- User-approved evidence: `DOE Workbench 单文件版(1).html` on localhost:8888,
+  packed `cp-inline-candidate-prototype/index.html` and `real-data.js`, and two annotated screenshots.
+- Two independently consumable components are named Candidates and Fit; the MDX has their two standalone previews plus a combined preview.
+- Candidates preserves existing generation-fixed score/classification, with Recommended / Filtered / Insufficient Sample views, Step/CP/Inline filters, exact paired-N and primary reason column filters, and pagination.
+- The new prototype's score formula is not adopted. Old INLINE_CONSTANT/CP_CONSTANT and unfiltered LOW semantics remain honest. Keep experiment-group identity even though the new prototype has only one row per parameter pair.
+- Fit contains only Wafer Pair detail plus three Wafer Scatter & Fits (CP Median/Min/Max). It displays supplied regression/correlation/spec/root evidence and does not decide availability from N. Local collapses and per-chart model visibility are presentation only.
+- Removed from this revision: Condition aggregation, business fit-config selectors, Control Window and Leave-One-Out Stability. This supersedes the prior three-section anatomy and Condition gate contract for this tab.
+- Combined preview uses the exact local shadcn Base Drawer non-modal pattern from `ui/apps/v4/examples/base/drawer-non-modal.tsx`: modal=false, disablePointerDismissal, swipeDirection=right. Product content replaces the demonstration placeholder; existing local Drawer is reused without a competing primitive.
+- Only the selected group's matching evidence is shown. Candidate/detail requests remain consumer-owned; mismatched identity remains waiting rather than revealing stale detail.
+- Existing data evidence: reviewed `db-probe/notebooks/tabs/computed fileds/inline-condition-vs-cp/cp_x_inline.ipynb`, Generation 13. Three persisted ranking rows are retained; kelvinS wafer summaries are transcribed exactly. Fit curves/metrics/roots are derived offline for fixtures, never at runtime. QG_QgTOT2 remains a separate prototype-backed Fit scenario.
+- Correct the prototype scientific-formatting error (e-10 became e-1) and avoid fixed-decimal tiny CP values rendering as zero. Prototype meta counts are not copied; counts come from the rendered dataset.
+- Visual revision: bounded responsive chart within its evidence column, existing DOE table local overflow and a named Fit Drawer inspection-width token. Positive/negative Spearman use existing chart-2/chart-5 with a signed numeric value, without indicating causal/pass judgment.

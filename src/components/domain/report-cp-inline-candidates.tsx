@@ -1,23 +1,21 @@
 "use client"
 
+import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon } from "lucide-react"
+
+import { EmptyState } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { EmptyState, ReportBadge } from "@/components/domain/report-parts"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   reportCpInlineCandidatesInputSchema,
   type ReportCpInlineCandidate,
@@ -41,249 +39,170 @@ export function ReportCpInlineCandidates({
   const parsed = reportCpInlineCandidatesInputSchema.parse(input)
   const patchFilters = (patch: Partial<ReportCpInlineCandidateFilter>) =>
     onFiltersChange?.({ ...parsed.filters, ...patch })
+  const recommended = parsed.filters.view === "recommended"
   const firstRank = (parsed.page - 1) * parsed.pageSize + 1
-  const lastRank = Math.min(parsed.page * parsed.pageSize, parsed.total)
+  const pageCount = Math.max(1, Math.ceil(parsed.total / parsed.pageSize))
+  const busy = parsed.status !== "ready"
 
   return (
-    <div className="not-prose domain-ui-typography">
-      <Card className="gap-0 overflow-hidden rounded-lg py-0 shadow-none">
-        <CardHeader className="border-b py-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <CardTitle>{parsed.title}</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {parsed.subtitle ??
-                  "按当前 Generation 的 Backend 顺序查看同片配对候选；打开候选只更新下方分析范围。"}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ReportBadge tone="good">Backend order</ReportBadge>
-              <ReportBadge>{parsed.total} candidates</ReportBadge>
-              <ReportBadge>{parsed.calculationVersion}</ReportBadge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-3 p-3">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <CandidateSelect
-              label="CP Parameter"
-              value={parsed.filters.cpParameter}
-              allLabel="All CP"
-              options={parsed.cpParameterOptions}
-              onChange={(value) => patchFilters({ cpParameter: value })}
-            />
-            <CandidateSelect
-              label="Inline Parameter"
-              value={parsed.filters.inlineParameter}
-              allLabel="All Inline"
-              options={parsed.inlineParameterOptions}
-              onChange={(value) => patchFilters({ inlineParameter: value })}
-            />
-            <CandidateSelect
-              label="Level"
-              value={parsed.filters.level}
-              options={[
-                ["RECOMMENDED", "High + Medium"],
-                ["HIGH_TREND", "High"],
-                ["MEDIUM_TREND", "Medium"],
-                ["LOW", "Low"],
-                ["ALL", "All / filtered"],
-              ]}
-              onChange={(value) =>
-                value &&
-                patchFilters({
-                  level: value as ReportCpInlineCandidateFilter["level"],
-                })
+    <TooltipProvider>
+      <div className="not-prose domain-ui-typography domain-ui-cp-inline">
+        <Card className="gap-0 rounded-(--doe-radius-card) border py-0 shadow-none ring-0">
+          <CardHeader className="border-b p-(--doe-module-padding)">
+            <CardTitle>{parsed.title}</CardTitle>
+            {parsed.subtitle ? <p className="text-sm text-muted-foreground">{parsed.subtitle}</p> : null}
+          </CardHeader>
+          <Tabs
+            value={parsed.filters.view}
+            onValueChange={(value) => {
+              if (value === "recommended" || value === "filtered" || value === "insufficient") {
+                patchFilters({ view: value, pairedN: null, reason: null })
               }
-              allowAll={false}
-            />
-            <CandidateSelect
-              label="Direction"
-              value={parsed.filters.direction}
-              allLabel="All directions"
-              options={[
-                ["POSITIVE", "Positive"],
-                ["NEGATIVE", "Negative"],
-              ]}
-              onChange={(value) =>
-                patchFilters({
-                  direction: value as ReportCpInlineCandidateFilter["direction"],
-                })
-              }
-            />
-            <CandidateSelect
-              label="Min N"
-              value={parsed.filters.minN == null ? null : String(parsed.filters.minN)}
-              allLabel="Any"
-              options={[
-                ["3", "3"],
-                ["6", "6"],
-              ]}
-              onChange={(value) => patchFilters({ minN: value ? Number(value) : null })}
-            />
-          </div>
-
-          {parsed.items.length === 0 ? (
-            <EmptyState>当前筛选没有候选组合。</EmptyState>
-          ) : (
-            <div className="max-w-full overflow-x-auto rounded-lg border">
-              <Table className="min-w-[1120px] text-xs">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Step / Factor</TableHead>
-                    <TableHead>CP</TableHead>
-                    <TableHead>Inline</TableHead>
-                    <TableHead>N</TableHead>
-                    <TableHead>Direction</TableHead>
-                    <TableHead>Spearman</TableHead>
-                    <TableHead>R²</TableHead>
-                    <TableHead>CP Response</TableHead>
-                    <TableHead>CP Spread</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead className="text-right">Open</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {parsed.items.map((candidate, index) => (
-                    <TableRow
-                      key={`${candidate.experimentGroupId}-${candidate.cpParameter}-${candidate.inlineParameter}`}
-                    >
-                      <TableCell className="font-mono">{firstRank + index}</TableCell>
-                      <TableCell>
-                        <b className="block">{candidate.factorLabel}</b>
-                        <span className="text-muted-foreground">{candidate.stepLabel}</span>
-                      </TableCell>
-                      <TableCell className="font-mono">{candidate.cpParameter}</TableCell>
-                      <TableCell className="font-mono">{candidate.inlineParameter}</TableCell>
-                      <TableCell className="font-mono">
-                        {candidate.pairedCount}/{candidate.assignedWaferCount}
-                      </TableCell>
-                      <TableCell>{directionLabel(candidate.direction)}</TableCell>
-                      <NumericCell value={candidate.spearman} />
-                      <NumericCell value={candidate.rSquared} />
-                      <NumericCell value={candidate.cpResponse} />
-                      <NumericCell value={candidate.cpSpread} />
-                      <NumericCell value={candidate.score} strong />
-                      <TableCell>
-                        <ReportBadge tone={candidateTone(candidate.level)}>
-                          {candidate.level}
-                        </ReportBadge>
-                        {candidate.sampleBand === "SMALL_SAMPLE" ||
-                        candidate.sampleBand === "N_LT_3" ? (
-                          <small className="mt-1 block text-amber-700">Small sample</small>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="link"
-                          size="sm"
-                          onClick={() => onOpenCandidate?.(candidate)}
-                        >
-                          View fit
-                        </Button>
-                      </TableCell>
+            }}
+            className="gap-0"
+          >
+            <div className="overflow-x-auto border-b px-(--doe-module-padding)">
+              <TabsList variant="line" className="h-(--doe-table-row-height) gap-4 p-0">
+                <TabsTrigger value="recommended" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Recommended Candidates</TabsTrigger>
+                <TabsTrigger value="filtered" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Filtered</TabsTrigger>
+                <TabsTrigger value="insufficient" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Insufficient Sample</TabsTrigger>
+              </TabsList>
+            </div>
+          </Tabs>
+          <CardContent className="grid gap-(--doe-section-gap) p-(--doe-module-padding)">
+            <div className="grid gap-3 md:grid-cols-3">
+              <CandidateSelect label="Step" value={parsed.filters.step} allLabel="All Steps" options={parsed.stepOptions} onChange={(step) => patchFilters({ step })} />
+              <CandidateSelect label="CP Parameter" value={parsed.filters.cpParameter} allLabel="All CP Parameters" options={parsed.cpParameterOptions} onChange={(cpParameter) => patchFilters({ cpParameter })} />
+              <CandidateSelect label="Inline Parameter" value={parsed.filters.inlineParameter} allLabel="All Inline Parameters" options={parsed.inlineParameterOptions} onChange={(inlineParameter) => patchFilters({ inlineParameter })} />
+            </div>
+            {parsed.status === "loading" ? (
+              <div role="status"><EmptyState>正在加载候选组合…</EmptyState></div>
+            ) : parsed.status === "error" ? (
+              <div role="alert"><EmptyState>{parsed.errorMessage ?? "候选组合加载失败。"}</EmptyState></div>
+            ) : parsed.items.length === 0 ? (
+              <EmptyState>当前筛选没有候选组合。</EmptyState>
+            ) : (
+              <div className="max-w-full overflow-x-auto">
+                <Table className="min-w-(--doe-cp-inline-table-min-width)">
+                  <TableHeader className="border-y bg-muted/50">
+                    <TableRow>
+                      {recommended ? <TableHead>Rank</TableHead> : null}
+                      <TableHead>CP Parameter</TableHead>
+                      <TableHead>Inline Parameter</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          Paired Wafers
+                          <ColumnFilter label="Paired Wafers" value={parsed.filters.pairedN == null ? null : String(parsed.filters.pairedN)} options={parsed.pairedNOptions.map(String)} onChange={(value) => patchFilters({ pairedN: value == null ? null : Number(value) })} />
+                          <Help label="Paired Wafers" text="同片配对的有效 Wafer 数 / 当前实验组分配的 Wafer 数。列头按配对数量精确筛选。" />
+                        </div>
+                      </TableHead>
+                      {recommended ? (
+                        <>
+                          <TableHead><div className="flex items-center gap-1">Spearman ρ<Help label="Spearman" text="上游保存的 Spearman 等级相关系数；正负号表示观测方向，不代表因果关系。" /></div></TableHead>
+                          <TableHead><div className="flex items-center gap-1">Score<Help label="Score" text={parsed.scoreDescription ?? "上游保存的候选评分，沿用现有计算版本与推荐分类；组件不重新计算。"} /></div></TableHead>
+                        </>
+                      ) : (
+                        <>
+                          <TableHead><div className="flex items-center gap-1">Primary Filter Reason<ColumnFilter label="Primary Filter Reason" value={parsed.filters.reason} options={parsed.reasonOptions} onChange={(reason) => patchFilters({ reason })} /></div></TableHead>
+                          <TableHead>Calculation Evidence</TableHead>
+                        </>
+                      )}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-muted-foreground">
-            <span>
-              {parsed.total === 0 ? "0" : `${firstRank}–${lastRank}`} / {parsed.total}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={parsed.page <= 1}
-              onClick={() => onPageChange?.(parsed.page - 1)}
-            >
-              Previous
-            </Button>
-            <span>Page {parsed.page}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={parsed.page * parsed.pageSize >= parsed.total}
-              onClick={() => onPageChange?.(parsed.page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                  </TableHeader>
+                  <TableBody>
+                    {parsed.items.map((candidate, index) => (
+                      <TableRow key={JSON.stringify([candidate.experimentGroupId, candidate.cpParameter, candidate.inlineParameter])} className="h-(--doe-table-row-height)">
+                        {recommended ? <TableCell className="tabular-nums text-muted-foreground">{firstRank + index}</TableCell> : null}
+                        <TableCell>
+                          <CandidateLink candidate={candidate} label={candidate.cpParameter} onOpen={onOpenCandidate} />
+                          <span className="mt-1 block text-xs text-muted-foreground">{candidate.cpUnit ?? "unit —"}</span>
+                        </TableCell>
+                        <TableCell><CandidateLink candidate={candidate} label={candidate.inlineParameter} onOpen={onOpenCandidate} /></TableCell>
+                        <TableCell className="tabular-nums">{candidate.pairedCount}/{candidate.assignedWaferCount}</TableCell>
+                        {recommended ? (
+                          <>
+                            <TableCell className={`font-semibold tabular-nums ${candidate.spearman == null || candidate.spearman === 0 ? "" : candidate.spearman > 0 ? "text-[var(--doe-cp-inline-wafer)]" : "text-[var(--doe-cp-inline-quadratic)]"}`}>
+                              {candidate.spearman == null ? "—" : `${candidate.spearman > 0 ? "+" : ""}${candidate.spearman.toFixed(2)}`}
+                            </TableCell>
+                            <TableCell>
+                              <div className="min-w-20 max-w-28">
+                                <span className="font-semibold tabular-nums">{candidate.score == null ? "—" : candidate.score.toFixed(1)}</span>
+                                {candidate.score != null ? <div aria-hidden="true" className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-[var(--doe-cp-inline-accent)]" style={{ width: `${Math.min(100, Math.max(0, candidate.score))}%` }} /></div> : null}
+                              </div>
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="whitespace-normal">{candidate.filterReason ?? (candidate.level === "LOW" ? "未达到现有推荐等级" : "—")}</TableCell>
+                            <TableCell className="whitespace-normal text-muted-foreground">{candidate.calculationEvidence ?? savedEvidence(candidate)}</TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="justify-end gap-3">
+            <Button type="button" variant="outline" size="icon" aria-label="Previous candidates page" disabled={busy || parsed.page <= 1} onClick={() => onPageChange?.(parsed.page - 1)}><ChevronLeftIcon /></Button>
+            <span className="text-sm tabular-nums text-muted-foreground">{parsed.page} / {pageCount}</span>
+            <Button type="button" variant="outline" size="icon" aria-label="Next candidates page" disabled={busy || parsed.page >= pageCount} onClick={() => onPageChange?.(parsed.page + 1)}><ChevronRightIcon /></Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </TooltipProvider>
   )
 }
 
-function CandidateSelect({
-  label,
-  value,
-  options,
-  allLabel = "All",
-  allowAll = true,
-  onChange,
-}: {
-  label: string
-  value: string | null
-  options: string[] | Array<readonly [string, string]>
-  allLabel?: string
-  allowAll?: boolean
-  onChange: (value: string | null) => void
-}) {
-  const entries = options.map((option) =>
-    typeof option === "string" ? ([option, option] as const) : option
-  )
+function CandidateLink({ candidate, label, onOpen }: { candidate: ReportCpInlineCandidate; label: string; onOpen?: (candidate: ReportCpInlineCandidate) => void }) {
   return (
-    <label className="grid gap-1 text-xs text-muted-foreground">
+    <Button type="button" variant="link" className="h-auto max-w-full justify-start whitespace-normal p-0 text-left font-semibold text-foreground" disabled={!candidate.detailAvailable} title={`${candidate.stepLabel} · ${candidate.factorLabel} · ${candidate.experimentGroupId}${candidate.detailAvailable ? "" : " · 详情不可用"}`} onClick={() => onOpen?.(candidate)}>{label}</Button>
+  )
+}
+
+function CandidateSelect({ label, value, options, allLabel, onChange }: { label: string; value: string | null; options: string[]; allLabel: string; onChange: (value: string | null) => void }) {
+  return (
+    <label className="grid gap-1.5 text-sm text-muted-foreground">
       <span>{label}</span>
-      <Select
-        value={value ?? ALL}
-        onValueChange={(next) => next && onChange(next === ALL ? null : next)}
-      >
-        <SelectTrigger className="w-full" aria-label={label}>
-          <SelectValue />
-        </SelectTrigger>
+      <Select value={value ?? ALL} onValueChange={(next) => next != null && onChange(next === ALL ? null : next)}>
+        <SelectTrigger className="w-full" aria-label={label}><SelectValue>{value ?? allLabel}</SelectValue></SelectTrigger>
         <SelectContent>
-          {allowAll ? <SelectItem value={ALL}>{allLabel}</SelectItem> : null}
-          {entries.map(([optionValue, optionLabel]) => (
-            <SelectItem key={optionValue} value={optionValue}>
-              {optionLabel}
-            </SelectItem>
-          ))}
+          <SelectItem value={ALL}>{allLabel}</SelectItem>
+          {options.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
         </SelectContent>
       </Select>
     </label>
   )
 }
 
-function NumericCell({ value, strong = false }: { value: number | null; strong?: boolean }) {
+function ColumnFilter({ label, value, options, onChange }: { label: string; value: string | null; options: string[]; onChange: (value: string | null) => void }) {
   return (
-    <TableCell className="font-mono tabular-nums">
-      {strong ? <b>{formatNumber(value)}</b> : formatNumber(value)}
-    </TableCell>
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon-sm" aria-label={`Filter ${label}`} className={value == null ? "text-muted-foreground" : "text-primary"} />}><ListFilterIcon /></DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuRadioGroup value={value ?? ALL} onValueChange={(next) => onChange(next === ALL ? null : String(next))}>
+          <DropdownMenuRadioItem value={ALL}>All</DropdownMenuRadioItem>
+          {options.map((option) => <DropdownMenuRadioItem key={option} value={option}>{option}</DropdownMenuRadioItem>)}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
-function formatNumber(value: number | null) {
-  if (value == null || !Number.isFinite(value)) return "—"
-  return value.toLocaleString(undefined, { maximumSignificantDigits: 6 })
+function Help({ label, text }: { label: string; text: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<Button type="button" variant="ghost" size="icon-sm" aria-label={`About ${label}`} className="text-muted-foreground" />}><CircleHelpIcon /></TooltipTrigger>
+      <TooltipContent>{text}</TooltipContent>
+    </Tooltip>
+  )
 }
 
-function directionLabel(direction: ReportCpInlineCandidate["direction"]) {
-  if (direction === "POSITIVE") return "↑ Positive"
-  if (direction === "NEGATIVE") return "↓ Negative"
+function savedEvidence(candidate: ReportCpInlineCandidate) {
+  if (candidate.filterReason === "INLINE_CONSTANT") return "上游标记 Inline 为常量。"
+  if (candidate.filterReason === "CP_CONSTANT") return "上游标记 CP 为常量。"
+  if (candidate.filterReason === "INSUFFICIENT_SAMPLE") return `上游标记样本不足；有效配对 ${candidate.pairedCount}/${candidate.assignedWaferCount}。`
+  if (candidate.level === "LOW" && candidate.filterReason == null) return "上游保存等级为 LOW，未提供过滤原因。"
   return "—"
-}
-
-function candidateTone(level: ReportCpInlineCandidate["level"]) {
-  if (level === "HIGH_TREND") return "good" as const
-  if (level === "MEDIUM_TREND") return "watch" as const
-  return "neutral" as const
 }

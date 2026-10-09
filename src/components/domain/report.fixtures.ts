@@ -1261,4 +1261,4 @@ export const reportInlineDataFixture: ReportInlineDataInput = {
   },
 }
 
-export { reportCpInlineFixture } from "@/components/domain/report-cp-inline.fixtures"
+export { reportCpInlineFitFixture } from "@/components/domain/report-cp-inline-fit.fixtures"
