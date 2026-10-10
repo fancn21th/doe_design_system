@@ -63,3 +63,12 @@ outcomes and 39 screenshots are recorded in the App Exec Plan self-test at
 User approved UI-C01–UI-C07. ReportWorkspaceLayout owns 16px / 24px top spacing and report panes remove their duplicate top padding only within the workspace. Grouped Split and Yield Matrix tables use one tbody per existing group, with merged-cell group hover and ordinary-cell row hover. Yield measures its actual plot viewport, shares its geometry across SVG / three X-axis layers / hit areas, separates the Y title from ticks, and keeps local horizontal scroll below 768px. Yield Detail uses the Split shell; Matrix retains a single scroll owner and sticky header. The Split and Yield component contracts and token fallback meaning record these rules.
 
 Canonical source was adopted by DOE App. App 183 tests and canonical 78 tests pass; modified-source lint, TypeScript and isolated production builds pass. Canonical full lint retains three pre-existing registry errors. The App-owned acceptance table, screenshots and per-item results are at `apps/frontend-ds/docs/acceptance/ui/report-center/records/2026-10-10-report-ui-comments-round2-self-test.md` in the consumer repository. Backend facts, provenance, NULL policy and workflow ownership remain with their existing owners.
+
+
+## 2026-10-10 · Yield chart Card pilot
+
+Wafer Yield & CP Fail Analysis adopts the explicitly requested Dashboard 01 chart-card layout: 24px inset, 8px title/description gap, 48px header-to-chart space, a neutral border and scoped light shadow, and no header divider. The legend moves into the header. The user subsequently requested permanent expansion, so the collapse control and Collapsible are removed. This is one component pilot; other charts and the global Analytical Surface contract are unchanged. See the yield-analysis component contract and App chart acceptance UI-CH01–05.
+
+## 2026-10-10 — Yield plot edge safety
+
+The approved Yield chart pilot reserves 12px inside each vertical SVG edge while retaining its 220px frame and 0–100% domain. Grid, line, markers, stacked bars and tick centres share the inset mapping. Rendered boundary regressions cover 0%, 100% and near-100% values; long Step text can wrap within narrow columns. This scoped repair preserves the card spacing and removes no further controls.

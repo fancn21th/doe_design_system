@@ -1,6 +1,5 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
 import * as React from "react"
 import { createPortal } from "react-dom"
 
@@ -11,20 +10,14 @@ import {
   waferYieldPlotGeometry,
 } from "@/components/domain/report-wafer-yield-cp-fail-model"
 import { EmptyState } from "@/components/domain/report-parts"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { cn } from "@/lib/utils"
 import type { ReportWaferYieldCpFail } from "@/schemas/domain-component-inputs"
 
 const CHART_PALETTE = [
@@ -39,6 +32,12 @@ const CHART_PALETTE = [
 ]
 const YIELD_COLOR = "#14a866"
 const PLOT_HEIGHT = 220
+// Keep endpoint markers, strokes and tick labels inside the SVG frame.
+const PLOT_INSET = 12
+const PLOT_DATA_HEIGHT = PLOT_HEIGHT - PLOT_INSET * 2
+function yieldPlotY(percent: number) {
+  return PLOT_INSET + ((100 - percent) / 100) * PLOT_DATA_HEIGHT
+}
 
 type ChartTooltip = {
   wafer: ReportWaferYieldCpFail["wafers"][number]
@@ -47,7 +46,6 @@ type ChartTooltip = {
 }
 
 export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpFail }) {
-  const [open, setOpen] = React.useState(true)
   const [tooltip, setTooltip] = React.useState<ChartTooltip | null>(null)
   const parameters = visibleCpFailParameters(input)
   const parameterColors = new Map(
@@ -72,7 +70,7 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
       observer.disconnect()
       narrow.removeEventListener("change", measure)
     }
-  }, [open, input.wafers.length])
+  }, [input.wafers.length])
   const groups = groupConsecutiveWaferSteps(input.wafers)
 
   React.useEffect(() => {
@@ -92,185 +90,169 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
   }, [tooltip])
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <Card size="sm" className="gap-0 border py-0 ring-0 shadow-none">
-        <CardHeader className="border-b">
-          <CardTitle className="text-base">{input.title}</CardTitle>
-          <CardAction>
-            <CollapsibleTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`${open ? "收起" : "展开"} ${input.title}`}
-                >
-                  <ChevronDown
-                    className={cn(
-                      "transition-transform",
-                      !open && "-rotate-90"
-                    )}
-                  />
-                </Button>
-              }
+    <>
+      <Card data-yield-chart-card className="gap-[24px] border py-[24px] ring-0 shadow-sm">
+        <CardHeader className="min-h-0! flex! flex-col flex-wrap gap-x-[24px] gap-y-[16px] px-[24px]! py-0! md:flex-row">
+          <div className="min-w-0 max-w-full space-y-[8px]">
+            <CardTitle className="font-semibold leading-none!">{input.title}</CardTitle>
+            <CardDescription className="text-[length:var(--doe-font-body)] leading-[20px]">各 Wafer Yield 与 CP Fail 占比</CardDescription>
+          </div>
+          <CardAction className="flex w-full min-w-0 flex-1 items-start justify-end gap-3 md:w-auto">
+            <ChartLegend
+              parameters={parameters}
+              parameterColors={parameterColors}
+              threshold={input.failThresholdPercent}
             />
           </CardAction>
         </CardHeader>
-        <CollapsibleContent>
-          <CardContent className="p-0">
-            {input.wafers.length === 0 ? (
-              <EmptyState>暂无 Wafer Yield 与 CP Fail 数据</EmptyState>
-            ) : (
-              <div className="p-4">
-                <ChartLegend
-                  parameters={parameters}
-                  parameterColors={parameterColors}
-                  threshold={input.failThresholdPercent}
-                />
-                <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] gap-2">
-                  <YieldAxis />
-                  <div ref={plotViewport} data-yield-plot-viewport className="min-w-0 overflow-x-auto overscroll-x-contain">
-                    <div
-                      className="relative" data-yield-plot
-                      style={{ width: plotWidth }}
+        <CardContent className="px-[24px] pt-[24px]">
+          {input.wafers.length === 0 ? (
+            <EmptyState>暂无 Wafer Yield 与 CP Fail 数据</EmptyState>
+          ) : (
+            <div data-yield-chart-body>
+              <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] gap-2">
+                <YieldAxis />
+                <div ref={plotViewport} data-yield-plot-viewport className="min-w-0 overflow-x-auto overscroll-x-contain">
+                  <div
+                    className="relative" data-yield-plot
+                    style={{ width: plotWidth }}
+                  >
+                    <svg
+                      className="block h-(--doe-wafer-yield-plot-height)"
+                      width={plotWidth}
+                      height={PLOT_HEIGHT}
+                      viewBox={`0 0 ${plotWidth} ${PLOT_HEIGHT}`}
+                      role="img"
+                      aria-label="各 Wafer Yield 折线与超过阈值的 CP Fail 堆叠柱"
                     >
-                      <svg
-                        className="block h-(--doe-wafer-yield-plot-height)"
-                        width={plotWidth}
-                        height={PLOT_HEIGHT}
-                        viewBox={`0 0 ${plotWidth} ${PLOT_HEIGHT}`}
-                        role="img"
-                        aria-label="各 Wafer Yield 折线与超过阈值的 CP Fail 堆叠柱"
-                      >
-                        {[0, 25, 50, 75, 100].map((tick) => {
-                          const y = PLOT_HEIGHT - (tick / 100) * PLOT_HEIGHT
-                          return (
-                            <line
-                              key={tick}
-                              x1={0}
-                              x2={plotWidth}
-                              y1={y}
-                              y2={y}
-                              stroke="var(--border)"
-                              strokeWidth={1}
-                              vectorEffect="non-scaling-stroke"
-                            />
-                          )
-                        })}
-                        {input.wafers.map((wafer, index) => {
-                          const centerX = (index + 0.5) * columnWidth
-                          let bottom = PLOT_HEIGHT
-                          const fails = visibleCpFails(
+                      {[0, 25, 50, 75, 100].map((tick) => {
+                        const y = yieldPlotY(tick)
+                        return (
+                          <line
+                            key={tick}
+                            x1={0}
+                            x2={plotWidth}
+                            y1={y}
+                            y2={y}
+                            stroke="var(--border)"
+                            strokeWidth={1}
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )
+                      })}
+                      {input.wafers.map((wafer, index) => {
+                        const centerX = (index + 0.5) * columnWidth
+                        let bottom = yieldPlotY(0)
+                        const fails = visibleCpFails(
+                          wafer,
+                          input.failThresholdPercent
+                        ).sort(
+                          (a, b) =>
+                            parameters.indexOf(a.parameter) -
+                            parameters.indexOf(b.parameter)
+                        )
+
+                        return (
+                          <g key={`${wafer.waferId}-fails`}>
+                            {fails.map((fail) => {
+                              const requestedHeight =
+                                (fail.percent / 100) * PLOT_DATA_HEIGHT
+                              const height = Math.min(bottom - PLOT_INSET, requestedHeight)
+                              bottom -= height
+                              return (
+                                <rect
+                                  key={fail.parameter}
+                                  x={centerX - barWidth / 2}
+                                  y={bottom}
+                                  width={barWidth}
+                                  height={height}
+                                  rx={fails.at(-1) === fail ? 4 : 0}
+                                  fill={parameterColors.get(fail.parameter)}
+                                />
+                              )
+                            })}
+                          </g>
+                        )
+                      })}
+                      {input.wafers.slice(1).map((wafer, index) => {
+                        const previous = input.wafers[index]
+                        if (previous.yield === null || wafer.yield === null) return null
+                        return (
+                          <line
+                            key={`${previous.waferId}-${wafer.waferId}-yield-line`}
+                            x1={(index + 0.5) * columnWidth}
+                            x2={(index + 1.5) * columnWidth}
+                            y1={yieldPlotY(previous.yield)}
+                            y2={yieldPlotY(wafer.yield)}
+                            stroke={YIELD_COLOR}
+                            strokeWidth={3}
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )
+                      })}
+                      {input.wafers.map((wafer, index) =>
+                        wafer.yield === null ? null : (
+                          <circle
+                            key={`${wafer.waferId}-yield`}
+                            cx={(index + 0.5) * columnWidth}
+                            cy={yieldPlotY(wafer.yield)}
+                            r={4.5}
+                            fill={YIELD_COLOR}
+                            stroke="var(--background)"
+                            strokeWidth={2}
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )
+                      )}
+                    </svg>
+                    <div
+                      className="absolute inset-0 grid h-(--doe-wafer-yield-plot-height)"
+                      style={{
+                        gridTemplateColumns: `repeat(${input.wafers.length}, minmax(0, 1fr))`,
+                      }}
+                    >
+                      {input.wafers.map((wafer) => (
+                        <button
+                          key={wafer.waferId}
+                          type="button"
+                          className="h-full border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                          aria-label={chartWaferLabel(
                             wafer,
                             input.failThresholdPercent
-                          ).sort(
-                            (a, b) =>
-                              parameters.indexOf(a.parameter) -
-                              parameters.indexOf(b.parameter)
-                          )
-
-                          return (
-                            <g key={`${wafer.waferId}-fails`}>
-                              {fails.map((fail) => {
-                                const requestedHeight =
-                                  (fail.percent / 100) * PLOT_HEIGHT
-                                const height = Math.min(bottom, requestedHeight)
-                                bottom -= height
-                                return (
-                                  <rect
-                                    key={fail.parameter}
-                                    x={centerX - barWidth / 2}
-                                    y={bottom}
-                                    width={barWidth}
-                                    height={height}
-                                    rx={fails.at(-1) === fail ? 4 : 0}
-                                    fill={parameterColors.get(fail.parameter)}
-                                  />
-                                )
-                              })}
-                            </g>
-                          )
-                        })}
-                        {input.wafers.slice(1).map((wafer, index) => {
-                          const previous = input.wafers[index]
-                          if (previous.yield === null || wafer.yield === null) return null
-                          return (
-                            <line
-                              key={`${previous.waferId}-${wafer.waferId}-yield-line`}
-                              x1={(index + 0.5) * columnWidth}
-                              x2={(index + 1.5) * columnWidth}
-                              y1={PLOT_HEIGHT - (previous.yield / 100) * PLOT_HEIGHT}
-                              y2={PLOT_HEIGHT - (wafer.yield / 100) * PLOT_HEIGHT}
-                              stroke={YIELD_COLOR}
-                              strokeWidth={3}
-                              strokeLinecap="round"
-                              vectorEffect="non-scaling-stroke"
-                            />
-                          )
-                        })}
-                        {input.wafers.map((wafer, index) =>
-                          wafer.yield === null ? null : (
-                            <circle
-                              key={`${wafer.waferId}-yield`}
-                              cx={(index + 0.5) * columnWidth}
-                              cy={PLOT_HEIGHT - (wafer.yield / 100) * PLOT_HEIGHT}
-                              r={4.5}
-                              fill={YIELD_COLOR}
-                              stroke="var(--background)"
-                              strokeWidth={2}
-                              vectorEffect="non-scaling-stroke"
-                            />
-                          )
-                        )}
-                      </svg>
-                      <div
-                        className="absolute inset-0 grid h-(--doe-wafer-yield-plot-height)"
-                        style={{
-                          gridTemplateColumns: `repeat(${input.wafers.length}, minmax(0, 1fr))`,
-                        }}
-                      >
-                        {input.wafers.map((wafer) => (
-                          <button
-                            key={wafer.waferId}
-                            type="button"
-                            className="h-full border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                            aria-label={chartWaferLabel(
+                          )}
+                          onPointerMove={(event) =>
+                            setTooltip({
                               wafer,
-                              input.failThresholdPercent
-                            )}
-                            onPointerMove={(event) =>
-                              setTooltip({
-                                wafer,
-                                x: event.clientX + 12,
-                                y: event.clientY + 12,
-                              })
-                            }
-                            onPointerLeave={() => setTooltip(null)}
-                            onFocus={(event) => {
-                              const rect = event.currentTarget.getBoundingClientRect()
-                              setTooltip({
-                                wafer,
-                                x: rect.left + rect.width / 2,
-                                y: rect.top + 36,
-                              })
-                            }}
-                            onBlur={() => setTooltip(null)}
-                          />
-                        ))}
-                      </div>
-                      <ChartXAxis
-                        wafers={input.wafers}
-                        groups={groups}
-                        columnWidth={columnWidth}
-                        plotWidth={plotWidth}
-                      />
+                              x: event.clientX + 12,
+                              y: event.clientY + 12,
+                            })
+                          }
+                          onPointerLeave={() => setTooltip(null)}
+                          onFocus={(event) => {
+                            const rect = event.currentTarget.getBoundingClientRect()
+                            setTooltip({
+                              wafer,
+                              x: rect.left + rect.width / 2,
+                              y: rect.top + 36,
+                            })
+                          }}
+                          onBlur={() => setTooltip(null)}
+                        />
+                      ))}
                     </div>
+                    <ChartXAxis
+                      wafers={input.wafers}
+                      groups={groups}
+                      columnWidth={columnWidth}
+                      plotWidth={plotWidth}
+                    />
                   </div>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </CollapsibleContent>
+            </div>
+          )}
+        </CardContent>
       </Card>
       {tooltip && typeof document !== "undefined"
         ? createPortal(
@@ -281,7 +263,7 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
             document.body
           )
         : null}
-    </Collapsible>
+    </>
   )
 }
 
@@ -296,7 +278,7 @@ function ChartLegend({
 }) {
   return (
     <div
-      className="mb-3 ml-14 flex flex-wrap items-center justify-end gap-x-5 gap-y-2 text-xs text-muted-foreground"
+      className="flex min-w-0 flex-wrap items-center justify-end gap-x-5 gap-y-2 pt-1 text-xs text-muted-foreground"
       aria-label="Yield 与 CP Fail 图例"
     >
       <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -328,9 +310,9 @@ function YieldAxis() {
       <span data-yield-axis-title className="self-center justify-self-center whitespace-nowrap [writing-mode:vertical-rl] rotate-180">
         Yield (%)
       </span>
-      <div data-yield-axis-ticks className="flex h-full flex-col items-end justify-between pr-1 tabular-nums">
+      <div data-yield-axis-ticks className="relative h-full tabular-nums">
         {[100, 75, 50, 25, 0].map((tick) => (
-          <span key={tick}>{tick}%</span>
+          <span key={tick} data-yield-tick={tick} className="absolute right-1 -translate-y-1/2" style={{ top: yieldPlotY(tick) }}>{tick}%</span>
         ))}
       </div>
     </div>
@@ -373,7 +355,7 @@ function ChartXAxis({
       {groups.map((group) => (
         <span
           key={`${group.step}-${group.startIndex}`}
-          className="absolute top-[6.75rem] flex h-[2.375rem] items-start justify-center overflow-hidden border-t border-l bg-background px-1 pt-1.5 text-center text-[10px] leading-3 text-foreground last:border-r"
+          className="absolute top-[6.75rem] flex h-[2.375rem] items-start justify-center overflow-hidden border-t border-l bg-background px-1 pt-1.5 text-center text-[10px] leading-3 text-foreground [overflow-wrap:anywhere] last:border-r"
           style={{
             left: group.startIndex * columnWidth,
             width: group.count * columnWidth,

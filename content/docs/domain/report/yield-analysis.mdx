@@ -25,7 +25,7 @@ import { ReportState } from "@/components/domain/report-state"
 - Wafer Yield & CP Fail Analysis 的绿色折线与 CP Fail 堆叠柱共享 0–100% 纵轴。Wafer 顺序、Condition、Step、Yield、CP Fail 百分比与 failed-die count 全部来自输入；图表仅展示 `percent > failThresholdPercent` 的 CP Fail，图例保持 `series` 输入顺序。
 - Yield Detail Analysis 使用 shadcn/base tabs 切换 `Wafer x CP Matrix`、`Loss Yield`、`Condition Yield Comparison` 三张表。
 
-图表 hover 和键盘 focus 都显示当前 Wafer 的 Yield 及通过阈值的 CP Fail 详情；pointer leave、blur、滚动、resize 或 `Escape` 关闭 tooltip。图表面板可独立收起，这些都是局部展示状态，不触发数据请求或跨组件 workflow。
+图表 hover 和键盘 focus 都显示当前 Wafer 的 Yield 及通过阈值的 CP Fail 详情；pointer leave、blur、滚动、resize 或 `Escape` 关闭 tooltip。图表常驻展开，不提供展开 / 收起按钮。Tooltip 属于局部展示状态，不触发数据请求或跨组件 workflow。
 
 筛选区使用无外框的紧凑控制行，只保留控件自身边界；组合图继续使用单层中性 Analytical Surface。明细分析使用无 Card 的轻量标题 / Tabs 工具栏，矩阵表以自身的边界和局部横向滚动作为唯一可读壳，不嵌套第二张分析卡片。组件内部只关心 report yield analysis schema 和本地展示状态；过滤后的业务数据由外部注入。
 
@@ -64,3 +64,20 @@ Matrix 在本地双向滚动区域保留表头；Loss 列名明确为 Cumulative
 ## Responsive geometry and table layout — 2026-10-10
 
 The Yield plot measures its available column with ResizeObserver. At desktop viewport widths (768px and above), SVG, three-level X axis and hit targets fill that column and share one geometry. Smaller viewports retain a 44px readable minimum per wafer with local horizontal scrolling. The Y title and percentage ticks occupy separate columns. Supplied values, order, fail threshold and missing-data semantics are unchanged. Detail tables use the Split Table shell, reading density and grouped hover contract; Matrix retains local two-axis scrolling and sticky headers.
+
+
+## Chart Card pilot — 2026-10-10
+
+用户确认的 shadcn Dashboard 01 图表布局先应用于 Wafer Yield & CP Fail Analysis：单层主题 Card、1px 中性边界、DOE 卡片圆角与轻阴影；24px 内部上 / 左右 / 下间距，标题为 16px / 600，主题副标题在标题下方间隔 8px。完整标题区到图表 viewport 以 24px Card gap + 24px content padding 保持 48px；标题区与图表区无横向分割线。轻阴影为本轮明确选定的参考外观，仅此组合图试点，不改变全局 Analytical Surface 规则。
+
+标题区左侧显示标题与「各 Wafer Yield 与 CP Fail 占比」说明，右侧放已有图例、输入阈值说明。图例允许换行，窄容器的标题 / 控件允许分行。该图没有局部 Tab，不新增参考页的时间筛选。坐标网格线和三级 X 轴结构保留；图表高度、数据、阈值、缺失值及 hover / keyboard tooltip 语义均沿用现有 contract。UI-facing schema、fixtures 和 scenarios 无新增字段。
+
+本轮 scope 与参考依据：DOE App `docs/acceptance/ui/report-charts/standard.md`（UI-CH01–05）；consumer 只同步该组件。其他图表待用户确认试点后再处理。
+
+用户本轮补充：消费端不需要展开 / 收起。组合图组件移除 Collapsible 和按钮，CardContent 常驻展示，不保留隐藏的折叠入口。
+
+### Yield 绘图区边界修复（2026-10-10）
+
+组合图 SVG 仍为 220px 高、0–100% 的线性比例；上下各保留 12px 图内安全边距，有效数据高度为 196px。折线、圆点、柱形、网格和 Y 轴刻度共用坐标：100% 位于 y=12、0% 位于 y=208。圆点半径 4.5px 加 2px 描边完整保留；堆叠柱最多绘制到 100% 网格线，不侵入安全边距。Y 轴文字中心对齐网格，窄列 Step 标签允许在必要时断词，防止 Screen OX 被横向裁切。
+
+该修复不改变输入数据、百分比定义、阈值、排序及 Card 的 24 / 8 / 48px 外部布局；展开 / 收起控件保持移除。渲染回归测试覆盖 0%、100%、99.63% 圆点与 100% 柱形的边界及共用比例。
