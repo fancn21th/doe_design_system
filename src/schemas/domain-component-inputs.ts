@@ -1053,3 +1053,11 @@ export type LayoutSidebarShellInput = z.infer<
   typeof layoutSidebarShellInputSchema
 >
 export type RunCardHistoryInput = z.infer<typeof runCardHistoryInputSchema>
+
+/** Presentation metadata for a business block; no query or workflow semantics. */
+export const blockTitleInputSchema = z.object({
+  id: z.string().trim().min(1).regex(/^[A-Za-z][A-Za-z0-9_-]*$/),
+  title: z.string().trim().min(1),
+  helpText: z.string().trim().min(1),
+})
+export type BlockTitleInput = z.infer<typeof blockTitleInputSchema>

@@ -11,7 +11,6 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 
 <div className="domain-ui-preview-wide">
   <div className="not-prose overflow-hidden rounded-xl border">
-    <div className="border-b px-4 py-3 text-sm font-medium">Wafer Split Table</div>
     <ReportSplitTable input={reportSplitTableScenarios.normal.input} />
   </div>
 </div>
@@ -19,7 +18,7 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 ## Contract
 
 `ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
-组件由过滤区域和逐 wafer 的 Split Table 组成；
+组件由业务标题与 body 组成，body 包含过滤区域和逐 wafer 的 Split Table；
 过滤区域使用多选 Combobox 按 `stageOptions` / `stepOptions` 过滤，空选中表示 `全部`。
 当 consumer 提供 `stepFacets` 时，Step 选项和已选 chip 会显示 BFF 提供的
 `sourceCount facts / displayCount displayed`；前者是权威 assignment 事实数，后者是
@@ -124,3 +123,20 @@ Within ReportWorkspaceLayout, the common content stack owns 16px top spacing bel
 ## Split Table container alignment pilot — 2026-10-10
 
 在 ReportWorkspaceLayout 内，Split Table 横向留白消费其局部 gutter，桌面（>=1024px）左右各 24px，其他宽度各 16px。Stage / Step 筛选容器和表格外框共享页头内容区的左右边界；单元格仍保留既有内部 padding。单独的 Component Lab 预览没有工作区 gutter 时，保留原来按 density 计算的 p-4 留白。用户随后授权推广到其他 Report Tab；共同布局负责横向留白，具体见 [Layout Shell Contract](/docs/domain/shared/layout-shell)。分组 hover、排序、筛选、业务输入及 callback 保持原契约。
+
+## Block title pilot — 2026-10-10
+
+本轮用户授权 Split Table 打样业务 block：使用共享 `BlockTitle`，标题文案为
+`Wafer Split Table`。标题是带稳定 `id="wafer-split-table"` 的 h2，外层 section
+通过 `aria-labelledby` 引用它，作为后续锚点定位的目标。小问号是可键盘聚焦的
+按钮，悬浮或聚焦时通过本地 shadcn / Base UI Tooltip 显示辅助说明，Escape 关闭。
+标题和 body 之间用已有 section gap，不画分割线、不增加折叠容器或展开/收缩控件。
+
+辅助说明：按 Stage / Step / Seq 分组查看 Wafer 的 Recipe、Condition、Yield 与 Top Fail，
+BSL / split 标签标识基准与实验条件分配。可通过 Stage 和 Step 筛选缩小查看范围；
+结果来自当前报告快照。
+
+标题在正常、空数据和筛选无结果状态中保持可见；body 保留已有输入、分组 hover、
+本地筛选、表格局部横向滚动与 callback，标题本身不请求数据或生成业务结论。
+本轮只接入 Split Table，其他业务标题不自动推广。共享组件契约见
+[Block Title](/docs/domain/shared/block-title)。

@@ -28,9 +28,10 @@ import { ReportState } from "@/components/domain/report-state"
 卡片的层级。App 不得在 `WaferMapGallery` 外另建 CP/Defect、Final Bin/Parameter 或
 Overlay 的视觉控制器。
 
-页面有两层局部筛选：一级在 `CP Map` 与 `Defect Map` 间切换；CP Map 下的二级筛选为
-`Final Bin` 与 `Parameter Map` 标准 Tabs。两级均复用 foundation `TabsList variant="line"`，
-一级和二级分行，保持报告页面一致的下划线选中状态和清晰层级。选择 `Parameter Map` 后，使用单选、可搜索、
+页面有两层局部视图导航：三级在 `CP Map`、`Defect Map` 与 `Overlay` 间切换，
+复用 `ReportViewNavigation` 的图标 + 文字 line Tabs；CP Map 下的四级为
+`Final Bin` 与 `Parameter Map`，保留已有无图标的 foundation `TabsList variant="line"` 样式。
+三级和四级分行并左对齐，保持清晰层级。选择 `Parameter Map` 后，使用单选、可搜索、
 可清除的 `CP Parameter` Combobox；每个参数选项都有其独立的 25 片 wafer map 输入。
 Defect Map 的二级筛选由 shared gallery 提供 `Layer` 与 `Defect Type` 两个单选、可搜索
 Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视图间共享或推断。
@@ -122,3 +123,8 @@ detail facts 的全屏空态；`map-without-wafer-summary` 用于验证未提供
 所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
 及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
 没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+### Navigation hierarchy
+
+导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
+三级复用共享导航，四级保持现有样式和选择 callback；地图可用性、参数与 Defect 查询归属不变。

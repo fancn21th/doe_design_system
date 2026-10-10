@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import {
   GitCompareArrowsIcon,
   Table2Icon,
@@ -34,12 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { TabsContent } from "@/components/ui/tabs"
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 import {
   reportYieldAnalysisInputSchema,
   type ReportYieldAnalysisInput,
@@ -443,7 +441,8 @@ export function ReportYieldAnalysis({
       stepOptions.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-[24px] p-4">
+          <ReportBlock input={{ id: "yield-analysis", title: "Yield Analysis", helpText: "按 Stage 和 Step 筛选 Wafer，比较 Yield 与主要 CP Fail 占比；数值来自当前报告快照。" }}>
           <div className="flex flex-col gap-3 md:flex-row">
             <MultiFilterCombobox
               label="Stage"
@@ -465,35 +464,18 @@ export function ReportYieldAnalysis({
             <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
           )}
 
-          <section
-            className="grid min-w-0 max-w-full gap-3"
-            aria-labelledby="yield-detail-analysis-title"
-          >
-            <Tabs
+          </ReportBlock>
+          <ReportBlock input={{ id: "yield-detail-analysis-title", title: "Yield Detail Analysis", helpText: "通过 Wafer × CP Matrix、Loss Yield 与 Condition Yield Comparison 查看良率明细，比较 CP 失效与实验条件的报告结果。" }}>
+            <ReportViewNavigation
               value={selectedDetailMode}
               onValueChange={handleDetailModeChange}
-              className="min-w-0 max-w-full gap-3"
+              ariaLabel="Yield Detail Analysis 视图"
+              options={detailModeOptions.map((option) => ({
+                value: option.id,
+                label: option.label,
+                icon: option.id === "wafer-cp-matrix" ? Table2Icon : option.id === "loss-yield" ? TrendingDownIcon : GitCompareArrowsIcon,
+              }))}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2
-                  id="yield-detail-analysis-title"
-                  className="text-sm font-semibold"
-                >
-                  Yield Detail Analysis
-                </h2>
-                <TabsList className="h-auto flex-wrap">
-                  {detailModeOptions.map((option) => (
-                    <TabsTrigger key={option.id} value={option.id}>
-                      {option.id === "wafer-cp-matrix" && <Table2Icon />}
-                      {option.id === "loss-yield" && <TrendingDownIcon />}
-                      {option.id === "condition-yield-comparison" && (
-                        <GitCompareArrowsIcon />
-                      )}
-                      {option.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
               <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
                 <MatrixTable rows={matrixRows} matrixColumns={matrixColumns} onWaferSelect={onWaferSelect} focusedWaferId={parsedInput.focusedWaferId} />
               </TabsContent>
@@ -503,8 +485,8 @@ export function ReportYieldAnalysis({
               <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
                 <ConditionYieldTable rows={conditionYieldRows} onWaferSelect={onWaferSelect} />
               </TabsContent>
-            </Tabs>
-          </section>
+            </ReportViewNavigation>
+          </ReportBlock>
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
 
 import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenarios"
@@ -58,12 +60,14 @@ export function ReportCpData({
         <EmptyState>暂无 CP Data 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+          <ReportBlock input={{ id: "cp-data-parameter-analysis", title: "CP Parameter Analysis", helpText: "选择 CP 参数，查看各 Wafer 的 die 测量分布、均值、中位数与参考线；展示当前报告快照中的测量数据。" }}>
           <CpParameterCombobox
             options={parameterOptions}
             value={selectedParameterCode}
             onValueChange={selectParameter}
           />
-          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <ReportMeasurement input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
+          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <ReportMeasurement appearance="report-chart" input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
+          </ReportBlock>
         </div>
       )}
     </div>

@@ -67,8 +67,8 @@ import { ReportState } from "@/components/domain/report-state"
 - 三张图分别比较 Inline Median 与 CP Median、CP Min、CP Max；仅消费提供的同片 Wafer 点。
 - 模型状态、方程、曲线、R²、RMSE、Residual N、df、每图 Pearson/Spearman、规格与交点均为上游只读证据。
   组件不回归、不求根，也不按 N 或 Condition levels 自行判断拟合可用性。
-- 两个业务区默认展开；每图 Linear/Quadratic 曲线显隐、hover 和交点坐标展开属于本地展示状态。
-  曲线显隐不移除右侧统计证据。域外交点保留标签，图中只画域内交点。
+- Wafer Pair 与 Wafer Scatter & Fits 业务区以标题和 body 组成，内容始终可见；Fit × Spec 交点坐标同样直接呈现，不提供模块收缩/展开。
+  每图 Linear/Quadratic 曲线显隐与 hover 仍属于本地展示状态，曲线显隐不移除右侧统计证据。域外交点保留标签，图中只画域内交点。
 - 未提供 spec / roots / model 时明确展示不可用；missing 不补零。科学计数法保留完整指数，防止小量级值归零。
 - 窄屏图与证据纵向堆叠；表格仅在自身横向滚动，图表随证据列宽调整。
 - Condition 聚合、拟合配置选择、Control Window 与 Leave-One-Out Stability 不属于新版 Fit。
@@ -151,3 +151,11 @@ Wafer 标签按屏幕坐标避让并限制在绘图区；引线连接原始散�
 - 小量级 CP Max 使用足够有效数字，避免 `0.0003000092` 与 `0.000300029` 都显示为 `0.000300`。
 - `small-scale-far-spec` 是 mock 坐标/精度回归场景；真实拟合曲线以 App 收到的 Backend 证据验收。
 - 原型中的离线派生曲线不代表任何 Backend 版本一定会返回同样的可用状态；Wafer 拟合准入仍由 Backend 决定。
+
+### Navigation hierarchy
+
+导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
+Candidates 的 Recommended Candidates / Filtered / Insufficient Sample 是三级视图导航，
+复用 `ReportViewNavigation` 的图标 + 文字 line Tabs；沿用 Inline Data 的中性选中态，左对齐并支持局部横向滚动。
+切换仍发出受控查询意图并清空 pairedN / reason，不在组件内重新分类、评分或请求。
+候选图表的局部语义色不定义导航选中态。

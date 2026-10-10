@@ -2,6 +2,8 @@
 
 import * as React from "react"
 
+import { BlockTitle } from "@/components/domain/block-title"
+
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
 import {
   formatPercent,
@@ -341,128 +343,135 @@ export function ReportSplitTable({
 
   return (
     <div className={className}>
-      <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
-        {rows.length === 0 && (
-          <ReportState title="暂无 Split Table 数据" description="当前报告暂无可展示的 Wafer Split Table 数据。" />
-        )}
-        {rows.length > 0 && (
-          <div className="flex flex-col gap-3 md:flex-row">
-            <MultiFilterCombobox
-              label="Stage"
-              placeholder="全部"
-              options={stageOptions}
-              value={selectedStageOptions}
-              onValueChange={setSelectedStageOptions}
-            />
-            <MultiFilterCombobox
-              label="Step"
-              placeholder="全部"
-              options={stepOptions}
-              value={selectedStepOptions}
-              onValueChange={setSelectedStepOptions}
-            />
-          </div>
-        )}
-        {rows.length > 0 && (filteredRows.length === 0 ? (
-            <ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" />
-          ) : (
-            <div className="domain-ui-split-table-shell">
-              <Table className="domain-ui-split-table domain-ui-report-split-table domain-ui-grouped-table">
-                <TableHeader className="bg-muted/60">
-                  <TableRow>
-                    <TableHead className="w-[24%]">Stage / Step / Seq</TableHead>
-                    <TableHead className="w-[12%]">Wafer ID</TableHead>
-                    <TableHead className="w-[18%]">Recipe</TableHead>
-                    <TableHead className="w-[18%]">Condition</TableHead>
-                    <TableHead className="w-[10%]">Yield</TableHead>
-                    <TableHead className="w-[18%]">Top Fail</TableHead>
-                  </TableRow>
-                </TableHeader>
-                {groupedRows.map((group) => (
-                  <TableBody key={group.key}>
-                    {group.rows.map(({ row, roleLabel }, index) => {
-                      const topFails = getReportSplitTableTopFails(row)
-                      const topFailText = topFails
-                        .map(
-                          ({ parameter, count }) =>
-                            `${parameter} · ${count.toLocaleString()}`
-                        )
-                        .join(", ")
-                      const hasTopFail = topFails.some(
-                        ({ parameter }) =>
-                          parameter !== "N/A" && parameter !== "—"
-                      )
-
-                      return (
-                        <TableRow
-                          key={`${group.key}-${row.waferId}-${row.condition}-${index}`}
-                          className={cn(index === 0 && "border-t first:border-t-0")}
-                        >
-                          {index === 0 && (
-                            <TableCell
-                              rowSpan={group.rows.length}
-                              className="whitespace-normal align-middle"
-                            >
-                              <span className="font-medium">
-                                {row.stage} / {row.step}
-                              </span>{" "}
-                              <span className="text-muted-foreground">
-                                / {row.seq}
-                              </span>
-                            </TableCell>
-                          )}
-                          <TableCell>
-                            <div className="flex flex-col items-start gap-1">
-                              <ReportSplitTableWaferLink row={row} onWaferSelect={onWaferSelect} />
-                              <Badge
-                                variant="outline"
-                                className="h-6 rounded-full px-2 font-normal text-muted-foreground"
-                              >
-                                {roleLabel}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell className="whitespace-normal">
-                            {row.recipe}
-                          </TableCell>
-                          <TableCell className="whitespace-normal">
-                            {row.condition}
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              "font-mono",
-                              getYieldTextClass(
-                                row.tone ?? getRowTone(row.yield)
-                              )
-                            )}
-                          >
-                            {formatSplitTableYield(row.yield)}
-                          </TableCell>
-                          <TableCell className="whitespace-normal">
-                            {onTopFailSelect && hasTopFail ? (
-                              <button
-                                type="button"
-                                aria-label={`查看 ${row.waferId} 的 ${topFailText}`}
-                                className="text-left font-mono text-xs font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                onClick={() => onTopFailSelect(row)}
-                              >
-                                {topFailText}
-                              </button>
-                            ) : (
-                              <span className="font-mono text-xs font-medium text-sky-700">
-                                {topFailText}
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                ))}
-              </Table>
+      <section aria-labelledby="wafer-split-table" data-report-block="wafer-split-table" className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+        <BlockTitle input={{
+          id: "wafer-split-table",
+          title: "Wafer Split Table",
+          helpText: "按 Stage / Step / Seq 分组查看 Wafer 的 Recipe、Condition、Yield 与 Top Fail，BSL / split 标签标识基准与实验条件分配。可通过 Stage 和 Step 筛选缩小查看范围；结果来自当前报告快照。",
+        }} />
+        <div data-slot="block-body" className="grid min-w-0 gap-4">
+          {rows.length === 0 && (
+            <ReportState title="暂无 Split Table 数据" description="当前报告暂无可展示的 Wafer Split Table 数据。" />
+          )}
+          {rows.length > 0 && (
+            <div className="flex flex-col gap-3 md:flex-row">
+              <MultiFilterCombobox
+                label="Stage"
+                placeholder="全部"
+                options={stageOptions}
+                value={selectedStageOptions}
+                onValueChange={setSelectedStageOptions}
+              />
+              <MultiFilterCombobox
+                label="Step"
+                placeholder="全部"
+                options={stepOptions}
+                value={selectedStepOptions}
+                onValueChange={setSelectedStepOptions}
+              />
             </div>
-          ))}
-      </div>
+          )}
+          {rows.length > 0 && (filteredRows.length === 0 ? (
+              <ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" />
+            ) : (
+              <div className="domain-ui-split-table-shell">
+                <Table className="domain-ui-split-table domain-ui-report-split-table domain-ui-grouped-table">
+                  <TableHeader className="bg-muted/60">
+                    <TableRow>
+                      <TableHead className="w-[24%]">Stage / Step / Seq</TableHead>
+                      <TableHead className="w-[12%]">Wafer ID</TableHead>
+                      <TableHead className="w-[18%]">Recipe</TableHead>
+                      <TableHead className="w-[18%]">Condition</TableHead>
+                      <TableHead className="w-[10%]">Yield</TableHead>
+                      <TableHead className="w-[18%]">Top Fail</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  {groupedRows.map((group) => (
+                    <TableBody key={group.key}>
+                      {group.rows.map(({ row, roleLabel }, index) => {
+                        const topFails = getReportSplitTableTopFails(row)
+                        const topFailText = topFails
+                          .map(
+                            ({ parameter, count }) =>
+                              `${parameter} · ${count.toLocaleString()}`
+                          )
+                          .join(", ")
+                        const hasTopFail = topFails.some(
+                          ({ parameter }) =>
+                            parameter !== "N/A" && parameter !== "—"
+                        )
+
+                        return (
+                          <TableRow
+                            key={`${group.key}-${row.waferId}-${row.condition}-${index}`}
+                            className={cn(index === 0 && "border-t first:border-t-0")}
+                          >
+                            {index === 0 && (
+                              <TableCell
+                                rowSpan={group.rows.length}
+                                className="whitespace-normal align-middle"
+                              >
+                                <span className="font-medium">
+                                  {row.stage} / {row.step}
+                                </span>{" "}
+                                <span className="text-muted-foreground">
+                                  / {row.seq}
+                                </span>
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              <div className="flex flex-col items-start gap-1">
+                                <ReportSplitTableWaferLink row={row} onWaferSelect={onWaferSelect} />
+                                <Badge
+                                  variant="outline"
+                                  className="h-6 rounded-full px-2 font-normal text-muted-foreground"
+                                >
+                                  {roleLabel}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="whitespace-normal">
+                              {row.recipe}
+                            </TableCell>
+                            <TableCell className="whitespace-normal">
+                              {row.condition}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                "font-mono",
+                                getYieldTextClass(
+                                  row.tone ?? getRowTone(row.yield)
+                                )
+                              )}
+                            >
+                              {formatSplitTableYield(row.yield)}
+                            </TableCell>
+                            <TableCell className="whitespace-normal">
+                              {onTopFailSelect && hasTopFail ? (
+                                <button
+                                  type="button"
+                                  aria-label={`查看 ${row.waferId} 的 ${topFailText}`}
+                                  className="text-left font-mono text-xs font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  onClick={() => onTopFailSelect(row)}
+                                >
+                                  {topFailText}
+                                </button>
+                              ) : (
+                                <span className="font-mono text-xs font-medium text-sky-700">
+                                  {topFailText}
+                                </span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  ))}
+                </Table>
+              </div>
+            ))}
+        </div>
+      </section>
     </div>
   )
 }

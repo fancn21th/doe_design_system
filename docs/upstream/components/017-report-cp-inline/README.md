@@ -247,3 +247,8 @@ changes belong to the next implementation step.
 ## 2026-10-10 measured-scale correction
 
 User compared the production IGSSNSC Fit to the documented prototype. USL=1e-4 expanded the axis around Median≈3e-8; generated model paths spanned only 0.01–0.02 px. Distinct Max≈3e-4 values collapsed under six-decimal formatting. The approved correction keeps axes around observations/visible models, preserves out-of-range spec values with explicit labels, and retains precision. Backend availability remains supplied evidence. See the CP × Inline MDX measured-scale contract.
+
+
+## 2026-10-10 Navigation and Block rule
+
+用户当前批注明确三级候选视图改为共同的带图标 Tabs 并左对齐。Wafer Pair、Scatter & Fits、Fit × Spec 交点区域均持续可见，撤销旧记录中的模块折叠约定；模型曲线显隐保留。信息架构规范见 `docs/patterns/navigation-and-blocks.md`，实际截图归 App UI 验收。

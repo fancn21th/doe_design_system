@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import { useState } from "react"
 import { ChartNoAxesColumnIncreasingIcon, Table2Icon } from "lucide-react"
 
@@ -25,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 import { cn } from "@/lib/utils"
 import {
   reportInlineDataInputSchema,
@@ -91,15 +93,16 @@ export function ReportInlineData({
 
   return (
     <div className={cn("domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4", className)}>
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h3 className="text-(length:--doe-font-module-title) font-semibold">{parsedInput.title ?? "Wafer × Inline Parameter"}</h3>
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as InlineViewMode)} className="gap-0">
-          <TabsList variant="line" aria-label="视图切换">
-            <TabsTrigger value="distribution" aria-label="箱型图视图"><ChartNoAxesColumnIncreasingIcon />箱型图</TabsTrigger>
-            <TabsTrigger value="matrix" aria-label="参数与 wafer 矩阵视图"><Table2Icon />矩阵</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </header>
+      <ReportBlock input={{ id: "inline-data", title: parsedInput.title ?? "Inline Data", helpText: "查看当前报告的 Inline 参数测量统计，切换箱型图或矩阵以比较各 Wafer 的测量分布与覆盖情况。" }}>
+      <ReportViewNavigation
+        value={viewMode}
+        onValueChange={(value) => setViewMode(value as InlineViewMode)}
+        ariaLabel="视图切换"
+        options={[
+          { value: "distribution", label: "箱型图", icon: ChartNoAxesColumnIncreasingIcon, ariaLabel: "箱型图视图" },
+          { value: "matrix", label: "矩阵", icon: Table2Icon, ariaLabel: "参数与 wafer 矩阵视图" },
+        ]}
+      />
       {parsedInput.summary && <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Inline 测量统计">
         <SnapshotMetric label="测量参数" value={parsedInput.summary.parameterCount} detail="本次报告包含的参数" />
         <SnapshotMetric label="测量点" value={parsedInput.summary.rawRowCount} detail="当前有效样本的测量记录" />
@@ -159,6 +162,7 @@ export function ReportInlineData({
           </div>
         </div>
       )}
+      </ReportBlock>
     </div>
   )
 }

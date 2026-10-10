@@ -1,6 +1,5 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
 import { useState, type ReactNode } from "react"
 
 import { ReportState } from "@/components/domain/report-state"
@@ -14,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import {
@@ -64,7 +62,14 @@ export function ReportCpInlineFit({ input, className, showHeader = true }: {
 }
 
 function FitSection({ title, children }: { title: string; children: ReactNode }) {
-  return <Collapsible defaultOpen className="min-w-0"><Card className="min-w-0 gap-0 py-0"><CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 border-b p-(--doe-module-padding) text-left text-(length:--doe-font-module-title) font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"><span>{title}</span><ChevronDown className="size-4 transition-transform group-data-panel-open:rotate-180" /></CollapsibleTrigger><CollapsibleContent>{children}</CollapsibleContent></Card></Collapsible>
+  return (
+    <Card className="min-w-0 gap-0 py-0">
+      <CardHeader className="border-b p-(--doe-module-padding)">
+        <h4 className="text-(length:--doe-font-module-title) font-semibold">{title}</h4>
+      </CardHeader>
+      {children}
+    </Card>
+  )
 }
 
 function FitResultPanel({ panel, input }: { panel: ReportCpInlineFitPanel; input: ReportCpInlineFitInput }) {
@@ -80,7 +85,10 @@ function FitResultPanel({ panel, input }: { panel: ReportCpInlineFitPanel; input
           {panel.models.map((model) => <ModelEvidence key={model.kind} model={model} visible={visibility[model.kind]} onToggle={() => setVisibility((current) => ({ ...current, [model.kind]: !current[model.kind] }))} />)}
           {panel.models.length === 0 && <p className="text-xs text-muted-foreground">未提供拟合结果。</p>}
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 border-t pt-3 text-sm"><dt>Pearson r</dt><dd className="font-mono font-semibold">{formatReportCpInlineValue(panel.pearson, 2)}</dd><dt>Spearman ρ</dt><dd className="font-mono font-semibold">{formatReportCpInlineValue(panel.spearman, 2)}</dd></dl>
-          <Collapsible className="border-t pt-2"><CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 py-2 text-left text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring">Fit × Spec 交点坐标<ChevronDown className="size-4 transition-transform group-data-panel-open:rotate-180" /></CollapsibleTrigger><CollapsibleContent keepMounted><div className="grid gap-2 pb-2 text-xs">{specs.length > 0 ? <p className="text-muted-foreground">{specs.map(({ kind, value }) => `${kind.toUpperCase()} ${formatReportCpInlineValue(value)}`).join(" · ")}{input.spec?.classification === "source-provisional" ? " · source-provisional" : ""}</p> : <p className="text-muted-foreground">未提供 CP 规格。</p>}{panel.roots.map((root) => <div key={root.id} className="rounded-(--doe-radius-cell) border p-2"><span className="font-semibold">{root.model === "linear" ? "Linear" : "Quadratic"} × {root.threshold.toUpperCase()}</span><span className="ml-2 text-muted-foreground">{root.domainStatus === "in-domain" ? "观测域内" : "观测域外"}</span><span className="mt-1 block font-mono">X {formatReportCpInlineValue(root.x)} · Y {formatReportCpInlineValue(root.y)}</span></div>)}{panel.roots.length === 0 && <p className="text-muted-foreground">未提供交点。</p>}</div></CollapsibleContent></Collapsible>
+          <section className="border-t pt-2">
+            <h5 className="py-2 text-xs font-semibold">Fit × Spec 交点坐标</h5>
+            <div className="grid gap-2 pb-2 text-xs">{specs.length > 0 ? <p className="text-muted-foreground">{specs.map(({ kind, value }) => `${kind.toUpperCase()} ${formatReportCpInlineValue(value)}`).join(" · ")}{input.spec?.classification === "source-provisional" ? " · source-provisional" : ""}</p> : <p className="text-muted-foreground">未提供 CP 规格。</p>}{panel.roots.map((root) => <div key={root.id} className="rounded-(--doe-radius-cell) border p-2"><span className="font-semibold">{root.model === "linear" ? "Linear" : "Quadratic"} × {root.threshold.toUpperCase()}</span><span className="ml-2 text-muted-foreground">{root.domainStatus === "in-domain" ? "观测域内" : "观测域外"}</span><span className="mt-1 block font-mono">X {formatReportCpInlineValue(root.x)} · Y {formatReportCpInlineValue(root.y)}</span></div>)}{panel.roots.length === 0 && <p className="text-muted-foreground">未提供交点。</p>}</div>
+          </section>
         </div>
       </CardContent>
     </Card>

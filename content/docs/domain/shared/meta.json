@@ -3,6 +3,7 @@
   "pages": [
     "wafer-map",
     "measurement",
-    "layout-shell"
+    "layout-shell",
+    "block-title"
   ]
 }

@@ -81,3 +81,10 @@ The Yield plot measures its available column with ResizeObserver. At desktop vie
 组合图 SVG 仍为 220px 高、0–100% 的线性比例；上下各保留 12px 图内安全边距，有效数据高度为 196px。折线、圆点、柱形、网格和 Y 轴刻度共用坐标：100% 位于 y=12、0% 位于 y=208。圆点半径 4.5px 加 2px 描边完整保留；堆叠柱最多绘制到 100% 网格线，不侵入安全边距。Y 轴文字中心对齐网格，窄列 Step 标签允许在必要时断词，防止 Screen OX 被横向裁切。
 
 该修复不改变输入数据、百分比定义、阈值、排序及 Card 的 24 / 8 / 48px 外部布局；展开 / 收起控件保持移除。渲染回归测试覆盖 0%、100%、99.63% 圆点与 100% 柱形的边界及共用比例。
+
+### Navigation hierarchy
+
+导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
+Yield Detail Analysis 的 Wafer × CP Matrix / Loss Yield / Condition Yield Comparison 是三级视图导航，
+复用 `ReportViewNavigation` 的图标 + 文字 line Tabs，在标题下方左对齐。
+已有 TabsContent、local mode 状态及 wafer selection callback 保持不变；过宽导航局部横向滚动。

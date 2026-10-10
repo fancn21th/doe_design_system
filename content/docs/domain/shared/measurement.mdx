@@ -88,3 +88,7 @@ when Measurement cannot display a chart. The component continues to decide
 that state from its parsed input and drawable domain. Report assets compose
 this slot with ReportState via ReportMeasurement; other consumers retain their
 existing default fallback. No statistics or evidence availability are redefined.
+
+## Report chart appearance
+
+`appearance="report-chart"` 应用已认可的报告图表卡片留白、标题、右上图例及无分割线布局。CP Data 消费此样式；其余 Measurement 消费默认样式。仅改变展示，不改变 Canvas 布局计算、测量值、规格线或交互。

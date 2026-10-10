@@ -24,8 +24,8 @@ import { ReportState } from "@/components/domain/report-state"
 矩阵单元格与箱型图共享同一组 `parameterId + waferId`：点击有数据的单元格会发出参数与 wafer 选择意图；弹出箱型图明细或切换应用工作流由 DOE App 决定。
 它通过 `selection.parameterId` / `selection.waferId` 接收 App 受控选择，并通过 callback 暴露参数/wafer 选择意图；请求、Snapshot 切换和重试属于 DOE App。仅分布/矩阵视图切换保留为组件本地展示状态。
 
-分布/矩阵切换在 `Wafer × Inline Parameter` 标题右侧使用共享 line Tabs，
-有文字和图标；两种视图都保留输入的测量统计。统计以紧凑的标签/数值行显示，
+分布/矩阵切换是三级视图导航，复用 `ReportViewNavigation` 的图标 + 文字 line Tabs，
+位于标题下方独立一行并左对齐；两种视图都保留输入的测量统计。统计以紧凑的标签/数值行显示，
 不在图表前堆叠独立 KPI 卡片。参数列表在宽屏与共享 `Measurement` 并排，
 使用既有 wafer parameter column token，长参数代码换行。覆盖和数据限制保留在图后。
 分布/矩阵状态不改变 App 的选中参数或 wafer；选择色只表达当前参数或 wafer，
@@ -50,3 +50,8 @@ import { ReportState } from "@/components/domain/report-state"
 所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
 及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
 没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+### Navigation hierarchy
+
+导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
+三级视图导航在自身区域横向滚动，不将长标签撑出主视图；切换视图保留已有参数与 wafer 选择。

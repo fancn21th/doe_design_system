@@ -1,6 +1,11 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
+import { CircleDotIcon, LayersIcon, ScanSearchIcon } from "lucide-react"
+
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 
 import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
 import { WaferMapGallery } from "@/components/domain/wafer-map"
@@ -146,36 +151,33 @@ export function ReportWaferMap({
   return (
     <section className={className} aria-label="Report Wafer Map">
       <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+          <ReportBlock input={{ id: "wafer-map", title: "Wafer Map", helpText: "通过 CP Map、Defect Map 或 Overlay 查看晶圆空间分布；CP Map 可切换 Final Bin 与 Parameter Map，具体视图取决于当前报告可用数据。" }}>
         <div className="grid gap-3">
-          <Tabs
+          <ReportViewNavigation
             value={primaryView}
             onValueChange={(value) => selectPrimaryView(value as PrimaryView)}
-            className="gap-0"
-          >
-            <TabsList variant="line" className="max-w-full" aria-label="Wafer Map 视图">
-              {hasCp && (
-                <TabsTrigger value="cp">CP Map</TabsTrigger>
-              )}
-              {hasDefect && (
-                <TabsTrigger value="defect">Defect Map</TabsTrigger>
-              )}
-              <TabsTrigger value="overlay">Overlay</TabsTrigger>
-            </TabsList>
-          </Tabs>
+            ariaLabel="Wafer Map 视图"
+            options={[
+              ...(hasCp ? [{ value: "cp", label: "CP Map", icon: CircleDotIcon }] : []),
+              ...(hasDefect ? [{ value: "defect", label: "Defect Map", icon: ScanSearchIcon }] : []),
+              { value: "overlay", label: "Overlay", icon: LayersIcon },
+            ]}
+          />
 
           {primaryView === "cp" && hasCp && (
             <>
               <Tabs
+                data-navigation-level="4"
                 value={cpView}
                 onValueChange={(value) => selectCpView(value as CpView)}
                 className="gap-0"
               >
-                <TabsList variant="line" className="max-w-full" aria-label="CP Map 类型">
+                <TabsList variant="line" className="max-w-full gap-0 px-0" aria-label="CP Map 类型">
                 {(finalBinView || finalBinState) && (
-                  <TabsTrigger value="final-bin">Final Bin</TabsTrigger>
+                  <TabsTrigger value="final-bin" className="flex-none border-x-0 px-0 mr-[16px] last:mr-0">Final Bin</TabsTrigger>
                 )}
                 {(parameterViews.length > 0 || parameterState) && (
-                  <TabsTrigger value="parameter">Parameter Map</TabsTrigger>
+                  <TabsTrigger value="parameter" className="flex-none border-x-0 px-0 mr-[16px] last:mr-0">Parameter Map</TabsTrigger>
                 )}
                 </TabsList>
               </Tabs>
@@ -214,6 +216,7 @@ export function ReportWaferMap({
         ) : primaryView === "cp" && cpView === "parameter" ? (
           <EmptyState>请选择 CP Parameter</EmptyState>
         ) : null}
+          </ReportBlock>
       </div>
     </section>
   )

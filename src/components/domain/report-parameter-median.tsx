@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
 
 import { reportParameterMedianScenarios } from "@/components/domain/report-parameter-median.scenarios"
@@ -386,6 +388,7 @@ export function ReportParameterMedian({
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4">
+          <ReportBlock input={{ id: "cp-parameter-analysis", title: "CP Parameter Analysis", helpText: "按 CP 参数对比各 Wafer 的中位数和规格状态，可搜索参数或仅显示 OOS；规格及状态以当前报告快照为准。" }}>
           <ParameterMedianFilterBar
             parameterQuery={parameterQuery}
             parameterOptions={parameterOptions}
@@ -402,6 +405,7 @@ export function ReportParameterMedian({
             onParameterSelect={onParameterSelect}
             onWaferCellSelect={onWaferCellSelect}
           />
+          </ReportBlock>
         </div>
       )}
     </div>

@@ -44,6 +44,8 @@ type CanvasLayerProps = {
 }
 
 export type MeasurementProps = {
+  /** Opt into the approved Report chart card without changing other Measurement consumers. */
+  appearance?: "report-chart"
   /** A consumer may supply fallback presentation without changing evidence state. */
   renderState?: (status: "pending" | "unavailable" | "empty") => React.ReactNode
   /** The UI-facing rendering contract. Apps adapt their upstream DTO before passing it here. */
@@ -56,12 +58,14 @@ export type MeasurementProps = {
 }
 
 export function Measurement({
+  appearance,
   renderState,
   input,
   onGroupSelect,
   headerAction,
   className,
 }: MeasurementProps) {
+  const reportChart = appearance === "report-chart"
   const parsedInput = useMemo(() => measurementInputSchema.parse(input), [input])
   const [viewportWidth, setViewportWidth] = useState(0)
   const [activePoint, setActivePoint] = useState<ActivePoint | null>(null)
@@ -147,33 +151,29 @@ export function Measurement({
   }
 
   return (
-    <Card size="sm" className={cn("min-w-0 w-full max-w-full border ring-0 shadow-none", className)}>
-      <CardHeader className="flex flex-wrap items-start justify-between gap-3 border-b">
-        <div className="min-w-0 break-words">
-          <CardTitle>{parsedInput.title ?? "Measurement"}</CardTitle>
-          {parsedInput.subtitle && <CardDescription>{parsedInput.subtitle}</CardDescription>}
+    <Card size={reportChart ? "default" : "sm"} className={cn("min-w-0 w-full max-w-full border ring-0 shadow-none", reportChart && "gap-[24px] py-[24px] rounded-xl shadow-sm", className)}>
+      <CardHeader className={cn("flex flex-wrap items-start justify-between gap-3", reportChart ? "min-h-0! px-[24px]! py-0!" : "border-b")}>
+        <div className={cn("min-w-0 break-words", reportChart && "grid gap-[8px]")}>
+          <CardTitle className={reportChart ? "text-[16px] font-semibold leading-[16px]" : undefined}>{parsedInput.title ?? "Measurement"}</CardTitle>
+          {parsedInput.subtitle && <CardDescription className={reportChart ? "text-[14px] leading-[20px]" : undefined}>{parsedInput.subtitle}</CardDescription>}
         </div>
         <CardAction className="min-w-0 max-w-full flex flex-wrap items-center justify-end gap-2 break-words text-xs text-muted-foreground">
           {headerAction}
           {parsedInput.sourceLabel && <span className="rounded-md border px-2 py-1">{parsedInput.sourceLabel}</span>}
           <span className="rounded-md border px-2 py-1">{parsedInput.groups.length} wafers</span>
           <span className="rounded-md border px-2 py-1">{parsedInput.metric.label}</span>
+
+          {reportChart && <MeasurementLegend />}
         </CardAction>
       </CardHeader>
-      <CardContent className="min-w-0 px-0">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 text-xs text-muted-foreground">
-          <LegendMark color="#2563a6" label="die point" />
-          <LegendMark color="#0f766e" label="mean" />
-          <LegendMark color="#c53a3a" label="median" />
-          <LegendMark color="#7c3aed" label="mean ±3σ" />
-          <LegendMark color="#b45309" dashed label="reference" />
-        </div>
+      <CardContent className={cn("min-w-0", reportChart ? "px-[8px] pt-[16px] sm:px-[24px] sm:pt-[24px]" : "px-0")}>
+        {!reportChart && <MeasurementLegend className="px-3" />}
         <dl className="sr-only" aria-label="晶圆专属参考线">
           {parsedInput.groups.flatMap((group) => (group.referenceLines ?? []).map((line) => (
             <div key={`${group.id}:${line.id}`}><dt>{group.label} · {line.label}</dt><dd>{line.value}</dd></div>
           )))}
         </dl>
-        <div className="min-w-0 max-w-full overflow-x-auto p-3" ref={hostRef} tabIndex={0} aria-label="Measurement 图表横向滚动区">
+        <div className={cn("min-w-0 max-w-full overflow-x-auto", !reportChart && "p-3")} ref={hostRef} tabIndex={0} aria-label="Measurement 图表横向滚动区">
           <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
             <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
             <CanvasLayer canvasRef={pointCanvasRef} width={width} height={CHART_HEIGHT} />
@@ -421,4 +421,14 @@ function formatValue(value: number | null | undefined) {
   if (value === null || value === undefined) return "—"
   if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) return value.toExponential(3)
   return value.toFixed(Math.abs(value) < 1 ? 4 : 3).replace(/\.?(0+)$/, "")
+}
+
+function MeasurementLegend({ className }: { className?: string }) {
+  return <div className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground", className)}>
+    <LegendMark color="#2563a6" label="die point" />
+    <LegendMark color="#0f766e" label="mean" />
+    <LegendMark color="#c53a3a" label="median" />
+    <LegendMark color="#7c3aed" label="mean ±3σ" />
+    <LegendMark color="#b45309" dashed label="reference" />
+  </div>
 }

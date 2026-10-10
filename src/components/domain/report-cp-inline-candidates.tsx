@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon, ListChecksIcon, TriangleAlertIcon } from "lucide-react"
 
 import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   reportCpInlineCandidatesInputSchema,
@@ -53,23 +53,20 @@ export function ReportCpInlineCandidates({
             <CardTitle>{parsed.title}</CardTitle>
             {parsed.subtitle ? <p className="text-sm text-muted-foreground">{parsed.subtitle}</p> : null}
           </CardHeader>
-          <Tabs
+          <ReportViewNavigation
             value={parsed.filters.view}
             onValueChange={(value) => {
               if (value === "recommended" || value === "filtered" || value === "insufficient") {
                 patchFilters({ view: value, pairedN: null, reason: null })
               }
             }}
-            className="gap-0"
-          >
-            <div className="overflow-x-auto border-b">
-              <TabsList variant="line" className="h-(--doe-table-row-height) gap-4 p-0">
-                <TabsTrigger value="recommended" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Recommended Candidates</TabsTrigger>
-                <TabsTrigger value="filtered" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Filtered</TabsTrigger>
-                <TabsTrigger value="insufficient" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Insufficient Sample</TabsTrigger>
-              </TabsList>
-            </div>
-          </Tabs>
+            ariaLabel="CP × Inline 候选视图"
+            options={[
+              { value: "recommended", label: "Recommended Candidates", icon: ListChecksIcon },
+              { value: "filtered", label: "Filtered", icon: ListFilterIcon },
+              { value: "insufficient", label: "Insufficient Sample", icon: TriangleAlertIcon },
+            ]}
+          />
           <CardContent className="grid min-w-0 gap-(--doe-section-gap) px-0 py-4">
             <div className="grid gap-3 md:grid-cols-3">
               <CandidateSelect label="Step" value={parsed.filters.step} allLabel="All Steps" options={parsed.stepOptions} onChange={(step) => patchFilters({ step })} />

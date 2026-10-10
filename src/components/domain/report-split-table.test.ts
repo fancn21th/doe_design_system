@@ -38,6 +38,17 @@ function row(
 }
 
 describe("ReportSplitTable grouping", () => {
+  it("keeps the named business block and help anchor in populated and empty snapshots", () => {
+    for (const rows of [[], [row("W01", "BSL", "5um")]]) {
+      const html = renderToStaticMarkup(React.createElement(ReportSplitTable, { input: { rows } }))
+      expect(html).toContain('aria-labelledby="wafer-split-table"')
+      expect(html).toMatch(/<h2[^>]*id="wafer-split-table"[^>]*>Wafer Split Table<\/h2>/)
+      expect(html).toContain('aria-label="关于 Wafer Split Table"')
+      expect(html).toContain('data-slot="block-body"')
+      expect(html).not.toContain('data-slot="collapsible"')
+    }
+  })
+
   it("renders a wafer action in the real table and invokes it with full assignment context", () => {
     const inputRow = row("W01", "BSL", "5um")
     const callback = vi.fn()

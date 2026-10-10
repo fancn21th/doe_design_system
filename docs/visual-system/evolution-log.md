@@ -78,3 +78,15 @@ The approved Yield chart pilot reserves 12px inside each vertical SVG edge while
 User confirmed Header content edges, measured relative to Main, as the alignment reference. ReportWorkspaceLayout defines a scoped 16px / 24px horizontal gutter; Header, report navigation and the Split Table pilot consume it. Report navigation removes horizontal tab padding/borders and replaces the existing inter-label spacing with 30px right margins. User subsequently approved rollout to all report panes, including Overview and the seven business tabs, through the shared workspace selector.
 
 Verification completed in DOE App: 18 actual-browser measurements across all eight pages at desktop/mobile sizes, plus breakpoint and collapsed-sidebar cases; container deltas 0px. Domain UI 80 tests and App 185 tests, targeted lint and both final isolated builds passed. Evidence remains under App UI acceptance; this does not establish Data acceptance.
+
+## 2026-10-10 — Navigation hierarchy and Block pilot
+
+User annotations establish four semantic navigation levels: existing global Sidebar, existing report-page text tabs, common icon-labelled view tabs aligned left, and unchanged Wafer Map subview line tabs. The earlier diagram is a reference, not a pixel specification. Business Blocks retain header/body without collapse wrappers; BlockTitle with Base UI Tooltip is piloted only by Wafer Split Table. The approved contract is [Navigation and Blocks](../patterns/navigation-and-blocks.md). Validation is recorded by App UI acceptance.
+
+Verification: all four level-3 consumers share identical computed styles and one icon per option; existing level-4 line navigation is unchanged. App actual-browser evidence covers 18 desktop/mobile navigation/layout states, Tooltip keyboard focus/Escape, and always-visible Fit sections. Domain UI 83 tests and App 188 tests, targeted lint, and both final isolated production builds passed. Pure pointer hover was not independently recorded; the component uses native Base UI Tooltip hover/focus behavior. App UI acceptance owns the evidence and screenshots.
+
+## 2026-10-10 — Block 标题推广与导航左边界
+
+用户认可 Split Table 的24px外部/14px标题正文间距。推广至五个报告页面（Yield双Block）；三级/四级导航水平padding与border归零，用16px右margin保持有效间距。Median裸筛选；CP Data选择报告图表容器外观。规范见 `docs/patterns/navigation-and-blocks.md`。
+
+本轮验证：消费端188项、canonical83项测试通过；affected lint与两端最终隔离生产构建通过。桌面1430×984/窄屏390×984关键路径、Inline标题键盘Tooltip及Escape通过，纯鼠标悬浮未独立录制。
