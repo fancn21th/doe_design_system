@@ -36,3 +36,24 @@ empty, selection and filter wording remain specific to the visible evidence.
 Measurement and WaferMapGallery offer optional consumer presentation slots so
 standalone Shared previews keep their existing fallback. See the Report MDX
 contracts and their executable loading / empty previews.
+
+## 2026-10-10 — Report visual repair, first round
+
+Following the second-round seven-tab acceptance audit and user confirmation,
+Report table contracts adopt the current Split Table header/body density, muted
+header, bounded neutral border and common gutters. Measurement bounds its wide
+canvas and places readable identity/axis/reference labels. Wafer Map uses supplied
+PASS/FAIL together with Final Bin identity, a neutral base and shared parameter
+colour scale legend. Inline uses labelled line tabs and compact supplied statistics;
+Fit annotations avoid overlap in screen space without moving evidence points.
+Component-specific contracts and scenarios own the details. Missing specs, Mock
+provenance, Overlay availability, data calculations and top navigation stay with
+their existing owners.
+
+Verification: canonical 69 tests and adopted App 156 tests pass; modified-source
+lint and isolated production builds pass in both repositories. Seven actual Report
+tabs were visually checked; chart/map/matrix boundaries were checked at 1024,
+1280 and 1414px. Wafer inspection tables also adopt the shared report-table
+style, while unavailable live inspection facts stay unavailable. Per-finding
+outcomes and 39 screenshots are recorded in the App Exec Plan self-test at
+`apps/frontend-ds/docs/exec-plans/2026-10-10-report-visual-repair-round1-self-test.md`.

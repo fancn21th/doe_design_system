@@ -29,7 +29,8 @@ import { ReportState } from "@/components/domain/report-state"
 Overlay 的视觉控制器。
 
 页面有两层局部筛选：一级在 `CP Map` 与 `Defect Map` 间切换；CP Map 下的二级筛选为
-`Final Bin` 与 `Parameter Map` 标准 Tabs。选择 `Parameter Map` 后，使用单选、可搜索、
+`Final Bin` 与 `Parameter Map` 标准 Tabs。两级均复用 foundation `TabsList variant="line"`，
+一级和二级分行，保持报告页面一致的下划线选中状态和清晰层级。选择 `Parameter Map` 后，使用单选、可搜索、
 可清除的 `CP Parameter` Combobox；每个参数选项都有其独立的 25 片 wafer map 输入。
 Defect Map 的二级筛选由 shared gallery 提供 `Layer` 与 `Defect Type` 两个单选、可搜索
 Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视图间共享或推断。

@@ -10,6 +10,7 @@ import {
   defectColor,
   finalBinColor,
   parameterColor,
+  parameterColorGradient,
   type DieData,
   type WaferMapData,
 } from "@/components/domain/wafer-map-model"
@@ -124,7 +125,7 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
       drawWaferBoundary(context, layout)
       context.save()
       clipWafer(context, layout)
-      context.fillStyle = "#cfe1dc"
+      context.fillStyle = "#e2e8f0"
       for (const die of wafer.geometry.dies) {
         const geometry = layout.dieById.get(die.id)
         if (geometry) context.fillRect(geometry.x, geometry.y, geometry.width, geometry.height)
@@ -141,7 +142,7 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
       clipWafer(context, layout)
       if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
         const palette = { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }
-        for (const die of wafer.dies) drawDie(context, layout, die, finalBinColor(die.finalBin, palette))
+        for (const die of wafer.dies) drawDie(context, layout, die, finalBinColor(die.finalBin, palette, die.pass))
       }
       if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
         for (const die of wafer.dies) {
@@ -564,10 +565,11 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
     <div className="flex min-h-11 flex-wrap items-center gap-3 border-b px-5 py-2 text-xs">
       {input.kind === "cp-final-bin" && isFinalBinWafer(wafer) && (
         <>
-          <strong>REAL Final Bin Code</strong>
+          <strong>Final Bin</strong>
+          <span className="text-muted-foreground">绿色 Pass · 暖色 Fail</span>
           {wafer.inspection?.rows.map((row) => (
             <span key={row.binCode} className="flex items-center gap-1.5">
-              <i className="size-2.5 rounded-sm" style={{ background: finalBinColor(row.binCode, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />
+              <FinalBinSwatches bin={row.binCode} wafers={[wafer]} palette={input.palette} />
               Bin {row.binCode} · {row.count.toLocaleString()}
             </span>
           ))}
@@ -576,10 +578,7 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
       )}
       {input.kind === "cp-parameter" && (
         <>
-          <strong>Parameter Value</strong>
-          <span className="text-muted-foreground">Low</span>
-          <i className="h-2 w-44 rounded-full bg-linear-to-r from-yellow-200 via-teal-500 to-slate-900" />
-          <span className="text-muted-foreground">High</span>
+          <ParameterLegend input={input} />
         </>
       )}
       {input.kind === "defect" && (
@@ -642,7 +641,7 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
           <InspectionMetric label="Total Fail Bin Count" value={wafer.inspection.totalFailBinCount.toLocaleString()} />
           <InspectionMetric label="Total Fail Bin Rate" value={formatPercent(wafer.inspection.totalFailBinRatePercent)} />
         </div>
-        <Table className="mt-3 text-xs" aria-label="各 Bin Code 数量与占比">
+        <Table className="domain-ui-report-table mt-3" aria-label="各 Bin Code 数量与占比">
           <TableHeader><TableRow><TableHead>Bin Code</TableHead><TableHead>Bin Des</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
           <TableBody>{wafer.inspection.rows.map((row) => <TableRow key={row.binCode}><TableCell>Bin {row.binCode}</TableCell><TableCell>{row.binDescription}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
         </Table>
@@ -653,7 +652,7 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
   if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
     return (
       <InspectionTableShell waferId={wafer.waferId} meta={`Tested Die：${wafer.inspection.testedDieCount.toLocaleString()}`}>
-        <Table className="mt-3 text-xs" aria-label="CP 与缺陷分类数量及占比">
+        <Table className="domain-ui-report-table mt-3" aria-label="CP 与缺陷分类数量及占比">
           <TableHeader><TableRow><TableHead>Type</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
           <TableBody>{wafer.inspection.rows.map((row) => <TableRow key={row.classification}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
         </Table>
@@ -670,7 +669,7 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
           <InspectionMetric label="Defect Die" value={inspection.defectDieCount.toLocaleString()} />
           <InspectionMetric label="Defect Record" value={inspection.defectRecordCount.toLocaleString()} />
         </div>
-        <Table className="mt-3 text-xs" aria-label="各类型缺陷记录总数与占比">
+        <Table className="domain-ui-report-table mt-3" aria-label="各类型缺陷记录总数与占比">
           <TableHeader><TableRow><TableHead>Defect Type</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
           <TableBody>{inspection.rows.map((row) => <TableRow key={row.typeId}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
         </Table>
@@ -790,12 +789,51 @@ function formatPercent(value: number) {
   return `${value.toFixed(2)}%`
 }
 
+function FinalBinSwatches({ bin, wafers, palette }: {
+  bin: string
+  wafers: WaferMapFinalBinWaferInput[]
+  palette?: Record<string, string>
+}) {
+  // A bin can contain both supplied CP states. Show both instead of inferring
+  // one state from its name or converting inspection counts into new facts.
+  const states = new Set<boolean>()
+  for (const wafer of wafers) for (const die of wafer.dies) {
+    if (die.finalBin === bin) states.add(die.pass)
+  }
+  const colors = states.size ? [...states].sort().map((pass) => ({
+    label: pass ? "Pass" : "Fail", color: finalBinColor(bin, palette, pass),
+  })) : [{ label: "状态未提供", color: finalBinColor(bin, palette) }]
+  return <span className="inline-flex gap-0.5">{colors.map(({ label, color }) => (
+    <i key={label} title={label} aria-label={label} className="size-2.5 rounded-sm" style={{ background: color }} />
+  ))}</span>
+}
+
+function ParameterLegend({ input }: { input: Extract<WaferMapGalleryInput, { kind: "cp-parameter" }> }) {
+  const { label, scale, unit } = input.parameter
+  const format = (value: number) => value.toLocaleString("en-US", { maximumSignificantDigits: 6 })
+  return <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+    <strong>{label}{unit ? ` (${unit})` : ""}</strong>
+    <span className="inline-flex items-center gap-2" aria-label={`参数色阶 ${scale.domainMin} 至 ${scale.domainMax}`}>
+      <span title={String(scale.domainMin)}>{format(scale.domainMin)}</span>
+      <i className="h-2 w-32 rounded-full" style={{ background: parameterColorGradient(scale.domainMin, scale.domainMax) }} />
+      <span title={String(scale.domainMax)}>{format(scale.domainMax)}</span>
+    </span>
+    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm bg-slate-400" />无有效值</span>
+    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm border-2 border-red-600" />CP Fail（已提供时）</span>
+  </div>
+}
+
 function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGalleryInput; onDefectFiltersChange: (filters: { layerId: string; typeIds: string[] }) => void }) {
-  if (input.kind === "cp-parameter") return <GalleryLegendRow><p className="text-xs text-muted-foreground"><b className="mr-2 text-foreground">{input.parameter.label}</b>{input.parameter.scale.domainMin} → {input.parameter.scale.domainMax}{input.parameter.unit ? ` ${input.parameter.unit}` : ""}</p></GalleryLegendRow>
+  if (input.kind === "cp-parameter") return <GalleryLegendRow><ParameterLegend input={input} /></GalleryLegendRow>
   if (input.kind === "defect") return <DefectFilterComboboxes input={input} onChange={onDefectFiltersChange} />
   const binCounts = new Map<string, number>()
   for (const wafer of input.wafers) for (const die of wafer.dies) binCounts.set(die.finalBin, (binCounts.get(die.finalBin) ?? 0) + 1)
-  return <GalleryLegendRow><div className="flex flex-wrap gap-2 text-xs">{[...binCounts.entries()].sort(([left], [right]) => Number(left) - Number(right)).map(([bin, count]) => <span key={bin} className="flex items-center gap-1"><i className="size-2 rounded-sm" style={{ background: finalBinColor(bin, { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }) }} />Bin {bin} · {count.toLocaleString()}</span>)}</div></GalleryLegendRow>
+  return <GalleryLegendRow><div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+    <span className="text-muted-foreground">绿色 Pass · 暖色 Fail</span>
+    {[...binCounts.entries()].sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true })).map(([bin, count]) => (
+      <span key={bin} className="flex items-center gap-1"><FinalBinSwatches bin={bin} wafers={input.wafers} palette={input.palette} />Bin {bin} · {count.toLocaleString()}</span>
+    ))}
+  </div></GalleryLegendRow>
 }
 
 type FilterOption = { id: string; label: string }

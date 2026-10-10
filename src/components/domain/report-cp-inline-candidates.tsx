@@ -47,9 +47,9 @@ export function ReportCpInlineCandidates({
 
   return (
     <TooltipProvider>
-      <div className="not-prose domain-ui-typography domain-ui-cp-inline">
-        <Card className="gap-0 rounded-(--doe-radius-card) border py-0 shadow-none ring-0">
-          <CardHeader className="border-b p-(--doe-module-padding)">
+      <div className="not-prose domain-ui-typography domain-ui-cp-inline min-w-0 p-4">
+        <Card className="min-w-0 gap-0 border-0 py-0 shadow-none ring-0">
+          <CardHeader className="border-b !px-0">
             <CardTitle>{parsed.title}</CardTitle>
             {parsed.subtitle ? <p className="text-sm text-muted-foreground">{parsed.subtitle}</p> : null}
           </CardHeader>
@@ -62,7 +62,7 @@ export function ReportCpInlineCandidates({
             }}
             className="gap-0"
           >
-            <div className="overflow-x-auto border-b px-(--doe-module-padding)">
+            <div className="overflow-x-auto border-b">
               <TabsList variant="line" className="h-(--doe-table-row-height) gap-4 p-0">
                 <TabsTrigger value="recommended" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Recommended Candidates</TabsTrigger>
                 <TabsTrigger value="filtered" className="px-0 data-active:text-[var(--doe-cp-inline-accent)] after:bg-[var(--doe-cp-inline-accent)] after:bottom-0">Filtered</TabsTrigger>
@@ -70,7 +70,7 @@ export function ReportCpInlineCandidates({
               </TabsList>
             </div>
           </Tabs>
-          <CardContent className="grid gap-(--doe-section-gap) p-(--doe-module-padding)">
+          <CardContent className="grid min-w-0 gap-(--doe-section-gap) px-0 py-4">
             <div className="grid gap-3 md:grid-cols-3">
               <CandidateSelect label="Step" value={parsed.filters.step} allLabel="All Steps" options={parsed.stepOptions} onChange={(step) => patchFilters({ step })} />
               <CandidateSelect label="CP Parameter" value={parsed.filters.cpParameter} allLabel="All CP Parameters" options={parsed.cpParameterOptions} onChange={(cpParameter) => patchFilters({ cpParameter })} />
@@ -83,9 +83,9 @@ export function ReportCpInlineCandidates({
             ) : parsed.items.length === 0 ? (
               <EmptyState>当前筛选没有候选组合。</EmptyState>
             ) : (
-              <div className="max-w-full overflow-x-auto">
-                <Table className="min-w-(--doe-cp-inline-table-min-width)">
-                  <TableHeader className="border-y bg-muted/50">
+              <div className="min-w-0 max-w-full overflow-x-auto rounded-(--doe-radius-control) border">
+                <Table className="domain-ui-report-table min-w-(--doe-cp-inline-table-min-width)">
+                  <TableHeader className="bg-muted/60">
                     <TableRow>
                       {recommended ? <TableHead>Rank</TableHead> : null}
                       <TableHead>CP Parameter</TableHead>
@@ -145,7 +145,7 @@ export function ReportCpInlineCandidates({
               </div>
             )}
           </CardContent>
-          <CardFooter className="justify-end gap-3">
+          <CardFooter className="justify-end gap-3 !px-0">
             <Button type="button" variant="outline" size="icon" aria-label="Previous candidates page" disabled={busy || parsed.page <= 1} onClick={() => onPageChange?.(parsed.page - 1)}><ChevronLeftIcon /></Button>
             <span className="text-sm tabular-nums text-muted-foreground">{parsed.page} / {pageCount}</span>
             <Button type="button" variant="outline" size="icon" aria-label="Next candidates page" disabled={busy || parsed.page >= pageCount} onClick={() => onPageChange?.(parsed.page + 1)}><ChevronRightIcon /></Button>

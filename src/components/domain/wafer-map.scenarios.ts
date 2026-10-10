@@ -5,6 +5,7 @@ import {
   waferMapFinalBinOverviewFixture,
   waferMapParameterOverviewFixture,
   waferMapSmallFixture,
+  waferMapSemanticColorFixture,
   waferMapW01Fixture,
   availableMapStates,
 } from "@/components/domain/wafer-map.fixtures"
@@ -31,6 +32,15 @@ export const waferMapScenarios = {
 } satisfies Record<string, WaferMapScenario>
 
 export const waferMapGalleryScenarios = {
+  semanticFinalBins: {
+    name: "mock-cp-status-over-bin-label",
+    input: {
+      kind: "cp-final-bin",
+      status: "ready",
+      wafers: [waferMapSemanticColorFixture],
+      mapStates: availableMapStates([waferMapSemanticColorFixture]),
+    },
+  },
   finalBinOverview: {
     name: "cp-final-bin-overview",
     input: {

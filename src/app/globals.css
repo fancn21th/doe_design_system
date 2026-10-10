@@ -412,92 +412,23 @@
     padding: 0.5rem;
   }
 
-  .domain-ui-inline-matrix-shell {
-    height: 32.5rem;
-    overflow-x: auto;
-    overflow-y: auto;
-    background: var(--background);
-  }
+  .domain-ui-split-table-shell.domain-ui-inline-matrix-shell { height: 32.5rem; min-width: 0; max-width: 100%; overflow: auto; background: var(--background); }
+  .domain-ui-split-table-shell.domain-ui-inline-matrix-shell [data-slot="table-container"] { width: max-content; min-width: 100%; max-width: none; overflow: visible; }
+  .domain-ui-inline-matrix { width: var(--doe-inline-matrix-min-width); min-width: var(--doe-inline-matrix-min-width); table-layout: fixed; }
+  .domain-ui-inline-matrix-parameter { width: var(--doe-inline-matrix-parameter-column); min-width: var(--doe-inline-matrix-parameter-column); }
+  .domain-ui-inline-matrix-wafer { width: var(--doe-inline-matrix-wafer-column); min-width: var(--doe-inline-matrix-wafer-column); }
+  .domain-ui-inline-matrix [data-slot="table-head"],
+  .domain-ui-inline-matrix [data-slot="table-cell"] { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .domain-ui-inline-matrix .domain-ui-inline-matrix-parameter { text-align: left; }
+  [data-slot="button"].domain-ui-inline-matrix-cell { width: var(--doe-inline-matrix-cell-width); height: var(--doe-inline-matrix-cell-min-height); min-height: var(--doe-inline-matrix-cell-min-height); flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; border: 0; border-radius: var(--doe-radius-cell); background: transparent; padding: 0.375rem 0.5rem; font-family: var(--font-mono); font-size: var(--doe-font-meta); line-height: 1rem; color: var(--muted-foreground); }
+  [data-slot="button"].domain-ui-inline-matrix-cell:hover { background: var(--muted); color: var(--foreground); }
+  .domain-ui-inline-matrix-cell strong { font-size: var(--doe-font-body); line-height: 1.1875rem; color: var(--foreground); }
+  .domain-ui-inline-matrix-empty { display: inline-block; width: var(--doe-inline-matrix-cell-width); line-height: var(--doe-inline-matrix-cell-min-height); color: var(--muted-foreground); }
 
-  .domain-ui-inline-matrix-shell [data-slot="table-container"] {
-    width: max-content;
-    min-width: 100%;
-    overflow: visible;
-  }
-
-  .domain-ui-inline-matrix {
-    width: 210.75rem;
-    min-width: 210.75rem;
-    table-layout: fixed;
-  }
-
-  .domain-ui-inline-matrix-parameter {
-    width: 17rem;
-    min-width: 17rem;
-  }
-
-  .domain-ui-inline-matrix-wafer {
-    width: 7.75rem;
-    min-width: 7.75rem;
-  }
-
-  .domain-ui-inline-matrix [data-slot="table-head"] {
-    height: 2.75rem;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 0.375rem 0.5rem;
-    background: color-mix(in oklab, var(--muted) 70%, var(--background));
-    font-size: 0.8125rem;
-    line-height: 1.25rem;
-  }
-
-  .domain-ui-inline-matrix [data-slot="table-cell"] {
-    height: auto;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 0.375rem 0.5rem;
-  }
-
-  .domain-ui-inline-matrix .domain-ui-inline-matrix-parameter {
-    padding-left: 0.75rem;
-    text-align: left;
-  }
-
-  [data-slot="button"].domain-ui-inline-matrix-cell {
-    width: 6.25rem;
-    height: 3.125rem;
-    min-height: 3.125rem;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 0;
-    border-color: #78b8f2;
-    border-radius: 0.5rem;
-    background: var(--background);
-    padding: 0.375rem 0.5625rem;
-    font-family: var(--font-geist-mono);
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    color: #52616b;
-  }
-
-  [data-slot="button"].domain-ui-inline-matrix-cell:hover {
-    border-color: #0071e3;
-    background: #f3f8ff;
-  }
-
-  .domain-ui-inline-matrix-cell strong {
-    font-size: 0.875rem;
-    line-height: 1.1875rem;
-    color: var(--foreground);
-  }
-
-  .domain-ui-inline-matrix-empty {
-    display: inline-block;
-    width: 6.25rem;
-    line-height: 3.125rem;
-    color: var(--muted-foreground);
-  }
+  /* Report tables adopt the accepted Split Table reading density. */
+  .domain-ui-typography .domain-ui-report-table[data-slot="table"] { font-size: var(--doe-font-body); }
+  .domain-ui-typography .domain-ui-report-table [data-slot="table-head"] { height: 2.5rem; padding: 0 0.5rem; background: var(--muted); font-size: var(--doe-font-body); line-height: 1.25rem; }
+  .domain-ui-typography .domain-ui-report-table [data-slot="table-cell"] { height: auto; padding: 0.5rem; font-size: var(--doe-font-body); }
 
   .domain-ui-wafer-parameter-panel {
     padding: var(--doe-wafer-parameter-padding);

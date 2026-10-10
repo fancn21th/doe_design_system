@@ -1,6 +1,7 @@
 import {
   measurementEmptyFixture,
   measurementFixture,
+  measurementLabelBoundaryFixture,
   measurementPendingFixture,
   measurementSmallFixture,
   measurementUnavailableFixture,
@@ -20,6 +21,10 @@ export const measurementScenarios = {
   compact: {
     name: "compact",
     input: measurementSmallFixture,
+  },
+  labelBoundaries: {
+    name: "label-boundaries",
+    input: measurementLabelBoundaryFixture,
   },
   empty: {
     name: "empty",

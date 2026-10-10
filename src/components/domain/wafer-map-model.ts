@@ -268,18 +268,22 @@ export function createWaferCanvasLayout(
 
 export function finalBinColor(
   finalBin: string,
-  palette: Readonly<Record<string, string>> = DEFAULT_FINAL_BIN_PALETTE
+  palette: Readonly<Record<string, string>> = DEFAULT_FINAL_BIN_PALETTE,
+  pass?: boolean
 ): string {
   const normalized = finalBin.replace(/^BIN\s*/i, "").trim()
-  if (palette[normalized]) {
-    return palette[normalized]
-  }
-
   let hash = 0
   for (const character of normalized || "unknown") {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0
   }
-  return `hsl(${hash % 360} 65% 43%)`
+  // CP status is supplied truth. Bin names/numbers and their arbitrary hashes
+  // must never make an explicitly failing die look passing.
+  if (pass === true) return `hsl(${134 + hash % 25} 65% ${32 + hash % 10}%)`
+  if (pass === false) {
+    const failHues = [0, 12, 24, 340, 352]
+    return `hsl(${failHues[hash % failHues.length]} 78% ${40 + hash % 10}%)`
+  }
+  return palette[normalized] ?? `hsl(${hash % 360} 65% 43%)`
 }
 
 export function parameterColor(value: number, low: number, high: number): string {
@@ -290,8 +294,16 @@ export function parameterColor(value: number, low: number, high: number): string
   return `hsl(${hue} 65% ${lightness}%)`
 }
 
+/** Sample the same value-to-colour function used by the canvas. */
+export function parameterColorGradient(low: number, high: number): string {
+  const stops = [0, 0.25, 0.5, 0.75, 1].map((amount) =>
+    `${parameterColor(low + (high - low) * amount, low, high)} ${amount * 100}%`
+  )
+  return `linear-gradient(to right, ${stops.join(", ")})`
+}
+
 export function defectColor(typeId: string): string {
-  const colors = ["#d76855", "#e3a33a", "#5a8f88", "#6978b8", "#9270aa", "#c4779a"]
+  const colors = ["#dc2626", "#c2410c", "#0e7490", "#4338ca", "#7e22ce", "#be185d"]
   let hash = 0
   for (const character of typeId) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0

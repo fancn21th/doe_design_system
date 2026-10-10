@@ -55,3 +55,10 @@ import { ReportState } from "@/components/domain/report-state"
 所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
 及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
 没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+
+## 表格视觉一致性 · 2026-10-10
+
+矩阵遵循 Split Table 的 14px 正文、40px 浅色表头、8px 单元格内边距和圆角边框。元数据列总宽度568px，明确限制各列宽度（Parameter 160px、Unit 56px、Mock LSL/USL 各112px、Mock Spec 128px），长参数与完整 Mock provenance 换行展示而不裁掉内容；Wafer 列以144px为可读基线，SOURCE CPK/不可计算状态允许换行，所有统计事实仍来自输入。
+
+Mock LSL/USL 数值保持14px正文与整串显示，不拆分小数；宽度调整不改变规格值或精度。

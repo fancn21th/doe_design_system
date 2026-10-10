@@ -130,3 +130,15 @@ Domain UI 不用原型阈值重新解释旧分类，也不决定小样本是否�
 所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
 及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
 没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+
+## 表格视觉一致性 · 2026-10-10
+
+Candidates 与 Wafer Pair 表遵循 Split Table 的14px正文、40px浅色表头、8px单元格内边距和圆角边框；模块与表格使用相同紧凑边距，宽表只在自身容器滚动。表格分类、查询意图、数值与 provenance 保持原合同。
+
+### Wafer scatter annotation readability — 2026-10-10
+
+Wafer 标签按屏幕坐标避让并限制在绘图区；引线连接原始散点，极窄时省略标签，
+但 tooltip 与 Wafer Pair 保留完整身份。散点、拟合曲线、规格和业务值不移动。
+实现使用 Recharts 3.8 的公开 `usePlotArea` / `useXAxisScale` / `useYAxisScale`：
+[公开自定义组件文档](https://recharts.github.io/guide/customize/)。

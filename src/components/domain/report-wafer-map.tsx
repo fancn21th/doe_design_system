@@ -14,7 +14,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   reportWaferMapInputSchema,
@@ -147,13 +146,13 @@ export function ReportWaferMap({
   return (
     <section className={className} aria-label="Report Wafer Map">
       <div className="domain-ui-typography grid gap-4 p-4">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid gap-3">
           <Tabs
             value={primaryView}
             onValueChange={(value) => selectPrimaryView(value as PrimaryView)}
             className="gap-0"
           >
-            <TabsList>
+            <TabsList variant="line" className="max-w-full" aria-label="Wafer Map 视图">
               {hasCp && (
                 <TabsTrigger value="cp">CP Map</TabsTrigger>
               )}
@@ -166,13 +165,12 @@ export function ReportWaferMap({
 
           {primaryView === "cp" && hasCp && (
             <>
-              <Separator orientation="vertical" className="h-5" />
               <Tabs
                 value={cpView}
                 onValueChange={(value) => selectCpView(value as CpView)}
                 className="gap-0"
               >
-                <TabsList>
+                <TabsList variant="line" className="max-w-full" aria-label="CP Map 类型">
                 {(finalBinView || finalBinState) && (
                   <TabsTrigger value="final-bin">Final Bin</TabsTrigger>
                 )}
@@ -207,7 +205,7 @@ export function ReportWaferMap({
           <WaferMapGallery
             input={visibleMapView}
             renderMissingMap={(state) => <ReportState className="min-h-40" title={state.availability === "empty" ? "当前 Wafer 无此 Map 数据" : "当前 Wafer Map 不可用"} description={state.reason} />}
-            showParameterLegend={false}
+            showParameterLegend
             focusedWaferId={selection?.focusedWaferId}
             onDefectFiltersChange={selectDefectFilters}
           />

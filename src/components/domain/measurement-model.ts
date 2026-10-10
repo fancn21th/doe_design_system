@@ -15,6 +15,53 @@ export type MeasurementLayout = {
 export type PositionedMeasurementPoint = { point: MeasurementPoint; x: number; y: number }
 export type MeasurementHitIndex = ReadonlyMap<string, readonly PositionedMeasurementPoint[]>
 
+// A readable column stays fixed when a report contains more wafers than fit on screen.
+export const MEASUREMENT_MIN_GROUP_WIDTH = 68
+export const MEASUREMENT_AXIS_WIDTH = 124
+
+export function measurementChartWidth(viewportWidth: number, groupCount: number): number {
+  return Math.max(viewportWidth, groupCount * MEASUREMENT_MIN_GROUP_WIDTH + MEASUREMENT_AXIS_WIDTH)
+}
+
+/** Compact only a supplied wafer-number suffix; full identity stays in the hover/click contract. */
+export function measurementGroupLabel(label: string): string {
+  const waferNumber = label.match(/(?:^W|[_-]W?)(\d{1,3})$/i)?.[1]
+  return waferNumber ? `W${waferNumber.padStart(2, "0")}` : label
+}
+
+export function createMeasurementReferenceLabels(
+  lines: MeasurementInput["referenceLines"],
+  domain: MeasurementDomain,
+  layout: MeasurementLayout,
+) {
+  const byValue = new Map<number, MeasurementInput["referenceLines"]>()
+  for (const line of lines) {
+    const sameValue = byValue.get(line.value) ?? []
+    sameValue.push(line)
+    byValue.set(line.value, sameValue)
+  }
+  const labels = [...byValue.entries()].map(([value, groupedLines]) => ({
+    value,
+    lines: groupedLines,
+    anchorY: measurementY(value, domain, layout),
+    labelY: 0,
+  })).sort((left, right) => left.anchorY - right.anchorY)
+  const minimumY = layout.top + 14
+  const maximumY = layout.top + layout.plotHeight - 8
+  const gap = 18
+  // Pack labels independently of their evidence lines; equal values share one annotation.
+  labels.forEach((label, index) => {
+    label.labelY = Math.max(minimumY, label.anchorY - 6, index ? labels[index - 1].labelY + gap : minimumY)
+  })
+  if (labels.length && labels.at(-1)!.labelY > maximumY) {
+    labels.at(-1)!.labelY = maximumY
+    for (let index = labels.length - 2; index >= 0; index--) {
+      labels[index].labelY = Math.min(labels[index].labelY, labels[index + 1].labelY - gap)
+    }
+  }
+  return labels
+}
+
 export function createMeasurementDomain(input: MeasurementInput): MeasurementDomain | null {
   const values: number[] = []
   for (const group of input.groups) {
@@ -39,10 +86,10 @@ export function createMeasurementDomain(input: MeasurementInput): MeasurementDom
 }
 
 export function createMeasurementLayout(width: number, height: number, groupCount: number): MeasurementLayout {
-  const left = 58
-  const right = 18
+  const left = 104
+  const right = 20
   const top = 38
-  const bottom = 46
+  const bottom = 52
   const plotWidth = Math.max(1, width - left - right)
   return { width, height, left, right, top, bottom, plotWidth, plotHeight: Math.max(1, height - top - bottom), groupWidth: plotWidth / Math.max(groupCount, 1) }
 }

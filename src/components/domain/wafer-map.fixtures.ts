@@ -36,6 +36,23 @@ export const waferMapSmallFixture: WaferMapData = {
   bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
 }
 
+/** Mock colour-contract case: source CP status intentionally contradicts bin names. */
+export const waferMapSemanticColorFixture: WaferMapFinalBinWaferInput = {
+  mapId: "mock-semantic-final-bin",
+  waferId: "MOCK-CP-STATUS",
+  geometry: {
+    coordinateSystem: "CP_DIE_GRID_V1",
+    dies: [...waferMapSmallFixture.dies],
+    bounds: waferMapSmallFixture.bounds,
+  },
+  dies: waferMapSmallFixture.dies.map((die, index) => ({
+    ...die,
+    finalBin: ["PASS", "PASS", "NON_NUMERIC_FAILURE", "1", "FAIL"][index],
+    pass: index === 0 || index === 4,
+  })),
+  summary: { pass: 2, fail: 3 },
+}
+
 export const waferMapEmptyFixture: WaferMapData = {
   id: "EMPTY",
   dies: [],

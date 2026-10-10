@@ -25,6 +25,8 @@ import { ReportState } from "@/components/domain/report-state"
 
 `Measurement` 使用单层中性 Analytical Surface：标题、范围、图例与分布证据按顺序呈现；画布宽度超出容器时在图表内部横向滚动。
 
+图表卡片与滚动 viewport 的宽度必须保持在 report 内容范围内；25 片 wafer 采用每列至少 68px 的画布，1024 / 1280 / 1414px 页面均通过内部横向滚动查看。横轴采用可识别的 wafer 序号简写与按列宽省略的 Stage，完整来源身份保留于整列 hover、die 浮层与原始 `onGroupSelect(groupId)`。纵轴标题与刻度分区，同值/近邻规格文字按 shared Measurement contract 排布；规格值及后端统计不改变。
+
 ## Consumer handoff · POC
 
 受控 `selection.parameterCode: null` 显示“请选择 CP Parameter”，参数控件仍可重新选择，旧图不会保留。

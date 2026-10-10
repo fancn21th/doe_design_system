@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import {
   reportInlineDataInputSchema,
@@ -89,43 +90,22 @@ export function ReportInlineData({
   }
 
   return (
-    <div className={cn("domain-ui-typography grid gap-4 p-4", className)}>
-      <div className="flex justify-end">
-        <div
-          className="flex items-center rounded-lg border bg-muted/50 p-0.5"
-          role="group"
-          aria-label="视图切换"
-        >
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className={cn(
-              "rounded-md",
-              viewMode === "distribution" && "bg-background text-foreground ring-1 ring-border"
-            )}
-            onClick={() => setViewMode("distribution")}
-            aria-label="箱型图视图"
-            aria-pressed={viewMode === "distribution"}
-            title="箱型图视图"
-          >
-            <ChartNoAxesColumnIncreasingIcon />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className={cn(
-              "rounded-md",
-              viewMode === "matrix" && "bg-background text-foreground ring-1 ring-border"
-            )}
-            onClick={() => setViewMode("matrix")}
-            aria-label="参数与 wafer 矩阵视图"
-            aria-pressed={viewMode === "matrix"}
-            title="参数与 wafer 矩阵视图"
-          >
-            <Table2Icon />
-          </Button>
-        </div>
-      </div>
+    <div className={cn("domain-ui-typography grid min-w-0 gap-4 p-4", className)}>
+      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <h3 className="text-(length:--doe-font-module-title) font-semibold">{parsedInput.title ?? "Wafer × Inline Parameter"}</h3>
+        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as InlineViewMode)} className="gap-0">
+          <TabsList variant="line" aria-label="视图切换">
+            <TabsTrigger value="distribution" aria-label="箱型图视图"><ChartNoAxesColumnIncreasingIcon />箱型图</TabsTrigger>
+            <TabsTrigger value="matrix" aria-label="参数与 wafer 矩阵视图"><Table2Icon />矩阵</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </header>
+      {parsedInput.summary && <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Inline 测量统计">
+        <SnapshotMetric label="测量参数" value={parsedInput.summary.parameterCount} detail="本次报告包含的参数" />
+        <SnapshotMetric label="测量点" value={parsedInput.summary.rawRowCount} detail="当前有效样本的测量记录" />
+        <SnapshotMetric label="有效样本" value={parsedInput.summary.sampleRowCount} detail="已排除历史样本" />
+        <SnapshotMetric label="可评估 CPK 的样本" value={parsedInput.summary.cpkEvaluableCount} detail="本次有效样本范围" />
+      </dl>}
       {parameters.length === 0 || !measurement ? (
         <EmptyState>暂无 Inline Data 数据</EmptyState>
       ) : viewMode === "matrix" ? (
@@ -137,36 +117,45 @@ export function ReportInlineData({
           onSelect={selectMatrixCell}
         />
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-          <Card size="sm" className="border ring-0 shadow-none">
-            <CardHeader className="flex items-center justify-between gap-2">
-              <CardTitle>SPC inline parameter</CardTitle>
-              <CardAction><ReportBadge tone="neutral">{parameters.length}</ReportBadge></CardAction>
-            </CardHeader>
-            <CardContent className="grid gap-2 pb-(--card-spacing)">
-              {parameters.map((parameter) => (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  key={parameter}
-                  onClick={() => selectParameter(parameter)}
-                  className={cn(
-                    "h-auto w-full justify-start border bg-background p-2 font-mono text-[11px]",
-                    parameter === selectedParameterId && "bg-muted text-foreground"
-                  )}
-                >
-                  {parameter}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="grid min-w-0 gap-4 lg:grid-cols-[var(--doe-wafer-parameter-column)_minmax(0,1fr)]">
+            <Card size="sm" className="min-w-0 self-start border ring-0 shadow-none">
+              <CardHeader className="flex items-center justify-between gap-2">
+                <CardTitle>SPC inline parameter</CardTitle>
+                <CardAction><ReportBadge tone="neutral">{parameters.length}</ReportBadge></CardAction>
+              </CardHeader>
+              <CardContent className="grid max-h-(--doe-wafer-panel-min-height) gap-2 overflow-y-auto pb-(--card-spacing)">
+                {parameters.map((parameter) => (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    key={parameter}
+                    onClick={() => selectParameter(parameter)}
+                    className={cn(
+                      "h-auto! min-h-8 w-full justify-start border bg-background p-2 text-left font-mono text-xs whitespace-normal break-all",
+                      parameter === selectedParameterId && "bg-muted text-foreground"
+                    )}
+                  >
+                    {parameter}
+                  </Button>
+                ))}
+              </CardContent>
+            </Card>
           <div className="min-w-0 xl:col-span-1">
-            {selectedWaferId && (
-              <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-3 flex flex-wrap gap-2">
+              <ReportBadge tone="neutral">
+                Inline Parameter: {selectedParameterId}
+              </ReportBadge>
+              {selectedWaferId && (
                 <ReportBadge tone="neutral">Wafer: {selectedWaferId}</ReportBadge>
-              </div>
-            )}
+              )}
+              <ReportBadge tone={parsedInput.status === "unavailable" ? "bad" : parsedInput.status === "partial" ? "watch" : "neutral"}>
+                {({ ready: "数据可用", partial: "部分数据", "no-data": "暂无数据", unavailable: "数据不可用" })[parsedInput.status]}
+              </ReportBadge>
+            </div>
             <ReportMeasurement input={measurement} onGroupSelect={selectWafer} />
+            {parsedInput.coverage.length ? <Card size="sm" className="mt-4 border ring-0 shadow-none"><CardHeader><CardTitle>晶圆测量覆盖</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2 pb-(--card-spacing)">{parsedInput.coverage.map((item) => <Button type="button" key={item.waferId} variant="outline" size="xs" disabled={!item.measured} onClick={() => selectWafer(item.waferId)} className={cn(item.waferId === selectedWaferId && "bg-muted text-foreground")}>{item.waferId}{item.measured ? " · 有测量数据" : " · 无测量数据"}</Button>)}</CardContent></Card> : null}
+            {parsedInput.rawDetail ? <p className="mt-3 text-xs text-muted-foreground">{parsedInput.rawDetail.parameterId}: {parsedInput.rawDetail.rawPointCount} 个测量点 · {({ ready: "数据可用", partial: "部分数据", unavailable: "数据不可用" })[parsedInput.rawDetail.status]}{parsedInput.rawDetail.reason ? ` · ${parsedInput.rawDetail.reason}` : ""}</p> : null}
+            {parsedInput.summary?.limitation ? <p className="mt-2 text-xs text-muted-foreground">{parsedInput.summary.limitation}</p> : null}
           </div>
         </div>
       )}
@@ -190,14 +179,14 @@ function InlineMatrix({
   const firstColumnClass = stickyFirstColumn
     ? "sticky left-0 z-20 border-r bg-background"
     : ""
-  const headerClass = stickyHeader ? "sticky top-0 z-10 bg-muted/80" : "bg-muted/30"
+  const headerClass = stickyHeader ? "sticky top-0 z-10" : ""
   const cornerClass = stickyHeader && stickyFirstColumn
-    ? "sticky left-0 top-0 z-30 border-r bg-muted"
+    ? "sticky left-0 top-0 z-30 border-r"
     : cn(headerClass, firstColumnClass)
 
   return (
-    <section className="domain-ui-inline-matrix-shell" aria-label="SPC inline parameter 与 Wafer 二维测量数据" tabIndex={0}>
-      <Table className="domain-ui-inline-matrix text-xs">
+    <section className="domain-ui-split-table-shell domain-ui-inline-matrix-shell" aria-label="SPC inline parameter 与 Wafer 二维测量数据" tabIndex={0}>
+      <Table className="domain-ui-report-table domain-ui-inline-matrix">
         <TableHeader>
           <TableRow>
             <TableHead className={cn("domain-ui-inline-matrix-parameter", cornerClass)}>SPC_inline parameter</TableHead>
@@ -212,7 +201,7 @@ function InlineMatrix({
               {coverage.map((wafer) => {
                 const cell = cellsByWafer.get(wafer.waferId)
                 return <TableCell key={wafer.waferId} className="domain-ui-inline-matrix-wafer text-center">
-                  {cell?.median == null ? <span className="domain-ui-inline-matrix-empty">—</span> : <Button variant="outline" size="sm" className="domain-ui-inline-matrix-cell" onClick={() => onSelect(row.parameterId, wafer.waferId)} aria-label={`查看${row.parameterId}下${wafer.waferId}的箱型图，Median ${formatInlineValue(cell.median)}，Cpk ${formatInlineValue(cell.cpk)}`}><strong className="font-mono">{formatInlineValue(cell.median)}</strong><span>Cpk {formatInlineValue(cell.cpk)}</span></Button>}
+                  {cell?.median == null ? <span className="domain-ui-inline-matrix-empty">—</span> : <Button variant="ghost" size="sm" className="domain-ui-inline-matrix-cell" onClick={() => onSelect(row.parameterId, wafer.waferId)} aria-label={`查看${row.parameterId}下${wafer.waferId}的箱型图，Median ${formatInlineValue(cell.median)}，Cpk ${formatInlineValue(cell.cpk)}`}><strong className="font-mono">{formatInlineValue(cell.median)}</strong><span>Cpk {formatInlineValue(cell.cpk)}</span></Button>}
                 </TableCell>
               })}
             </TableRow>
@@ -226,4 +215,13 @@ function InlineMatrix({
 function formatInlineValue(value: number | null | undefined) {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—"
   return Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(3)
+}
+
+function SnapshotMetric({ label, value, detail }: { label: string; value?: number; detail: string }) {
+  return (
+    <div className="flex items-baseline gap-2" title={detail}>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-semibold tabular-nums">{value ?? "—"}</dd>
+    </div>
+  )
 }

@@ -3,7 +3,6 @@
 import {
   CartesianGrid,
   ComposedChart,
-  LabelList,
   Line,
   ReferenceDot,
   ReferenceLine,
@@ -12,7 +11,12 @@ import {
   Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
+  usePlotArea,
+  useXAxisScale,
+  useYAxisScale,
 } from "recharts"
+
+import { placeFitPointLabels } from "@/components/domain/report-cp-inline-label-layout"
 
 import {
   formatReportCpInlineValue,
@@ -76,21 +80,39 @@ export function ReportCpInlineFitChart({
             <YAxis type="number" dataKey="y" domain={["auto", "auto"]} tickFormatter={(value: number) => formatReportCpInlineMeasurementValue(value)} tick={{ fontSize: 11 }} width={82} />
             <RechartsTooltip content={<FitPointTooltip />} />
             {specs.map(({ kind, value }) => (
-              <ReferenceLine key={kind} y={value} ifOverflow="extendDomain" stroke={kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)"} strokeDasharray="5 4" label={{ value: kind === "target" ? "Target" : kind.toUpperCase(), fontSize: 11, position: "insideTopRight" }} />
+              <ReferenceLine key={kind} y={value} ifOverflow="extendDomain" stroke={kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)"} strokeDasharray="5 4" label={{ value: kind === "target" ? "Target" : kind.toUpperCase(), fontSize: 11, position: "insideBottomRight" }} />
             ))}
             {models.map((model) => (
               <Line key={model.kind} name={model.label} data={model.series} dataKey="y" type="linear" dot={false} isAnimationActive={false} stroke={REPORT_CP_INLINE_MODEL_COLORS[model.kind]} strokeWidth={2.5} />
             ))}
-            <Scatter name="Wafer" data={panel.points} fill="var(--doe-cp-inline-wafer)" isAnimationActive={false}>
-              <LabelList dataKey="label" position="top" fontSize={11} />
-            </Scatter>
+            <Scatter name="Wafer" data={panel.points} fill="var(--doe-cp-inline-wafer)" isAnimationActive={false} />
             {roots.map((root) => <ReferenceDot key={root.id} x={root.x} y={root.y} r={4} fill="var(--background)" stroke={REPORT_CP_INLINE_MODEL_COLORS[root.model]} strokeWidth={2} ifOverflow="extendDomain" />)}
+            <FitPointLabels points={panel.points} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
       <div className="mt-2 text-center text-xs break-words text-muted-foreground">{inlineParameter} · Wafer Median</div>
     </div>
   )
+}
+
+function FitPointLabels({ points }: { points: ReportCpInlineFitPoint[] }) {
+  const plot = usePlotArea()
+  const xScale = useXAxisScale()
+  const yScale = useYAxisScale()
+  if (!plot || !xScale || !yScale) return null
+  const positions = points.flatMap((point) => {
+    const x = xScale(point.x)
+    const y = yScale(point.y)
+    return typeof x === "number" && typeof y === "number" && Number.isFinite(x) && Number.isFinite(y)
+      ? [{ id: point.id, label: point.label, x, y }]
+      : []
+  })
+  return <g className="pointer-events-none" aria-hidden>{placeFitPointLabels(positions, plot).map((label) => <g key={label.id} data-fit-wafer-label={label.label}>
+    <line x1={label.x} y1={label.y} x2={label.left + label.width / 2} y2={label.top + label.height / 2} stroke="var(--muted-foreground)" strokeWidth={0.75} />
+    <rect x={label.left} y={label.top} width={label.width} height={label.height} rx={2} fill="var(--background)" />
+    <text x={label.left + label.width / 2} y={label.top + 12} textAnchor="middle" fontSize={11} fill="var(--foreground)"><title>{label.label}</title>{label.text}</text>
+  </g>)}</g>
 }
 
 function FitPointTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload?: unknown }> }) {

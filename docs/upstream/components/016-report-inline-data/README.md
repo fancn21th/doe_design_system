@@ -104,3 +104,14 @@ coverage, matrix rows, raw-detail status and explicit source-provisional
 limitations. It still composes shared `Measurement` for the distribution; it
 does not calculate Cpk or infer a DOE Step from Inline data. Snapshot selection,
 lazy detail requests and retry remain DOE App workflow responsibilities.
+
+## Approved visual repair — 2026-10-10
+
+The second-round App/prototype audit and user-approved repair retain the title
+and distribution/matrix modes while replacing the oversized App-only summary
+card stack with compact supplied statistics. Both modes share a labelled line
+tab control; the matrix adopts the accepted Report Split Table header/body
+density and neutral cell controls. Coverage, limitations, full parameter identity
+and controlled callbacks remain intact. Reference evidence:
+`db-probe/reference/acceptance/2026-10-10-visual-round2/visual-audit.md`
+(U01/U02/U14/U15/U17). No prototype numbers or Cpk assessments are introduced.

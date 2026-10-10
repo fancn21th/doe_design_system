@@ -16,6 +16,13 @@ import { measurementScenarios } from "@/components/domain/measurement.scenarios"
 
 `Measurement` 是渲染边界：Canvas 分层绘制全量 die 点云、箱体统计量、规格线、整列选择与单 die 检视浮层。它不请求数据，也不解释 CP/Inline 的业务工作流。
 
+### Readable plotting boundaries
+
+- Analytical Surface 和滚动 viewport 必须服从消费方可用宽度；25 片 wafer 保留每列至少 68px，宽画布仅在组件内横向滚动。
+- 纵轴标题与刻度使用独立区域。过长标题在画布上截断，完整 metric 保留在图表标题区；刻度文字限制在自身区域。
+- 提供 `LOT_01` / `LOT_W01` 等带 wafer 序号的 group label 时，横轴使用 `W01` 简写；其他名称按列宽省略。Stage 同样按列宽省略。悬停整列显示完整 group 与 Stage / Step / Sequence / Condition，点击仍发送原始 `group.id`，die 浮层保留完整 label。
+- 同值参考线共享 `LSL / Target` 等文字标注；近邻标注在纵向保持间隔，偏移标注连接到原始参考线。此排布只调整文字位置，绝不改变传入值、scale 或缺失值语义。
+
 5173 report application is a read-only data upstream. The consuming app owns an adapter from its upstream DTO to this schema; this package neither imports nor modifies that application.
 
 ## Shadcn Components
@@ -57,9 +64,12 @@ Every group supplies its complete physical point cloud. `summary.count` must equ
 
 - `normal`
 - `compact`
+- `label-boundaries`（长来源名称、同值与近邻参考线）
 - `empty`
 - `pending`
 - `unavailable`
+
+<div className="not-prose max-w-3xl"><Measurement input={measurementScenarios.labelBoundaries.input} /></div>
 
 ## Consumer state presentation
 

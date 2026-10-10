@@ -24,9 +24,16 @@ import { ReportState } from "@/components/domain/report-state"
 矩阵单元格与箱型图共享同一组 `parameterId + waferId`：点击有数据的单元格会发出参数与 wafer 选择意图；弹出箱型图明细或切换应用工作流由 DOE App 决定。
 它通过 `selection.parameterId` / `selection.waferId` 接收 App 受控选择，并通过 callback 暴露参数/wafer 选择意图；请求、Snapshot 切换和重试属于 DOE App。仅分布/矩阵视图切换保留为组件本地展示状态。
 
-分布/矩阵视图切换作为独立的双图标控件呈现，不额外包裹标题 Analytical Surface；
-分布/矩阵状态不改变 App 的选中参数或 wafer。分布视图以
-parameter selector 与 shared `Measurement` 组织；矩阵视图保持独立的双向滚动表面，不嵌套外层分析卡片。选择色只表达当前参数或 wafer，不承担业务 assessment。
+分布/矩阵切换在 `Wafer × Inline Parameter` 标题右侧使用共享 line Tabs，
+有文字和图标；两种视图都保留输入的测量统计。统计以紧凑的标签/数值行显示，
+不在图表前堆叠独立 KPI 卡片。参数列表在宽屏与共享 `Measurement` 并排，
+使用既有 wafer parameter column token，长参数代码换行。覆盖和数据限制保留在图后。
+分布/矩阵状态不改变 App 的选中参数或 wafer；选择色只表达当前参数或 wafer，
+不承担业务 assessment。
+
+矩阵作为单独的圆角边框表面，双向滚动、固定表头和首列；字体、40px 表头和
+单元格间距采用已验收的 Split Table 节奏。单元格用中性背景的两行 Median / Cpk
+提供选择意图，缺失值保留 `—`。没有输入的 assessment 不从 Cpk 数字推断颜色或阈值。
 
 ## Scenarios
 

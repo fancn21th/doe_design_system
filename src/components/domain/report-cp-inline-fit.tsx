@@ -42,13 +42,15 @@ export function ReportCpInlineFit({ input, className, showHeader = true }: {
       {showHeader && <header className="space-y-1"><h3 className="text-(length:--doe-font-module-title) font-semibold break-words">{parsed.cpParameter} × {parsed.inlineParameter}</h3><p className="text-xs text-muted-foreground">{parsed.stepLabel} · {parsed.factorLabel}</p></header>}
       {!showHeader && <p className="text-xs text-muted-foreground">{parsed.stepLabel} · {parsed.factorLabel}</p>}
       <FitSection title="Wafer Pair明细">
-        <Table className="domain-ui-cp-inline-table">
-          <TableHeader className="bg-muted/50"><TableRow><TableHead>Wafer ID</TableHead><TableHead>Condition</TableHead><TableHead>Inline Median X</TableHead><TableHead>CP Median Y</TableHead><TableHead>CP Min</TableHead><TableHead>CP Max</TableHead></TableRow></TableHeader>
+        <div className="min-w-0 p-4"><div className="max-w-full overflow-x-auto rounded-(--doe-radius-control) border">
+        <Table className="domain-ui-report-table domain-ui-cp-inline-table">
+          <TableHeader className="bg-muted/60"><TableRow><TableHead>Wafer ID</TableHead><TableHead>Condition</TableHead><TableHead>Inline Median X</TableHead><TableHead>CP Median Y</TableHead><TableHead>CP Min</TableHead><TableHead>CP Max</TableHead></TableRow></TableHeader>
           <TableBody>
             {parsed.waferPairs.map((pair) => <TableRow key={pair.waferId}><TableCell><span className="mr-2 text-primary">{pair.waferId}</span><Badge variant="outline">{pair.role}</Badge>{pair.coverageStatus !== "PAIRED" && <span className="mt-1 block text-xs text-muted-foreground">{COVERAGE_LABELS[pair.coverageStatus]}</span>}</TableCell><TableCell>{pair.condition}</TableCell><TableCell className="font-mono">{formatReportCpInlineValue(pair.inlineMedian, pair.inlineMedian != null && Math.abs(pair.inlineMedian) < 10 ? 6 : 1)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMedian)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMin)}</TableCell><TableCell className="font-mono">{formatReportCpInlineMeasurementValue(pair.cpMax)}</TableCell></TableRow>)}
             {parsed.waferPairs.length === 0 && <TableRow><TableCell colSpan={6} className="p-0"><ReportState title="暂无 Wafer 明细。" className="min-h-40" /></TableCell></TableRow>}
           </TableBody>
         </Table>
+        </div></div>
       </FitSection>
       <FitSection title="Wafer Scatter & Fits">
         <div className="grid min-w-0 gap-(--doe-section-gap) p-(--doe-module-padding)">

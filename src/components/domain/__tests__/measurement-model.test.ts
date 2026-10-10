@@ -4,13 +4,16 @@ import {
   createMeasurementDomain,
   createMeasurementHitIndex,
   createMeasurementLayout,
+  createMeasurementReferenceLabels,
   groupBounds,
   hasCompletePointCloud,
   measurementY,
+  measurementChartWidth,
+  measurementGroupLabel,
   nearestMeasurementPoint,
   stableJitter,
 } from "@/components/domain/measurement-model"
-import { measurementFixture, measurementSmallFixture } from "@/components/domain/measurement.fixtures"
+import { measurementFixture, measurementLabelBoundaryFixture, measurementSmallFixture } from "@/components/domain/measurement.fixtures"
 import { measurementInputSchema } from "@/schemas/domain-component-inputs"
 
 describe("Measurement rendering model", () => {
@@ -50,5 +53,56 @@ describe("Measurement rendering model", () => {
     const index = createMeasurementHitIndex(measurementSmallFixture, domain, layout)
 
     expect(nearestMeasurementPoint(index, 0, x, y)?.point.id).toBe(point.id)
+  })
+
+  it("keeps 25 wafer columns readable at narrow report widths without squeezing their geometry", () => {
+    for (const viewport of [680, 936, 1070]) {
+      const width = measurementChartWidth(viewport, 25)
+      const layout = createMeasurementLayout(width, 560, 25)
+      expect(width).toBeGreaterThan(viewport)
+      expect(layout.groupWidth).toBeGreaterThanOrEqual(68)
+      expect(groupBounds(24, layout).right).toBeLessThanOrEqual(width - layout.right)
+    }
+    const width = measurementChartWidth(936, 4)
+    expect(width).toBe(936)
+  })
+
+  it("compacts source wafer suffixes while retaining arbitrary group labels and supplied identities", () => {
+    const group = measurementLabelBoundaryFixture.groups[0]
+    expect(measurementGroupLabel(group.label)).toBe("W01")
+    expect(group.id).toBe("SOURCE_LOT_01")
+    expect(group.label).toBe("SOURCE_LOT_01")
+    expect(measurementGroupLabel("W24")).toBe("W24")
+    expect(measurementGroupLabel("REFERENCE GROUP")).toBe("REFERENCE GROUP")
+  })
+
+  it("combines equal-valued reference annotations and separates nearby labels without moving evidence lines", () => {
+    const input = measurementLabelBoundaryFixture
+    const originalLines = structuredClone(input.referenceLines)
+    const domain = createMeasurementDomain(input)!
+    const layout = createMeasurementLayout(936, 560, 3)
+    const labels = createMeasurementReferenceLabels(input.referenceLines, domain, layout)
+    expect(labels).toHaveLength(2)
+    expect(labels.find((label) => label.value === 90)?.lines.map((line) => line.label)).toEqual(["LSL", "Target"])
+    expect(labels[1].labelY - labels[0].labelY).toBeGreaterThanOrEqual(18)
+    for (const label of labels) {
+      expect(label.anchorY).toBe(measurementY(label.value, domain, layout))
+      expect(label.labelY).toBeGreaterThanOrEqual(layout.top)
+      expect(label.labelY).toBeLessThan(layout.top + layout.plotHeight)
+    }
+    expect(input.referenceLines).toEqual(originalLines)
+  })
+
+  it("keeps clustered annotations inside the plot at both vertical edges", () => {
+    const domain = { minimum: 0, maximum: 1 }
+    const layout = createMeasurementLayout(936, 560, 4)
+    for (const values of [[0, 0.001, 0.002], [0.998, 0.999, 1]]) {
+      const lines = values.map((value, index) => ({ id: String(index), label: String(index), value, kind: "guide" as const }))
+      const labels = createMeasurementReferenceLabels(lines, domain, layout)
+      expect(labels[0].labelY).toBeGreaterThanOrEqual(layout.top + 14)
+      expect(labels.at(-1)!.labelY).toBeLessThanOrEqual(layout.top + layout.plotHeight - 8)
+      expect(labels[1].labelY - labels[0].labelY).toBeGreaterThanOrEqual(18)
+      expect(labels[2].labelY - labels[1].labelY).toBeGreaterThanOrEqual(18)
+    }
   })
 })

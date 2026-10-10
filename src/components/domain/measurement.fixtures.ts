@@ -123,3 +123,21 @@ export const measurementEmptyFixture: MeasurementInput = {
 
 export const measurementPendingFixture: MeasurementInput = { ...measurementEmptyFixture, status: "pending" }
 export const measurementUnavailableFixture: MeasurementInput = { ...measurementEmptyFixture, status: "unavailable" }
+
+/** Derived layout fixture: long source identities and equal/nearby supplied reference values. */
+export const measurementLabelBoundaryFixture: MeasurementInput = {
+  ...measurementSmallFixture,
+  title: "Measurement label boundaries",
+  metric: { id: "long-metric", label: "LONG_SOURCE_MEASUREMENT_PARAMETER_WITH_UNIT", unit: "V" },
+  groups: measurementSmallFixture.groups.map((group, index) => ({
+    ...group,
+    id: `SOURCE_LOT_${String(index + 1).padStart(2, "0")}`,
+    label: `SOURCE_LOT_${String(index + 1).padStart(2, "0")}`,
+    context: { ...group.context, stage: "SOURCE_STAGE_WITH_A_LONG_IDENTIFIER" },
+  })),
+  referenceLines: [
+    { id: "lsl", label: "LSL", value: 90, kind: "formal-spec" },
+    { id: "target", label: "Target", value: 90, kind: "target" },
+    { id: "usl", label: "USL", value: 90.1, kind: "formal-spec" },
+  ],
+}

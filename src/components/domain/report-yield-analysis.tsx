@@ -236,8 +236,8 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
           {sortByYield ? "恢复组内顺序" : "组内按 Yield 排序"}
         </Button>
       </div>
-      <div ref={regionRef} role="region" aria-label="Wafer × CP Matrix" tabIndex={0} className="min-w-0 max-w-full max-h-(--doe-yield-matrix-height) overflow-auto rounded-lg border">
-        <Table className="min-w-(--doe-yield-matrix-min-width) border-separate border-spacing-0">
+      <div ref={regionRef} role="region" aria-label="Wafer × CP Matrix" tabIndex={0} className="min-w-0 max-w-full max-h-(--doe-yield-matrix-height) overflow-auto rounded-(--doe-radius-control) border">
+        <Table className="domain-ui-report-table min-w-(--doe-yield-matrix-min-width) border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-20 bg-background">
             <TableRow>
               <TableHead className="w-52 bg-muted">Stage / Step / Seq</TableHead>
@@ -260,16 +260,16 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
                   {onWaferSelect ? <button type="button" className="font-mono text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(row.waferId)}>{row.waferId}</button> : <b className="font-mono text-sky-700">{row.waferId}</b>}
                   {row.role && <span className="ml-2 text-xs text-muted-foreground">{row.role}</span>}
                 </TableCell>
-                <TableCell className="font-mono text-xs">{row.condition}</TableCell>
+                <TableCell className="font-mono">{row.condition}</TableCell>
                 <TableCell><ReportBadge tone={row.tone ?? "neutral"}>{formatOptionalPercent(row.yield)}</ReportBadge></TableCell>
-                <TableCell className="font-mono text-xs" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
+                <TableCell className="font-mono" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
                   {row.deltaPp === null ? (row.role?.toUpperCase() === "BASELINE" || row.baselineWaferId === row.waferId ? "—" : row.baselineWaferId ? "缺少有效 Yield" : "缺少比较对象") : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
                 </TableCell>
-                <TableCell className="font-mono text-xs">{row.goodDies === null || row.goodDies === undefined ? "—" : formatCount(row.goodDies)} / {formatOptionalCount(row.testedDies)}</TableCell>
+                <TableCell className="font-mono">{row.goodDies === null || row.goodDies === undefined ? "—" : formatCount(row.goodDies)} / {formatOptionalCount(row.testedDies)}</TableCell>
                 {matrixColumns.map((column) => {
                   const count = row.failCounts[column]
                   const rate = row.failRates[column]
-                  return <TableCell key={column} className="text-right font-mono text-xs" title={count === undefined || count === null ? undefined : `${formatCount(count)} failed dies`}>
+                  return <TableCell key={column} className="text-right font-mono" title={count === undefined || count === null ? undefined : `${formatCount(count)} failed dies`}>
                     {rate === undefined || rate === null ? "缺少数据" : rate === 0 ? "—" : formatPercent(rate)}
                   </TableCell>
                 })}
@@ -286,9 +286,9 @@ function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
   if (rows.length === 0) return <EmptyState>暂无 Loss Yield 数据</EmptyState>
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-[48rem]">
-        <TableHeader>
+    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-(--doe-radius-control) border">
+      <Table className="domain-ui-report-table min-w-[48rem]">
+        <TableHeader className="bg-muted/60">
           <TableRow>
             <TableHead className="w-16">Rank</TableHead>
             <TableHead>Failed CP Parameters</TableHead>
@@ -334,9 +334,9 @@ function ConditionYieldTable({ rows, onWaferSelect }: {
   }
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-[78rem]">
-        <TableHeader>
+    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-(--doe-radius-control) border">
+      <Table className="domain-ui-report-table min-w-[78rem]">
+        <TableHeader className="bg-muted/60">
           <TableRow>
             <TableHead className="w-52">Stage / Step / Seq</TableHead>
             <TableHead>Condition</TableHead>
@@ -356,8 +356,8 @@ function ConditionYieldTable({ rows, onWaferSelect }: {
                   {row.step} · {row.seq}
                 </span>
               </TableCell>
-              <TableCell className="font-mono text-xs">{row.condition}</TableCell>
-              <TableCell className="font-mono text-xs">{row.waferIds.map((waferId, index) => <React.Fragment key={waferId}>{index > 0 && " / "}{onWaferSelect ? <button type="button" className="text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(waferId)}>{waferId}</button> : waferId}</React.Fragment>)}</TableCell>
+              <TableCell className="font-mono">{row.condition}</TableCell>
+              <TableCell className="font-mono">{row.waferIds.map((waferId, index) => <React.Fragment key={waferId}>{index > 0 && " / "}{onWaferSelect ? <button type="button" className="text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(waferId)}>{waferId}</button> : waferId}</React.Fragment>)}</TableCell>
               <TableCell className="text-right">
                 <ReportBadge tone={row.tone}>
                   {formatOptionalPercent(row.weightedYield)}

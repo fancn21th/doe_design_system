@@ -12,6 +12,10 @@ import { waferMapGalleryScenarios, waferMapScenarios } from "@/components/domain
 
 <WaferMapGallery input={waferMapGalleryScenarios.finalBinOverview.input} />
 
+### Mock CP status · bin labels do not determine Pass/Fail
+
+<WaferMapGallery input={waferMapGalleryScenarios.semanticFinalBins.input} />
+
 ### CP Parameter Gradient
 
 <WaferMapGallery input={waferMapGalleryScenarios.parameterOverview.input} />
@@ -37,10 +41,20 @@ not place a Gallery beside a separately reimplemented Report control bar. Every 
 carries its own geometry and data payload; no fixture or component assumes that 25
 wafers share values.
 
-Final Bin presentation accepts the BFF-preserved bin label literally. The default
-palette gives semantic `PASS` the same green treatment as numeric Bin `1`; a
-different authoritative bin palette may be supplied through the input. The App
-must not infer a numeric bin code from a label.
+Final Bin presentation preserves the BFF bin label and supplied `die.pass` literally.
+Explicit Pass uses a green colour family; explicit Fail uses a contrasting warm
+colour family, with stable bin-specific shades. Neither numeric Bin `1`, a label,
+nor a colour hash can override `die.pass`. The legacy input palette is a fallback
+only when CP status is absent; the Final Bin schema requires that status. Thumbnail,
+fullscreen and legend use the same resolver. Mixed-state bins show both swatches;
+supplied inspection counts and summary facts remain unchanged.
+
+All modes share a neutral grey legal-die base. Defect types use saturated contrasting
+colours so selected defects remain visible against the base. Parameter legends in
+the gallery and fullscreen show the supplied `scale.domainMin` / `domainMax` and unit,
+using the same continuous value-to-colour function as the map. Grey means no valid
+value; red outlines denote only explicitly supplied CP Fail. The component never
+computes a new range, interprets the range as specification, or invents OOS cutoffs.
 
 `WaferMapCore` owns three stacked Canvas layers: an immediate base layer for all legal dies, a data layer for Final Bin / parameter / defect color, and an interaction layer. The shallow grey circular boundary is presentation only; the supplied legal-die coordinates define the actual footprint.
 
