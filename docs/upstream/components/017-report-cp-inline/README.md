@@ -242,3 +242,8 @@ changes belong to the next implementation step.
 - Existing data evidence: reviewed `db-probe/notebooks/tabs/computed fileds/inline-condition-vs-cp/cp_x_inline.ipynb`, Generation 13. Three persisted ranking rows are retained; kelvinS wafer summaries are transcribed exactly. Fit curves/metrics/roots are derived offline for fixtures, never at runtime. QG_QgTOT2 remains a separate prototype-backed Fit scenario.
 - Correct the prototype scientific-formatting error (e-10 became e-1) and avoid fixed-decimal tiny CP values rendering as zero. Prototype meta counts are not copied; counts come from the rendered dataset.
 - Visual revision: bounded responsive chart within its evidence column, existing DOE table local overflow and a named Fit Drawer inspection-width token. Positive/negative Spearman use existing chart-2/chart-5 with a signed numeric value, without indicating causal/pass judgment.
+
+
+## 2026-10-10 measured-scale correction
+
+User compared the production IGSSNSC Fit to the documented prototype. USL=1e-4 expanded the axis around Median≈3e-8; generated model paths spanned only 0.01–0.02 px. Distinct Max≈3e-4 values collapsed under six-decimal formatting. The approved correction keeps axes around observations/visible models, preserves out-of-range spec values with explicit labels, and retains precision. Backend availability remains supplied evidence. See the CP × Inline MDX measured-scale contract.

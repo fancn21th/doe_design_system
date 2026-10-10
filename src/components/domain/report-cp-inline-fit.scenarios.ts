@@ -47,11 +47,41 @@ const partial: ReportCpInlineFitInput = {
   provenance: { classification: "mock", source: "Partial CP Min evidence scenario" },
 }
 
+const smallScaleFarSpec: ReportCpInlineFitInput = {
+  ...reportCpInlineFitFixture,
+  experimentGroupId: "MOCK_SMALL_SCALE", cpParameter: "SMALL_CP", inlineParameter: "INLINE_X",
+  stepLabel: "Mock", factorLabel: "Measured-scale display",
+  waferPairs: reportCpInlineFitFixture.waferPairs.map((pair, index) => ({ ...pair,
+    waferId: `MOCK_${index + 1}`, inlineMedian: [18, 27, 53, 203][index],
+    cpMedian: [2.76e-8, 2.80e-8, 2.89e-8, 3.26e-8][index],
+    cpMin: [9.9e-9, 1.06e-8, 1.04e-8, 1.26e-8][index],
+    cpMax: [0.0003000222, 0.0003000092, 0.0003000236, 0.000300029][index],
+  })),
+  fitPanels: reportCpInlineFitFixture.fitPanels.map((panel) => {
+    const ys = panel.id === "median" ? [2.76e-8, 2.80e-8, 2.89e-8, 3.26e-8]
+      : panel.id === "min" ? [9.9e-9, 1.06e-8, 1.04e-8, 1.26e-8]
+      : [0.0003000222, 0.0003000092, 0.0003000236, 0.000300029]
+    const points = panel.points.map((point, index) => ({ ...point, id: `${panel.id}-MOCK_${index + 1}`,
+      waferId: `MOCK_${index + 1}`, label: `MOCK_${index + 1}`, x: [18, 27, 53, 203][index], y: ys[index],
+      inlineWafers: [`MOCK_${index + 1}`], cpWafers: [`MOCK_${index + 1}`],
+    }))
+    return { ...panel, metricLabel: `CP ${panel.id === "median" ? "Median" : panel.id === "min" ? "Min" : "Max"}`, points, pearson: null, spearman: null, roots: [],
+      models: panel.models.map((model) => ({ ...model, status: "unavailable", equation: null, series: [],
+        r2: null, rmse: null, residualN: null, residualDf: null,
+        diagnostic: "Mock 坐标轴/精度场景，不提供拟合证据。", unavailableReason: "未提供模型。" })),
+      provenance: "Mock small-scale points and distant USL; no statistical claims",
+    }
+  }),
+  spec: { target: null, lsl: null, usl: 0.0001, sourceLabel: "Mock distant USL", classification: "source-provisional" },
+  provenance: { classification: "mock", source: "Display regression inspired by IGSSNSC; not a production dataset" },
+}
+
 export const reportCpInlineFitScenarios = {
   normal: { name: "normal", input: reportCpInlineFitFixture },
   upstreamAvailableSmallSample: { name: "upstream-available-small-sample", input: reportCpInlineSmallAvailableFitFixture },
   configuredSpec: { name: "configured-spec", input: { ...reportCpInlineFitFixture, spec: { target: 0.03174, lsl: 0.001, usl: 0.08000001, sourceLabel: "Mock review SPEC", classification: "source-provisional" }, fitPanels: reportCpInlineFitFixture.fitPanels.map((panel) => panel.id === "median" ? { ...panel, roots: [...panel.roots, { id: "review-linear-target", model: "linear", threshold: "target", x: 5.6410256410253705, y: 0.03174, domainStatus: "in-domain" }] } : panel), provenance: { classification: "mock", source: "Review SPEC fixture; target root derived offline, LSL/USL roots preserved" } } },
   prototype: { name: "prototype-backed", input: reportCpInlinePrototypeFitFixture },
+  smallScaleFarSpec: { name: "small-scale-far-spec", input: smallScaleFarSpec },
   coverageMismatch: { name: "coverage-mismatch", input: coverageMismatch },
   partial: { name: "partial", input: partial },
   insufficient: { name: "upstream-unavailable", input: reportCpInlineBoundaryFits[reportCpInlineInsufficientRows[0].experimentGroupId] },

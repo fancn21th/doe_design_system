@@ -9,6 +9,7 @@ import {
   formatReportCpInlineValue,
   formatReportCpInlineMeasurementValue,
   reportCpInlineSpecEntries,
+  reportCpInlineYDomain,
   visibleReportCpInlineModels,
 } from "@/components/domain/report-cp-inline-model"
 import { reportCpInlineFitInputSchema, type ReportCpInlineFitInput } from "@/schemas/domain-component-inputs"
@@ -96,5 +97,35 @@ describe("CP × Inline Fit evidence", () => {
     expect(unavailable).toContain("Wafer Pair明细")
     expect(unavailable).toContain("不可用")
     expect(reportCpInlineSpecEntries(undefined)).toEqual([])
+  })
+})
+
+
+describe("CP small-scale measurement regression", () => {
+  it("retains distinct CP Max values instead of rounding all to 0.000300", () => {
+    const values = [0.0003000092, 0.0003000067, 0.000300029]
+    expect(new Set(values.map(formatReportCpInlineMeasurementValue)).size).toBe(3)
+    for (const value of values) expect(Number(formatReportCpInlineMeasurementValue(value))).toBe(value)
+  })
+})
+
+
+describe("CP measured-scale chart range", () => {
+  it("includes observations and supplied visible curves with a small margin", () => {
+    const [low, high] = reportCpInlineYDomain([{ y: 2.76e-8 }, { y: 3.26e-8 }], [{ series: [{ x: 18, y: 2.75e-8 }, { x: 203, y: 3.3e-8 }] }])
+    expect(low).toBeLessThan(2.75e-8)
+    expect(high).toBeGreaterThan(3.3e-8)
+    expect(high - low).toBeLessThan(1e-8)
+    const max = reportCpInlineYDomain([{ y: 0.0003000092 }, { y: 0.000300029 }], [])
+    expect(max[1] - max[0]).toBeLessThan(3e-8)
+  })
+  it("handles empty, zero, constant, negative and nonfinite display values", () => {
+    expect(reportCpInlineYDomain([], [])).toEqual([0, 1])
+    expect(reportCpInlineYDomain([{ y: NaN }], [])).toEqual([0, 1])
+    for (const value of [0, -3e-8, 3e-8]) {
+      const [low, high] = reportCpInlineYDomain([{ y: value }], [])
+      expect(low).toBeLessThan(value)
+      expect(high).toBeGreaterThan(value)
+    }
   })
 })

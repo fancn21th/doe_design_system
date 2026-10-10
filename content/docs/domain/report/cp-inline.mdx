@@ -142,3 +142,12 @@ Wafer 标签按屏幕坐标避让并限制在绘图区；引线连接原始散�
 但 tooltip 与 Wafer Pair 保留完整身份。散点、拟合曲线、规格和业务值不移动。
 实现使用 Recharts 3.8 的公开 `usePlotArea` / `useXAxisScale` / `useYAxisScale`：
 [公开自定义组件文档](https://recharts.github.io/guide/customize/)。
+
+
+### Fit measured-scale display — 2026-10-10
+
+- 每张图的纵轴仅按注入的 Wafer 散点和当前可见曲线取范围，并留少量边距；切换曲线显隐可以改变显示范围，不改变输入数值。
+- 规格值在图例保留；超出纵轴的规格明确标注「纵轴范围外」，不强制扩大纵轴。域外规格和交点仍可在 Fit × Spec 明细查看，不移动到图内，也不代表规格通过。
+- 小量级 CP Max 使用足够有效数字，避免 `0.0003000092` 与 `0.000300029` 都显示为 `0.000300`。
+- `small-scale-far-spec` 是 mock 坐标/精度回归场景；真实拟合曲线以 App 收到的 Backend 证据验收。
+- 原型中的离线派生曲线不代表任何 Backend 版本一定会返回同样的可用状态；Wafer 拟合准入仍由 Backend 决定。

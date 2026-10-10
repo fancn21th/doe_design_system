@@ -22,6 +22,7 @@ import {
   formatReportCpInlineValue,
   formatReportCpInlineMeasurementValue,
   reportCpInlineSpecEntries,
+  reportCpInlineYDomain,
   visibleReportCpInlineModels,
   type ReportCpInlineModelVisibility,
 } from "@/components/domain/report-cp-inline-model"
@@ -53,6 +54,8 @@ export function ReportCpInlineFitChart({
 }) {
   const models = visibleReportCpInlineModels(panel.models, visibility)
   const specs = reportCpInlineSpecEntries(spec)
+  const yDomain = reportCpInlineYDomain(panel.points, models)
+  const inYDomain = (value: number) => value >= yDomain[0] && value <= yDomain[1]
   const roots = panel.roots.filter(
     (root) => root.domainStatus === "in-domain" &&
       models.some((model) => model.kind === root.model)
@@ -69,7 +72,7 @@ export function ReportCpInlineFitChart({
         ))}
         <span className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full bg-[var(--doe-cp-inline-wafer)]" />Wafer</span>
         {models.map((model) => <span key={`${model.kind}-root`} className="inline-flex items-center gap-1.5"><span className="size-2 rounded-full border-2" style={{ borderColor: REPORT_CP_INLINE_MODEL_COLORS[model.kind] }} />{model.kind === "linear" ? "Linear" : "Quadratic"} 交点</span>)}
-        {specs.map(({ kind }) => <span key={kind} className="inline-flex items-center gap-1.5"><span className="w-4 border-t border-dashed" style={{ borderColor: kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)" }} />{kind === "target" ? "Target" : kind.toUpperCase()}</span>)}
+        {specs.map(({ kind }) => <span key={kind} className="inline-flex items-center gap-1.5"><span className="w-4 border-t border-dashed" style={{ borderColor: kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)" }} />{kind === "target" ? "Target" : kind.toUpperCase()} {formatReportCpInlineMeasurementValue(spec?.[kind])}{!inYDomain(spec?.[kind] ?? NaN) && "（纵轴范围外）"}</span>)}
       </div>
       <div className="mb-1 text-xs text-muted-foreground">{panel.metricLabel}{cpUnit ? ` (${cpUnit})` : ""}</div>
       <div className="domain-ui-cp-inline-chart" role="img" aria-label={`${cpParameter} · ${panel.title}，${panel.points.length} 个 Wafer 散点，${models.length} 条可见拟合曲线`}>
@@ -77,16 +80,16 @@ export function ReportCpInlineFitChart({
           <ComposedChart margin={{ top: 20, right: 22, bottom: 12, left: 0 }} accessibilityLayer>
             <CartesianGrid stroke="var(--border)" />
             <XAxis type="number" dataKey="x" domain={["dataMin", "dataMax"]} tickFormatter={(value: number) => formatReportCpInlineValue(value, Math.abs(value) < 10 ? 4 : 1)} tick={{ fontSize: 11 }} />
-            <YAxis type="number" dataKey="y" domain={["auto", "auto"]} tickFormatter={(value: number) => formatReportCpInlineMeasurementValue(value)} tick={{ fontSize: 11 }} width={82} />
+            <YAxis type="number" dataKey="y" domain={yDomain} allowDataOverflow tickFormatter={(value: number) => formatReportCpInlineMeasurementValue(value)} tick={{ fontSize: 11 }} width={82} />
             <RechartsTooltip content={<FitPointTooltip />} />
-            {specs.map(({ kind, value }) => (
-              <ReferenceLine key={kind} y={value} ifOverflow="extendDomain" stroke={kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)"} strokeDasharray="5 4" label={{ value: kind === "target" ? "Target" : kind.toUpperCase(), fontSize: 11, position: "insideBottomRight" }} />
+            {specs.filter(({ value }) => inYDomain(value)).map(({ kind, value }) => (
+              <ReferenceLine key={kind} y={value} ifOverflow="discard" stroke={kind === "target" ? "var(--doe-cp-inline-accent)" : "var(--doe-cp-inline-limit)"} strokeDasharray="5 4" label={{ value: kind === "target" ? "Target" : kind.toUpperCase(), fontSize: 11, position: "insideBottomRight" }} />
             ))}
             {models.map((model) => (
               <Line key={model.kind} name={model.label} data={model.series} dataKey="y" type="linear" dot={false} isAnimationActive={false} stroke={REPORT_CP_INLINE_MODEL_COLORS[model.kind]} strokeWidth={2.5} />
             ))}
             <Scatter name="Wafer" data={panel.points} fill="var(--doe-cp-inline-wafer)" isAnimationActive={false} />
-            {roots.map((root) => <ReferenceDot key={root.id} x={root.x} y={root.y} r={4} fill="var(--background)" stroke={REPORT_CP_INLINE_MODEL_COLORS[root.model]} strokeWidth={2} ifOverflow="extendDomain" />)}
+            {roots.map((root) => <ReferenceDot key={root.id} x={root.x} y={root.y} r={4} fill="var(--background)" stroke={REPORT_CP_INLINE_MODEL_COLORS[root.model]} strokeWidth={2} ifOverflow="discard" />)}
             <FitPointLabels points={panel.points} />
           </ComposedChart>
         </ResponsiveContainer>
