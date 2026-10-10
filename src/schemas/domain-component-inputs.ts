@@ -419,6 +419,12 @@ export const measurementSummarySchema = z.object({
   mean: z.number().finite().nullable(),
   sampleSigma: z.number().finite().nullable(),
 })
+export const measurementReferenceLineSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.number().finite(),
+  kind: z.enum(["formal-spec", "mock-spec", "target", "guide"]),
+})
 export const measurementGroupSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -443,6 +449,8 @@ export const measurementGroupSchema = z.object({
     lsl: z.number().finite().nullable().optional(),
     usl: z.number().finite().nullable().optional(),
   }).optional(),
+  /** Effective references supplied for this group; no source-spec inference occurs here. */
+  referenceLines: z.array(measurementReferenceLineSchema).optional(),
   summary: measurementSummarySchema,
   points: z.array(measurementPointSchema),
 }).superRefine((group, context) => {
@@ -453,12 +461,6 @@ export const measurementGroupSchema = z.object({
       path: ["summary", "count"],
     })
   }
-})
-export const measurementReferenceLineSchema = z.object({
-  id: z.string(),
-  label: z.string(),
-  value: z.number().finite(),
-  kind: z.enum(["formal-spec", "mock-spec", "target", "guide"]),
 })
 export const measurementInputSchema = z.object({
   status: z.enum(["ready", "pending", "unavailable"]),

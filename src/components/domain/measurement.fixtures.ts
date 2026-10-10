@@ -141,3 +141,24 @@ export const measurementLabelBoundaryFixture: MeasurementInput = {
     { id: "usl", label: "USL", value: 90.1, kind: "formal-spec" },
   ],
 }
+
+/** Synthetic mixed-spec fixture: references are rendering facts, never inferred from raw limits. */
+export const measurementMixedSpecFixture: MeasurementInput = {
+  ...measurementSmallFixture,
+  title: "Measurement per-wafer specifications",
+  metric: { id: "INLINE", label: "Inline measurement" },
+  referenceLines: [],
+  groups: measurementSmallFixture.groups.map((group, index) => {
+    const points = group.points.slice(0, 12).map((point, pointIndex) => ({ ...point, value: 0.78 + pointIndex * 0.001 }))
+    return {
+      ...group,
+      points,
+      summary: summarise(points),
+      referenceLines: [
+        { id: "lsl", label: "LSL", value: index === 1 ? 0.7 : 0.5, kind: "formal-spec" as const },
+        { id: "target", label: "Target", value: 0.79, kind: "target" as const },
+        { id: "usl", label: "USL", value: index === 1 ? 0.88 : 1, kind: "formal-spec" as const },
+      ],
+    }
+  }),
+}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   createMeasurementDomain,
+  createMeasurementGroupReferenceLabels,
   createMeasurementHitIndex,
   createMeasurementLayout,
   createMeasurementReferenceLabels,
@@ -167,6 +168,11 @@ export function Measurement({
           <LegendMark color="#7c3aed" label="mean ±3σ" />
           <LegendMark color="#b45309" dashed label="reference" />
         </div>
+        <dl className="sr-only" aria-label="晶圆专属参考线">
+          {parsedInput.groups.flatMap((group) => (group.referenceLines ?? []).map((line) => (
+            <div key={`${group.id}:${line.id}`}><dt>{group.label} · {line.label}</dt><dd>{line.value}</dd></div>
+          )))}
+        </dl>
         <div className="min-w-0 max-w-full overflow-x-auto p-3" ref={hostRef} tabIndex={0} aria-label="Measurement 图表横向滚动区">
           <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
             <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
@@ -225,6 +231,7 @@ function PointPopover({ group, metric, point, width }: { group: MeasurementGroup
     ...(group.capability?.status ? [["CPK 状态", group.capability.status]] : []),
     ["CPU", formatValue(group.capability?.cpu)],
     ["CPL", formatValue(group.capability?.cpl)],
+    ...(group.referenceLines ?? []).map((line) => [line.label, formatValue(line.value)]),
   ]
   return (
     <aside className="pointer-events-none absolute z-10 w-[298px] rounded-xl border border-teal-800/25 bg-background/95 p-4 shadow-xl backdrop-blur" style={{ left, top: Math.max(10, point.y - 26) }}>
@@ -283,6 +290,23 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
       context.beginPath(); context.moveTo(layout.left + 2, Math.max(layout.top, Math.min(anchorY, layout.top + layout.plotHeight))); context.lineTo(layout.left + 2, labelY - 4); context.stroke()
     }
   })
+  createMeasurementGroupReferenceLabels(input, domain, layout).forEach(({ lines, value, anchorY, labelY, left, right }) => {
+    context.strokeStyle = lines[0].kind === "mock-spec" ? "#b45309" : "#a94b3b"
+    context.setLineDash([7, 5])
+    context.beginPath(); context.moveTo(left, anchorY); context.lineTo(right, anchorY); context.stroke()
+    context.setLineDash([])
+    context.textAlign = "left"
+    context.fillStyle = context.strokeStyle
+    const text = fitCanvasText(context, `${lines.map((line) => line.label).join(" / ")} ${formatValue(value)}`, right - left - 4)
+    context.save()
+    context.fillStyle = "rgba(255, 255, 255, 0.92)"
+    context.fillRect(left, labelY - 13, context.measureText(text).width + 4, 16)
+    context.restore()
+    context.fillText(text, left + 2, labelY)
+    if (Math.abs(labelY - (anchorY - 6)) > 6) {
+      context.beginPath(); context.moveTo(left, anchorY); context.lineTo(left, labelY - 4); context.stroke()
+    }
+  })
   input.groups.forEach((group, index) => {
     const bounds = groupBounds(index, layout)
     context.textAlign = "center"
@@ -296,7 +320,7 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
 
 function groupIdentity(group: MeasurementGroup | undefined) {
   if (!group) return undefined
-  return [group.label, group.context?.stage, group.context?.step, group.context?.sequence, group.context?.condition].filter(Boolean).join(" · ")
+  return [group.label, group.context?.stage, group.context?.step, group.context?.sequence, group.context?.condition, ...(group.referenceLines ?? []).map((line) => `${line.label} ${formatValue(line.value)}`)].filter(Boolean).join(" · ")
 }
 
 function fitCanvasText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {

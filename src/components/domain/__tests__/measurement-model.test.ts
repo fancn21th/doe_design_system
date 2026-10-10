@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   createMeasurementDomain,
+  createMeasurementGroupReferenceLabels,
   createMeasurementHitIndex,
   createMeasurementLayout,
   createMeasurementReferenceLabels,
@@ -13,7 +14,7 @@ import {
   nearestMeasurementPoint,
   stableJitter,
 } from "@/components/domain/measurement-model"
-import { measurementFixture, measurementLabelBoundaryFixture, measurementSmallFixture } from "@/components/domain/measurement.fixtures"
+import { measurementFixture, measurementLabelBoundaryFixture, measurementMixedSpecFixture, measurementSmallFixture } from "@/components/domain/measurement.fixtures"
 import { measurementInputSchema } from "@/schemas/domain-component-inputs"
 
 describe("Measurement rendering model", () => {
@@ -105,4 +106,34 @@ describe("Measurement rendering model", () => {
       expect(labels[2].labelY - labels[1].labelY).toBeGreaterThanOrEqual(18)
     }
   })
+  it("preserves per-wafer effective references and includes them in the plotting domain", () => {
+    const input = measurementInputSchema.parse(measurementMixedSpecFixture)
+    const original = structuredClone(input.groups.map((group) => group.referenceLines))
+    const domain = createMeasurementDomain(input)!
+    const layout = createMeasurementLayout(680, 560, input.groups.length)
+    const labels = createMeasurementGroupReferenceLabels(input, domain, layout)
+    expect(domain.minimum).toBeLessThan(0.5)
+    expect(domain.maximum).toBeGreaterThan(1)
+    expect(input.referenceLines).toEqual([])
+    expect(labels).toHaveLength(9)
+    expect(labels.filter((label) => label.groupIndex === 1).map((label) => label.value).sort()).toEqual([0.7, 0.79, 0.88])
+    for (const label of labels) {
+      const bounds = groupBounds(label.groupIndex, layout)
+      expect(label.left).toBeGreaterThan(bounds.left)
+      expect(label.right).toBeLessThan(bounds.right)
+      expect(label.anchorY).toBe(measurementY(label.value, domain, layout))
+    }
+    expect(input.groups.map((group) => group.referenceLines)).toEqual(original)
+  })
+
+  it("keeps absent group references backward compatible and honours explicit data-only scale", () => {
+    const parsed = measurementInputSchema.parse(measurementSmallFixture)
+    expect(parsed.groups.every((group) => group.referenceLines === undefined)).toBe(true)
+    const dataOnly = { ...measurementMixedSpecFixture, scale: { mode: "fixed" as const } }
+    const domain = createMeasurementDomain(dataOnly)!
+    expect(domain.minimum).toBeGreaterThan(0.7)
+    expect(domain.maximum).toBeLessThan(0.88)
+    expect(createMeasurementGroupReferenceLabels(parsed, createMeasurementDomain(parsed)!, createMeasurementLayout(680, 560, 3))).toEqual([])
+  })
+
 })

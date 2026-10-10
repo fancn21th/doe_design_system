@@ -118,3 +118,7 @@ See `../report-code-first-pass.md` for the full code-evidence summary.
 - Does V1 need horizontal scrolling, zooming, or brushing for many wafers?
 - Are out-of-spec points visually encoded by this component or by parent data?
 - Should LSL, USL, and target all be optional reference lines?
+
+## 2026-10-10 per-group references
+
+The Report Center round-3 audit found that the consuming Inline plot promoted the first wafer's limits to every column, including a mixed-spec wafer. The approved correction extends Measurement with optional per-group effective references. Domain UI draws supplied values inside their owning wafer column, exposes them in inspection, and includes them in the default plotting domain. Backend owns effective-limit semantics; no zero-limit or Cpk policy is implemented here. The synthetic mixed-spec scenario captures the rendering boundary without storing customer measurements.

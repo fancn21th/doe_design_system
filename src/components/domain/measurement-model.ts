@@ -62,6 +62,19 @@ export function createMeasurementReferenceLabels(
   return labels
 }
 
+/** Group references stay inside their wafer column; values and group identity are preserved. */
+export function createMeasurementGroupReferenceLabels(
+  input: MeasurementInput,
+  domain: MeasurementDomain,
+  layout: MeasurementLayout,
+) {
+  return input.groups.flatMap((group, groupIndex) => {
+    const bounds = groupBounds(groupIndex, layout)
+    return createMeasurementReferenceLabels(group.referenceLines ?? [], domain, layout)
+      .map((label) => ({ ...label, groupIndex, left: bounds.left + 6, right: bounds.right - 6 }))
+  })
+}
+
 export function createMeasurementDomain(input: MeasurementInput): MeasurementDomain | null {
   const values: number[] = []
   for (const group of input.groups) {
@@ -72,6 +85,9 @@ export function createMeasurementDomain(input: MeasurementInput): MeasurementDom
   }
   if (input.scale?.mode === "data-and-references" || !input.scale) {
     for (const line of input.referenceLines) values.push(line.value)
+    for (const group of input.groups) {
+      for (const line of group.referenceLines ?? []) values.push(line.value)
+    }
   }
   const requestedMin = input.scale?.min
   const requestedMax = input.scale?.max

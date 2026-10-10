@@ -43,6 +43,7 @@ export const measurementInputSchema = z.object({
       cohortId: z.string(),
       role: z.enum(["baseline", "variant"]),
     }).optional(),
+    referenceLines: z.array(measurementReferenceLineSchema).optional(),
     summary: measurementSummarySchema,
     points: z.array(measurementPointSchema),
   })),
@@ -53,6 +54,14 @@ export const measurementInputSchema = z.object({
 Every group supplies its complete physical point cloud. `summary.count` must equal `points.length`; the component does not sample points. Keep Oracle/CP DTO details behind an application-owned adapter.
 
 `comparison` is rendering metadata from that adapter: every group that should highlight together shares a `cohortId`; exactly one group in a cohort should use `role: "baseline"`, with the others using `"variant"`.
+
+## Per-group references
+
+`groups[].referenceLines` optionally supplies effective references for one wafer. They render as short lines inside that wafer column and participate in the default Y domain. The whole-chart `referenceLines` field is for references genuinely shared by all groups; consumers must not promote the first wafer's specification to a global line.
+
+Effective limits and their availability belong to the upstream fact owner. Measurement never treats a raw zero as a missing limit, normalizes specifications, or recalculates capability. Consumers omit unavailable references. Group hover/die inspection keeps supplied labels and values available; absent group references preserve the existing contract.
+
+<div className="domain-ui-preview-wide"><Measurement input={measurementScenarios.mixedSpecs.input} /></div>
 
 ## Interaction contract
 
@@ -65,6 +74,7 @@ Every group supplies its complete physical point cloud. `summary.count` must equ
 - `normal`
 - `compact`
 - `label-boundaries`（长来源名称、同值与近邻参考线）
+- `mixed-specs`（逐片有效规格，不伪造全图统一线）
 - `empty`
 - `pending`
 - `unavailable`
