@@ -72,3 +72,9 @@ Wafer Yield & CP Fail Analysis adopts the explicitly requested Dashboard 01 char
 ## 2026-10-10 — Yield plot edge safety
 
 The approved Yield chart pilot reserves 12px inside each vertical SVG edge while retaining its 220px frame and 0–100% domain. Grid, line, markers, stacked bars and tick centres share the inset mapping. Rendered boundary regressions cover 0%, 100% and near-100% values; long Step text can wrap within narrow columns. This scoped repair preserves the card spacing and removes no further controls.
+
+## 2026-10-10 — Report container alignment pilot
+
+User confirmed Header content edges, measured relative to Main, as the alignment reference. ReportWorkspaceLayout defines a scoped 16px / 24px horizontal gutter; Header, report navigation and the Split Table pilot consume it. Report navigation removes horizontal tab padding/borders and replaces the existing inter-label spacing with 30px right margins. User subsequently approved rollout to all report panes, including Overview and the seven business tabs, through the shared workspace selector.
+
+Verification completed in DOE App: 18 actual-browser measurements across all eight pages at desktop/mobile sizes, plus breakpoint and collapsed-sidebar cases; container deltas 0px. Domain UI 80 tests and App 185 tests, targeted lint and both final isolated builds passed. Evidence remains under App UI acceptance; this does not establish Data acceptance.

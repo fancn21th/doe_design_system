@@ -32,10 +32,10 @@ export function ReportWorkspaceLayout({
   scrollContent?: boolean
 }) {
   return (
-    <LayoutShell defaultOpen sidebarWidth="18rem" className={scrollContent ? "h-screen" : undefined}>
+    <LayoutShell defaultOpen sidebarWidth="18rem" className={`[--doe-report-workspace-gutter:16px] lg:[--doe-report-workspace-gutter:24px] ${scrollContent ? "h-screen" : ""}`}>
       {sidebar}
       <LayoutShell.Main>
-        <LayoutShell.Header>
+        <LayoutShell.Header className="px-(--doe-report-workspace-gutter)!">
           <LayoutShell.Trigger className="-ml-1" />
           <Separator
             orientation="vertical"
@@ -47,11 +47,11 @@ export function ReportWorkspaceLayout({
           ) : null}
         </LayoutShell.Header>
         <LayoutShell.Content className={scrollContent ? "min-h-0" : undefined}>
-          <div data-report-navigation className="flex h-12 shrink-0 items-center gap-3 border-b px-4 lg:px-6">
+          <div data-report-navigation className="flex h-12 shrink-0 items-center gap-3 border-b px-(--doe-report-workspace-gutter) [&_[data-slot=tabs-list]]:gap-0! [&_[data-slot=tabs-list]]:p-0! [&_[data-slot=tabs-trigger]]:border-x-0! [&_[data-slot=tabs-trigger]]:px-0! [&_[data-slot=tabs-trigger]]:mr-[30px] [&_[data-slot=tabs-trigger]:last-child]:mr-0">
             <div className="min-w-0 flex-1 self-stretch">{tabs}</div>
             {syncStatus}
           </div>
-          <LayoutShell.ContentStack className={`domain-ui-report-content ${scrollContent ? "min-h-0 overflow-y-auto" : ""}`}>
+          <LayoutShell.ContentStack className={`domain-ui-report-content [&_.domain-ui-report-pane]:px-(--doe-report-workspace-gutter) ${scrollContent ? "min-h-0 overflow-y-auto" : ""}`}>
             {children}
           </LayoutShell.ContentStack>
         </LayoutShell.Content>

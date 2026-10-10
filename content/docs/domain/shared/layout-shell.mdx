@@ -25,3 +25,9 @@ import { LayoutShellDoePreview } from "@/components/domain/layout-shell.preview"
 `LayoutShell`，固定 Sidebar、Header、报告 tab 栏与 Content Stack 的阅读顺序，
 并通过 slots 接收应用的 Source 导航、面包屑、操作、tab 交互和内容。它不接收
 fixture 作为生产数据，也不拥有应用路由或 BFF workflow。
+
+## Report container alignment — 2026-10-10
+
+用户明确纠正为容器量测，并确认页头内容区是对齐基准。`ReportWorkspaceLayout` 提供局部 `--doe-report-workspace-gutter`：1024px 以下 16px，1024px 及以上 24px；Header 与报告导航左右内边距共享该值。工作区通过 `.domain-ui-report-pane` 的统一局部样式覆盖横向 padding，现推广至 Overview 及 7 个业务 Tab，不在每个业务组件中重复定义。量测以 Main 的左右容器边界为参照，扣除 Header 自身边框后，比较 Header 内容边界、导航内容边界、筛选区及表格外框；按钮点击区、SVG 图标与表格内部 cell padding 都不作为外层对齐基准。
+
+报告导航局部覆盖 Tabs 的左右 padding 和左右透明边框为 0，TabsList gap 为 0；每项右外边距 30px、末项 0，以保留当前标签之间的距离。Tabs 选择、选中下划线、横向滚动与 App callback 不变。此规则只作用于报告导航 slot，不改变全局 Tab primitive 或其他页面的局部 Tabs。

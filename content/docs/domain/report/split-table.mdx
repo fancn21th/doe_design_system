@@ -120,3 +120,7 @@ Each Stage / Step / Seq group occupies one semantic tbody. Hovering its rowspan 
 ## Report workspace content spacing — 2026-10-10
 
 Within ReportWorkspaceLayout, the common content stack owns 16px top spacing below 768px and 24px from 768px upward. Report panes remove their additional top padding only in that workspace, retaining horizontal and bottom padding and standalone preview spacing. Consumer diagnostic buttons belong in the navigation action slot and must not add a separate line above the first report control.
+
+## Split Table container alignment pilot — 2026-10-10
+
+在 ReportWorkspaceLayout 内，Split Table 横向留白消费其局部 gutter，桌面（>=1024px）左右各 24px，其他宽度各 16px。Stage / Step 筛选容器和表格外框共享页头内容区的左右边界；单元格仍保留既有内部 padding。单独的 Component Lab 预览没有工作区 gutter 时，保留原来按 density 计算的 p-4 留白。用户随后授权推广到其他 Report Tab；共同布局负责横向留白，具体见 [Layout Shell Contract](/docs/domain/shared/layout-shell)。分组 hover、排序、筛选、业务输入及 callback 保持原契约。

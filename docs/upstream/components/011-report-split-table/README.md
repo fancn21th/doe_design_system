@@ -146,3 +146,7 @@ The approved first slice is Split Table only. Loading uses a muted rounded icon
 background, arc spinner, Chinese title and description; no data and filtered
 empty use only centered text. Consumer request state remains outside the
 component. See the Split Table MDX contract and its three status previews.
+
+## 2026-10-10 Container alignment evidence
+
+用户提供 Split Table 的 6 条对齐批注，随后纠正要求按容器边界量测，并明确确认以 Header 内容区为基准、桌面左右各 24px。原 App 1224px 下 Header / navigation 为 24px，而 Split filters / table shell 为 14px。该新证据修订工作区横向布局；具体 contract 见 Split Table MDX 的 container alignment pilot。原数据和局部表格交互不变。
