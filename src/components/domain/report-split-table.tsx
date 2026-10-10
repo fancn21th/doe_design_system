@@ -54,7 +54,7 @@ type ReportSplitTableDisplayRow = {
   roleLabel: string
 }
 
-type ReportSplitTableGroup = {
+export type ReportSplitTableGroup = {
   key: string
   rows: ReportSplitTableDisplayRow[]
 }
@@ -341,7 +341,7 @@ export function ReportSplitTable({
 
   return (
     <div className={className}>
-      <div className="domain-ui-typography grid gap-4 p-4">
+      <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
         {rows.length === 0 && (
           <ReportState title="暂无 Split Table 数据" description="当前报告暂无可展示的 Wafer Split Table 数据。" />
         )}
@@ -367,7 +367,7 @@ export function ReportSplitTable({
             <ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" />
           ) : (
             <div className="domain-ui-split-table-shell">
-              <Table className="domain-ui-split-table domain-ui-report-split-table">
+              <Table className="domain-ui-split-table domain-ui-report-split-table domain-ui-grouped-table">
                 <TableHeader className="bg-muted/60">
                   <TableRow>
                     <TableHead className="w-[24%]">Stage / Step / Seq</TableHead>
@@ -378,9 +378,9 @@ export function ReportSplitTable({
                     <TableHead className="w-[18%]">Top Fail</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {groupedRows.flatMap((group) =>
-                    group.rows.map(({ row, roleLabel }, index) => {
+                {groupedRows.map((group) => (
+                  <TableBody key={group.key}>
+                    {group.rows.map(({ row, roleLabel }, index) => {
                       const topFails = getReportSplitTableTopFails(row)
                       const topFailText = topFails
                         .map(
@@ -456,9 +456,9 @@ export function ReportSplitTable({
                           </TableCell>
                         </TableRow>
                       )
-                    })
-                  )}
-                </TableBody>
+                    })}
+                  </TableBody>
+                ))}
               </Table>
             </div>
           ))}

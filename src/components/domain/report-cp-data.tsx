@@ -57,7 +57,7 @@ export function ReportCpData({
       {parameterOptions.length === 0 ? (
         <EmptyState>暂无 CP Data 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
           <CpParameterCombobox
             options={parameterOptions}
             value={selectedParameterCode}

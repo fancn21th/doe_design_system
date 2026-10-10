@@ -236,8 +236,8 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
           {sortByYield ? "恢复组内顺序" : "组内按 Yield 排序"}
         </Button>
       </div>
-      <div ref={regionRef} role="region" aria-label="Wafer × CP Matrix" tabIndex={0} className="min-w-0 max-w-full max-h-(--doe-yield-matrix-height) overflow-auto rounded-(--doe-radius-control) border">
-        <Table className="domain-ui-report-table min-w-(--doe-yield-matrix-min-width) border-separate border-spacing-0">
+      <div ref={regionRef} role="region" aria-label="Wafer × CP Matrix" tabIndex={0} className="min-w-0 max-w-full max-h-(--doe-yield-matrix-height) domain-ui-split-table-shell domain-ui-yield-matrix-shell">
+        <Table className="domain-ui-report-table domain-ui-grouped-table min-w-(--doe-yield-matrix-min-width)">
           <TableHeader className="sticky top-0 z-20 bg-background">
             <TableRow>
               <TableHead className="w-52 bg-muted">Stage / Step / Seq</TableHead>
@@ -249,14 +249,15 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
               {matrixColumns.map((column) => <TableHead key={column} className="w-24 bg-muted text-right">{column}</TableHead>)}
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {groupMatrixRows(rows, sortByYield).map((group) => group.rows.map((row, index) => (
-              <TableRow key={row.rowId} data-wafer-id={row.waferId} className={focusedWaferId === row.waferId ? "bg-muted" : undefined}>
-                {index === 0 && <TableCell rowSpan={group.rows.length} className="border-t align-middle">
+          {groupMatrixRows(rows, sortByYield).map((group) => (
+            <TableBody key={group.groupId}>
+              {group.rows.map((row, index) => (
+              <TableRow key={row.rowId} data-wafer-id={row.waferId} data-state={focusedWaferId === row.waferId ? "selected" : undefined}>
+                {index === 0 && <TableCell rowSpan={group.rows.length} className="align-middle">
                   <span className="font-medium">{row.stage}</span>
                   <span className="block text-xs text-muted-foreground">{row.step} · {row.seq}</span>
                 </TableCell>}
-                <TableCell className={index === 0 ? "border-t" : undefined}>
+                <TableCell>
                   {onWaferSelect ? <button type="button" className="font-mono text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(row.waferId)}>{row.waferId}</button> : <b className="font-mono text-sky-700">{row.waferId}</b>}
                   {row.role && <span className="ml-2 text-xs text-muted-foreground">{row.role}</span>}
                 </TableCell>
@@ -274,8 +275,9 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
                   </TableCell>
                 })}
               </TableRow>
-            )))}
-          </TableBody>
+              ))}
+            </TableBody>
+          ))}
         </Table>
       </div>
     </div>
@@ -286,7 +288,7 @@ function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
   if (rows.length === 0) return <EmptyState>暂无 Loss Yield 数据</EmptyState>
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-(--doe-radius-control) border">
+    <div className="domain-ui-split-table-shell">
       <Table className="domain-ui-report-table min-w-[48rem]">
         <TableHeader className="bg-muted/60">
           <TableRow>
@@ -334,7 +336,7 @@ function ConditionYieldTable({ rows, onWaferSelect }: {
   }
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-(--doe-radius-control) border">
+    <div className="domain-ui-split-table-shell">
       <Table className="domain-ui-report-table min-w-[78rem]">
         <TableHeader className="bg-muted/60">
           <TableRow>
@@ -441,7 +443,7 @@ export function ReportYieldAnalysis({
       stepOptions.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
           <div className="flex flex-col gap-3 md:flex-row">
             <MultiFilterCombobox
               label="Stage"

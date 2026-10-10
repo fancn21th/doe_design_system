@@ -40,7 +40,7 @@ export function ReportOverview({
       {!identity && metrics.length === 0 ? (
         <EmptyState>暂无 Report Overview 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
           {identity && (
             <OverviewCard>
               <CardHeader>

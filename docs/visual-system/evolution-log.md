@@ -57,3 +57,9 @@ tabs were visually checked; chart/map/matrix boundaries were checked at 1024,
 style, while unavailable live inspection facts stay unavailable. Per-finding
 outcomes and 39 screenshots are recorded in the App Exec Plan self-test at
 `apps/frontend-ds/docs/exec-plans/2026-10-10-report-visual-repair-round1-self-test.md`.
+
+## 2026-10-10 — Report browser comments, second repair round
+
+User approved UI-C01–UI-C07. ReportWorkspaceLayout owns 16px / 24px top spacing and report panes remove their duplicate top padding only within the workspace. Grouped Split and Yield Matrix tables use one tbody per existing group, with merged-cell group hover and ordinary-cell row hover. Yield measures its actual plot viewport, shares its geometry across SVG / three X-axis layers / hit areas, separates the Y title from ticks, and keeps local horizontal scroll below 768px. Yield Detail uses the Split shell; Matrix retains a single scroll owner and sticky header. The Split and Yield component contracts and token fallback meaning record these rules.
+
+Canonical source was adopted by DOE App. App 183 tests and canonical 78 tests pass; modified-source lint, TypeScript and isolated production builds pass. Canonical full lint retains three pre-existing registry errors. The App-owned acceptance table, screenshots and per-item results are at `apps/frontend-ds/docs/acceptance/ui/report-center/records/2026-10-10-report-ui-comments-round2-self-test.md` in the consumer repository. Backend facts, provenance, NULL policy and workflow ownership remain with their existing owners.

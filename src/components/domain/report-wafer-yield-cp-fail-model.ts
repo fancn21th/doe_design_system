@@ -43,3 +43,15 @@ export function groupConsecutiveWaferSteps(
     return groups
   }, [])
 }
+
+
+/** One shared layout for SVG, column labels and hit targets. */
+export function waferYieldPlotGeometry(availableWidth: number, waferCount: number, compactViewport: boolean) {
+  const count = Math.max(1, waferCount)
+  const measured = Number.isFinite(availableWidth) && availableWidth > 0
+  const width = measured
+    ? compactViewport ? Math.max(availableWidth, count * 44) : availableWidth
+    : Math.max(1100, count * 44)
+  const columnWidth = width / count
+  return { width, columnWidth, barWidth: Math.min(24, columnWidth * 0.6) }
+}

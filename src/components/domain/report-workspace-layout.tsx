@@ -47,11 +47,11 @@ export function ReportWorkspaceLayout({
           ) : null}
         </LayoutShell.Header>
         <LayoutShell.Content className={scrollContent ? "min-h-0" : undefined}>
-          <div className="flex min-h-12 shrink-0 items-center gap-3 border-b px-4 lg:px-6">
-            <div className="min-w-0 flex-1">{tabs}</div>
+          <div data-report-navigation className="flex h-12 shrink-0 items-center gap-3 border-b px-4 lg:px-6">
+            <div className="min-w-0 flex-1 self-stretch">{tabs}</div>
             {syncStatus}
           </div>
-          <LayoutShell.ContentStack className={scrollContent ? "min-h-0 overflow-y-auto" : undefined}>
+          <LayoutShell.ContentStack className={`domain-ui-report-content ${scrollContent ? "min-h-0 overflow-y-auto" : ""}`}>
             {children}
           </LayoutShell.ContentStack>
         </LayoutShell.Content>

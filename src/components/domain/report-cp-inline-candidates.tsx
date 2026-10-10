@@ -47,7 +47,7 @@ export function ReportCpInlineCandidates({
 
   return (
     <TooltipProvider>
-      <div className="not-prose domain-ui-typography domain-ui-cp-inline min-w-0 p-4">
+      <div className="not-prose domain-ui-typography domain-ui-report-pane domain-ui-cp-inline min-w-0 p-4">
         <Card className="min-w-0 gap-0 border-0 py-0 shadow-none ring-0">
           <CardHeader className="border-b !px-0">
             <CardTitle>{parsed.title}</CardTitle>

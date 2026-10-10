@@ -385,7 +385,7 @@ export function ReportParameterMedian({
       {rows.length === 0 ? (
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid min-w-0 gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4">
           <ParameterMedianFilterBar
             parameterQuery={parameterQuery}
             parameterOptions={parameterOptions}

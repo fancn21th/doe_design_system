@@ -48,7 +48,7 @@ shell tokens are outside this scope.
 | `--doe-cp-inline-drawer-width` | `1120px` | Non-modal Fit inspection width, capped at viewport minus 32px |
 | `--doe-yield-matrix-min-width` | `2880px` | Yield analysis wafer × CP inspection width |
 | `--doe-yield-matrix-height` | `544px` | Yield matrix local vertical inspection height |
-| `--doe-wafer-yield-chart-min-width` | `1100px` | Wafer yield × CP fail chart readable width |
+| `--doe-wafer-yield-chart-min-width` | `1100px` | Static / pre-measurement Yield plot fallback; live desktop width follows its container |
 | `--doe-wafer-yield-plot-height` | `220px` | Wafer yield × CP fail shared percentage plot |
 | `--doe-parameter-median-matrix-min-width` | `3840px` | Parameter median wafer inspection width |
 | `--doe-parameter-median-matrix-height` | `544px` | Parameter median local inspection height |

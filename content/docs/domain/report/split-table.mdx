@@ -112,3 +112,11 @@ Primitive 源码同步自本地 `ui/apps/v4/styles/base-nova/ui/{empty,spinner}.
 上游 revision `7c9eaba1c0a6404c990c144a654792e3313c650d`。仅将 `cn` 导入适配为本工程
 `@/lib/utils`；Spinner 保留上游 Loader2Icon。按已确认的截图适配为较大媒体和
 18px 标题，删除 Cancel 并采用中文文案。
+
+## Grouped cell hover — 2026-10-10
+
+Each Stage / Step / Seq group occupies one semantic tbody. Hovering its rowspan cell highlights all cells in that group. Hovering an ordinary cell highlights only ordinary cells in its row, including when that row owns the rowspan; adjacent groups and the merged cell retain their normal/selected background. Pointer exit clears hover without changing grouping, ordering or callbacks.
+
+## Report workspace content spacing — 2026-10-10
+
+Within ReportWorkspaceLayout, the common content stack owns 16px top spacing below 768px and 24px from 768px upward. Report panes remove their additional top padding only in that workspace, retaining horizontal and bottom padding and standalone preview spacing. Consumer diagnostic buttons belong in the navigation action slot and must not add a separate line above the first report control.

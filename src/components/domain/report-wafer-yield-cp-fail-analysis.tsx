@@ -8,6 +8,7 @@ import {
   groupConsecutiveWaferSteps,
   visibleCpFailParameters,
   visibleCpFails,
+  waferYieldPlotGeometry,
 } from "@/components/domain/report-wafer-yield-cp-fail-model"
 import { EmptyState } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
@@ -26,7 +27,6 @@ import {
 import { cn } from "@/lib/utils"
 import type { ReportWaferYieldCpFail } from "@/schemas/domain-component-inputs"
 
-
 const CHART_PALETTE = [
   "#ff9f0a",
   "#8e8e93",
@@ -39,8 +39,6 @@ const CHART_PALETTE = [
 ]
 const YIELD_COLOR = "#14a866"
 const PLOT_HEIGHT = 220
-const MIN_PLOT_WIDTH = 1100
-const COLUMN_WIDTH = 44
 
 type ChartTooltip = {
   wafer: ReportWaferYieldCpFail["wafers"][number]
@@ -58,10 +56,23 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
       CHART_PALETTE[index % CHART_PALETTE.length],
     ])
   )
-  const plotWidth = Math.max(MIN_PLOT_WIDTH, input.wafers.length * COLUMN_WIDTH)
-  const columnWidth = input.wafers.length > 0
-    ? plotWidth / input.wafers.length
-    : COLUMN_WIDTH
+  const plotViewport = React.useRef<HTMLDivElement>(null)
+  const [viewport, setViewport] = React.useState({ width: 0, compact: false })
+  const { width: plotWidth, columnWidth, barWidth } = waferYieldPlotGeometry(viewport.width, input.wafers.length, viewport.compact)
+
+  React.useEffect(() => {
+    const element = plotViewport.current
+    if (!element) return
+    const narrow = window.matchMedia("(max-width: 767px)")
+    const measure = () => setViewport({ width: element.clientWidth, compact: narrow.matches })
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    narrow.addEventListener("change", measure)
+    return () => {
+      observer.disconnect()
+      narrow.removeEventListener("change", measure)
+    }
+  }, [open, input.wafers.length])
   const groups = groupConsecutiveWaferSteps(input.wafers)
 
   React.useEffect(() => {
@@ -116,11 +127,11 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
                   parameterColors={parameterColors}
                   threshold={input.failThresholdPercent}
                 />
-                <div className="grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] gap-2">
+                <div className="grid min-w-0 grid-cols-[4rem_minmax(0,1fr)] gap-2">
                   <YieldAxis />
-                  <div className="min-w-0 overflow-x-auto overscroll-x-contain">
+                  <div ref={plotViewport} data-yield-plot-viewport className="min-w-0 overflow-x-auto overscroll-x-contain">
                     <div
-                      className="relative min-w-(--doe-wafer-yield-chart-min-width)"
+                      className="relative" data-yield-plot
                       style={{ width: plotWidth }}
                     >
                       <svg
@@ -168,9 +179,9 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
                                 return (
                                   <rect
                                     key={fail.parameter}
-                                    x={centerX - 12}
+                                    x={centerX - barWidth / 2}
                                     y={bottom}
-                                    width={24}
+                                    width={barWidth}
                                     height={height}
                                     rx={fails.at(-1) === fail ? 4 : 0}
                                     fill={parameterColors.get(fail.parameter)}
@@ -313,11 +324,11 @@ function ChartLegend({
 
 function YieldAxis() {
   return (
-    <div className="relative h-(--doe-wafer-yield-plot-height) text-xs text-muted-foreground">
-      <span className="absolute top-1/2 -left-3 -translate-y-1/2 -rotate-90 whitespace-nowrap">
+    <div data-yield-axis className="grid h-(--doe-wafer-yield-plot-height) grid-cols-[1rem_minmax(0,1fr)] gap-2 text-xs text-muted-foreground">
+      <span data-yield-axis-title className="self-center justify-self-center whitespace-nowrap [writing-mode:vertical-rl] rotate-180">
         Yield (%)
       </span>
-      <div className="flex h-full flex-col items-end justify-between pr-1 tabular-nums">
+      <div data-yield-axis-ticks className="flex h-full flex-col items-end justify-between pr-1 tabular-nums">
         {[100, 75, 50, 25, 0].map((tick) => (
           <span key={tick}>{tick}%</span>
         ))}

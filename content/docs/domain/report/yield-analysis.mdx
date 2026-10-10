@@ -60,3 +60,7 @@ Matrix 在本地双向滚动区域保留表头；Loss 列名明确为 Cumulative
 ## 表格视觉一致性 · 2026-10-10
 
 三张明细表遵循已验收 Split Table 的样式：14px 正文、40px 浅色表头、8px 单元格内边距和圆角边框；宽表只在自身容器内滚动，分组、缺失语义和排序保持原合同。
+
+## Responsive geometry and table layout — 2026-10-10
+
+The Yield plot measures its available column with ResizeObserver. At desktop viewport widths (768px and above), SVG, three-level X axis and hit targets fill that column and share one geometry. Smaller viewports retain a 44px readable minimum per wafer with local horizontal scrolling. The Y title and percentage ticks occupy separate columns. Supplied values, order, fail threshold and missing-data semantics are unchanged. Detail tables use the Split Table shell, reading density and grouped hover contract; Matrix retains local two-axis scrolling and sticky headers.

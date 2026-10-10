@@ -90,7 +90,7 @@ export function ReportInlineData({
   }
 
   return (
-    <div className={cn("domain-ui-typography grid min-w-0 gap-4 p-4", className)}>
+    <div className={cn("domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4", className)}>
       <header className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h3 className="text-(length:--doe-font-module-title) font-semibold">{parsedInput.title ?? "Wafer × Inline Parameter"}</h3>
         <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as InlineViewMode)} className="gap-0">

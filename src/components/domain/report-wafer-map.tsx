@@ -145,7 +145,7 @@ export function ReportWaferMap({
 
   return (
     <section className={className} aria-label="Report Wafer Map">
-      <div className="domain-ui-typography grid gap-4 p-4">
+      <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
         <div className="grid gap-3">
           <Tabs
             value={primaryView}

@@ -425,6 +425,20 @@
   .domain-ui-inline-matrix-cell strong { font-size: var(--doe-font-body); line-height: 1.1875rem; color: var(--foreground); }
   .domain-ui-inline-matrix-empty { display: inline-block; width: var(--doe-inline-matrix-cell-width); line-height: var(--doe-inline-matrix-cell-min-height); color: var(--muted-foreground); }
 
+
+  /* ReportWorkspaceLayout owns the first-pane top rhythm; standalone labs keep p-4. */
+  .domain-ui-report-content .domain-ui-report-pane { padding-top: 0; }
+  .domain-ui-split-table-shell.domain-ui-yield-matrix-shell { overflow: auto; }
+  .domain-ui-split-table-shell.domain-ui-yield-matrix-shell > [data-slot="table-container"] { overflow: visible; }
+
+  /* Rowspan hover is scoped to a semantic group, not its first DOM row. */
+  .domain-ui-grouped-table tbody + tbody { border-top: 1px solid var(--border); }
+  .domain-ui-grouped-table tbody tr:hover:not([data-state="selected"]) { background-color: transparent; }
+  .domain-ui-grouped-table tbody tr:has(> td:not([rowspan]):hover) > td:not([rowspan]),
+  .domain-ui-grouped-table tbody:has(> tr > td[rowspan]:hover) > tr > td {
+    background-color: color-mix(in oklab, var(--muted) 50%, transparent);
+  }
+
   /* Report tables adopt the accepted Split Table reading density. */
   .domain-ui-typography .domain-ui-report-table[data-slot="table"] { font-size: var(--doe-font-body); }
   .domain-ui-typography .domain-ui-report-table [data-slot="table-head"] { height: 2.5rem; padding: 0 0.5rem; background: var(--muted); font-size: var(--doe-font-body); line-height: 1.25rem; }
