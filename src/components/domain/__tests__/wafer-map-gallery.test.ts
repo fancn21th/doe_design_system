@@ -8,10 +8,14 @@ import {
   createWaferCanvasLayout,
   finalBinColor,
   parameterColor,
+  boundedWaferZoom,
+  canvasPointFromClient,
+  dieColorSegments,
+  waferTooltipPosition,
 } from "@/components/domain/wafer-map-model"
 import { waferMapW01Fixture } from "@/components/domain/wafer-map.fixtures"
 import { waferMapGalleryScenarios } from "@/components/domain/wafer-map.scenarios"
-import { WaferMapCard, InspectionStatistics, DefectRecordDetails, selectedDieRows, defectClassesForLayer } from "@/components/domain/wafer-map"
+import { WaferMapCard, InspectionStatistics, DefectRecordDetails, selectedDieRows, defectClassesForLayer, diePopoverData, DefectFilterComboboxes, matchingDefectClasses, createWaferZoomViewportRef } from "@/components/domain/wafer-map"
 import {
   reportWaferMapInputSchema,
   waferMapGalleryInputSchema,
@@ -59,10 +63,125 @@ describe("wafer map gallery contract", () => {
       throw new Error("Unexpected wafer map scenario kind")
     }
 
+    const binHtml = renderToStaticMarkup(React.createElement(InspectionStatistics, { input: finalBin, wafer: finalBin.wafers[0]! }))
+    expect(binHtml).toContain("关于 Total Fail Bin Rate")
+    expect(binHtml).toContain("关于 各 Bin Rate")
     expect(finalBin.wafers[0].inspection?.rows.reduce((sum, row) => sum + row.count, 0)).toBe(4099)
     expect(parameter.wafers[0].inspection?.sampleCount).toBe(4091)
     expect(parameter.wafers[0].inspection?.mean).toBeGreaterThan(0)
     expect(defect.wafers[0].inspection?.byLayer.map((item) => item.layerId)).toEqual(["M1", "M2"])
+  })
+
+  it("uses only aligned wafer SPEC for Die detail and hover, retaining one-sided bounds and raw Bin 0", () => {
+    const source = waferMapGalleryScenarios.oneSidedParameter.input
+    const input = waferMapGalleryInputSchema.parse({ ...source, wafers: source.wafers.slice(0, 1) })
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter")
+    const wafer = input.wafers[0]!
+    const die = wafer.dies[0]!
+    die.binCode = "0"; die.binDescription = "Source PASS"; die.finalBin = "PASS"; die.pass = true
+    const rows = selectedDieRows(input, wafer, die.id).items
+    expect(rows).toContainEqual({ label: "SPEC LSL V", value: "81.2" })
+    expect(rows).toContainEqual({ label: "SPEC USL V", value: "—" })
+    expect(rows).toContainEqual({ label: "Final Bin", value: "Bin 0" })
+    expect(rows).toContainEqual({ label: "Bin Des", value: "Source PASS" })
+    expect(diePopoverData(input, wafer, die.id)).toContainEqual({ label: "CP 状态", value: "CP Pass" })
+    input.parameter.lsl = 999; input.parameter.usl = 1000
+    delete wafer.inspection; delete die.pass; delete die.binCode
+    die.cpUnavailableReason = "CP_MAP_IDENTITY_UNAVAILABLE"
+    const absent = diePopoverData(input, wafer, die.id)
+    expect(absent).toContainEqual({ label: "SPEC LSL", value: "—" })
+    expect(absent).toContainEqual({ label: "Final Bin", value: "—" })
+    expect(absent.some((row) => row.value.includes("999") || row.value === "Bin PASS")).toBe(false)
+    expect(absent.find((row) => row.label === "CP 状态")?.value).not.toContain("CP_MAP_IDENTITY_UNAVAILABLE")
+    die.cpUnavailableReason = "CP_DIE_COORDINATE_MISSING"
+    expect(diePopoverData(input, wafer, die.id)).toContainEqual({ label: "CP 状态", value: "当前 Die 的 CP 坐标未提供。" })
+    die.cpUnavailableReason = "NEW_UNAVAILABLE_CODE"
+    expect(diePopoverData(input, wafer, die.id)).toContainEqual({ label: "CP 状态", value: "CP 状态暂不可用" })
+  })
+
+  it("retains every matching class in equal-width drawing segments and hover counts", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
+    if (input.kind !== "defect") throw new Error("Expected defect")
+    const wafer = input.wafers[0]!
+    const classes = matchingDefectClasses(wafer.dies[0], "EOL", [])
+    expect(matchingDefectClasses(wafer.dies[0], "EOL", ["class:212"]).map((item) => item.typeId)).toEqual(["class:212"])
+    expect(matchingDefectClasses(wafer.dies[0], "EOL", ["class:missing"])).toEqual([])
+    const geometry = { id: wafer.dies[0].id, x: 10, y: 20, width: 9, height: 4 }
+    const segments = dieColorSegments(geometry, classes.map((item) => item.typeId))
+    expect(segments.map((item) => [item.x, item.width, item.fill])).toEqual([[10, 4.5, "class:206"], [14.5, 4.5, "class:212"]])
+    expect(dieColorSegments(geometry, ["class:212"])).toEqual([{ ...geometry, fill: "class:212" }])
+    expect(dieColorSegments(geometry, [])).toEqual([])
+    const hover = diePopoverData(input, wafer, wafer.dies[0].id)
+    expect(hover).toContainEqual({ label: "Layer", value: "EOL" })
+    expect(hover).toContainEqual({ label: "206（名称未解析）", value: "1" })
+    expect(hover).toContainEqual({ label: "212（名称未解析）", value: "2" })
+  })
+
+  it("binds zoom/resize on delayed portal node mount and cleans up before remount", () => {
+    const observers: Array<{ resize: (entries: Array<{ contentRect: { width: number; height: number } }>) => void; observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }> = []
+    class TestResizeObserver {
+      observe = vi.fn()
+      disconnect = vi.fn()
+      constructor(public resize: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) { observers.push(this) }
+    }
+    vi.stubGlobal("ResizeObserver", TestResizeObserver)
+    try {
+      const onSize = vi.fn()
+      const onZoom = vi.fn()
+      const ref = createWaferZoomViewportRef(onSize, onZoom)
+      expect(ref(null)).toBeUndefined() // Open render precedes portal DOM.
+      expect(observers).toHaveLength(0)
+      const viewport = new EventTarget() as HTMLDivElement
+      const cleanup = ref(viewport)!
+      expect(observers[0].observe).toHaveBeenCalledWith(viewport)
+      observers[0].resize([{ contentRect: { width: 884, height: 540 } }])
+      expect(onSize).toHaveBeenCalledWith(516)
+      const wheel = new Event("wheel", { cancelable: true })
+      Object.defineProperty(wheel, "deltaY", { value: -20 })
+      viewport.dispatchEvent(wheel)
+      expect(wheel.defaultPrevented).toBe(true)
+      expect(onZoom).toHaveBeenLastCalledWith(10)
+      cleanup()
+      expect(observers[0].disconnect).toHaveBeenCalledOnce()
+      viewport.dispatchEvent(wheel)
+      expect(onZoom).toHaveBeenCalledOnce()
+      const nextViewport = new EventTarget() as HTMLDivElement
+      const nextCleanup = ref(nextViewport)!
+      nextViewport.dispatchEvent(wheel)
+      expect(onZoom).toHaveBeenCalledTimes(2)
+      expect(observers[1].observe).toHaveBeenCalledWith(nextViewport)
+      nextCleanup()
+    } finally { vi.unstubAllGlobals() }
+  })
+
+  it("keeps pointer coordinates accurate at 60%, 100% and 300%, and clamps tooltip corners", () => {
+    const geometry = createWaferCanvasLayout(waferMapW01Fixture, 400, 10).dieById.values().next().value!
+    for (const zoom of [60, 100, 300]) {
+      const size = 400 * zoom / 100
+      const rect = { left: -50, top: -70, width: size, height: size }
+      const point = canvasPointFromClient({ x: rect.left + (geometry.x + geometry.width / 2) / 400 * size, y: rect.top + (geometry.y + geometry.height / 2) / 400 * size }, rect, 400)
+      expect(point.x).toBeCloseTo(geometry.x + geometry.width / 2)
+      expect(point.y).toBeCloseTo(geometry.y + geometry.height / 2)
+    }
+    expect(boundedWaferZoom(40)).toBe(60)
+    expect(boundedWaferZoom(320)).toBe(300)
+    for (const pointer of [{ x: 0, y: 0 }, { x: 990, y: 790 }]) {
+      const position = waferTooltipPosition(pointer, { width: 256, height: 180 }, { width: 1000, height: 800 })
+      expect(position.left).toBeGreaterThanOrEqual(16)
+      expect(position.left + 256).toBeLessThanOrEqual(984)
+      expect(position.top).toBeGreaterThanOrEqual(16)
+      expect(position.top + 180).toBeLessThanOrEqual(784)
+    }
+  })
+
+  it("displays invalid controlled class intent without pretending All or emitting a reset", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
+    if (input.kind !== "defect") throw new Error("Expected defect")
+    input.selectedDefectTypeIds = ["class:missing"]
+    const onChange = vi.fn()
+    const html = renderToStaticMarkup(React.createElement(DefectFilterComboboxes, { input, onChange }))
+    expect(html).toContain("当前 Layer 不可用 · class:missing")
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it("shows supplied numeric Bin identity separately from its display classification", () => {
@@ -102,6 +221,7 @@ describe("wafer map gallery contract", () => {
     expect(unavailable).toContain("Uniformity (RsU)")
     expect(unavailable).toContain("Hi/Lo Var.")
     expect(unavailable).not.toContain("0.00%")
+    expect(unavailable).toContain("均值为零，无法计算")
     wafer.inspection!.uniformityPercent = -2.125
     wafer.inspection!.hiLoVariationPercent = -4.25
     expect(waferMapGalleryInputSchema.safeParse(input).success).toBe(true)
@@ -161,6 +281,7 @@ describe("wafer map gallery contract", () => {
     expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Record", value: "3" })
     expect(defectClassesForLayer(wafer.dies[0], "EOL").map((item) => item.typeId)).toEqual(["class:206", "class:212"])
     const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("当前 Layer 全部类型汇总")
     expect(html).toContain("网格外记录：1")
     expect(html).toContain("25.00%")
     expect(html).toContain("75.00%")

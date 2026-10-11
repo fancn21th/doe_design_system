@@ -163,6 +163,9 @@ export const waferMapFinalBinDieSchema = waferMapDieSchema.extend({
   pass: z.boolean(),
 })
 export const waferMapParameterDieSchema = waferMapDieSchema.extend({
+  binCode: z.string().nullable().optional(),
+  binDescription: z.string().nullable().optional(),
+  cpUnavailableReason: z.string().nullable().optional(),
   // Parameter L1 can provide value/validity without CP Final Bin facts.
   finalBin: z.string().optional(),
   pass: z.boolean().optional(),
@@ -215,6 +218,8 @@ export const waferMapParameterInspectionSchema = z.object({
   /** Per-wafer full-population facts; color-scale percentiles are separate. */
   uniformityPercent: z.number().finite().nullable().optional(),
   hiLoVariationPercent: z.number().finite().nullable().optional(),
+  uniformityStatus: z.string().nullable().optional(),
+  hiLoVariationStatus: z.string().nullable().optional(),
   sampleCount: z.number().int().nonnegative().nullable(),
   mean: z.number().finite().nullable(),
   stddev: z.number().finite().nonnegative().nullable(),

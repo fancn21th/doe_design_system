@@ -1,12 +1,16 @@
 "use client"
 
-import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { ChevronLeft, ChevronRight, Expand, ZoomIn, ZoomOut } from "lucide-react"
+import { ChevronLeft, ChevronRight, CircleHelp, Expand, ZoomIn, ZoomOut } from "lucide-react"
 
 import {
   DEFAULT_FINAL_BIN_PALETTE,
   createWaferCanvasLayout,
+  boundedWaferZoom,
+  canvasPointFromClient,
+  dieColorSegments,
+  waferTooltipPosition,
   defectColor,
   finalBinColor,
   parameterColor,
@@ -37,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
 import {
   Table,
@@ -153,12 +158,14 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
         }
       }
       if (input.kind === "defect" && isDefectWafer(wafer)) {
-        const selectedTypes = new Set(input.selectedDefectTypeIds)
         for (const die of wafer.dies) {
-          const matching = defectClassesForLayer(die, input.selectedLayerId).find(
-            (classification) => classification.count > 0 && (selectedTypes.size === 0 || selectedTypes.has(classification.typeId))
-          )
-          if (matching) drawDie(context, layout, die, defectColor(matching.typeId))
+          const matching = matchingDefectClasses(die, input.selectedLayerId, input.selectedDefectTypeIds)
+          const geometry = layout.dieById.get(die.id)
+          if (!geometry) continue
+          for (const segment of dieColorSegments(geometry, matching.map((classification) => defectColor(classification.typeId)))) {
+            context.fillStyle = segment.fill
+            context.fillRect(segment.x, segment.y, segment.width, segment.height)
+          }
         }
       }
       context.restore()
@@ -178,12 +185,11 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
 
   function resolveDie(event: React.PointerEvent<HTMLDivElement>): ActiveDie | null {
     const rect = event.currentTarget.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width) * size
-    const y = ((event.clientY - rect.top) / rect.height) * size
+    const { x, y } = canvasPointFromClient({ x: event.clientX, y: event.clientY }, rect, size)
     for (const die of wafer.geometry.dies) {
       const geometry = layout.dieById.get(die.id)
       if (geometry && x >= geometry.x && x <= geometry.x + geometry.width && y >= geometry.y && y <= geometry.y + geometry.height) {
-        return { die, x: event.clientX + 12, y: event.clientY + 12 }
+        return { die, x: event.clientX, y: event.clientY }
       }
     }
     return null
@@ -227,9 +233,24 @@ function CanvasLayer({ size, canvasRef }: { size: number; canvasRef: React.RefOb
 }
 
 function DiePopover({ activeDie, input, wafer }: { activeDie: ActiveDie; input: WaferMapGalleryInput; wafer: AnyWafer }) {
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const details = diePopoverData(input, wafer, activeDie.die.id)
+  useLayoutEffect(() => {
+    const tooltip = tooltipRef.current
+    if (!tooltip) return
+    const place = () => {
+      const position = waferTooltipPosition(activeDie, tooltip.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight })
+      tooltip.style.left = `${position.left}px`
+      tooltip.style.top = `${position.top}px`
+    }
+    place()
+    const observer = new ResizeObserver(place)
+    observer.observe(tooltip)
+    window.addEventListener("resize", place)
+    return () => { observer.disconnect(); window.removeEventListener("resize", place) }
+  }, [activeDie])
   return (
-    <div className="pointer-events-none fixed z-50 w-52 rounded-md bg-popover p-3 text-xs text-popover-foreground shadow-lg ring-1 ring-foreground/10" role="tooltip" style={{ left: activeDie.x, top: activeDie.y }}>
+    <div ref={tooltipRef} className="pointer-events-none fixed z-50 w-64 max-w-[calc(100vw-32px)] rounded-md bg-popover p-3 text-xs text-popover-foreground shadow-lg ring-1 ring-foreground/10" role="tooltip" style={{ left: activeDie.x, top: activeDie.y }}>
       <div className="grid gap-1">
         <PopoverRow label="Wafer" value={wafer.waferId} />
         <PopoverRow label="DIE_X" value={String(activeDie.die.x)} />
@@ -241,27 +262,20 @@ function DiePopover({ activeDie, input, wafer }: { activeDie: ActiveDie; input: 
 }
 
 function PopoverRow({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-3"><span className="text-muted-foreground">{label}</span><b className="font-mono font-medium">{value}</b></div>
+  return <div className="flex justify-between gap-3 break-words"><span className="text-muted-foreground">{label}</span><b className="font-mono font-medium">{value}</b></div>
 }
 
-function diePopoverData(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
-  if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
-    const die = wafer.dies.find((item) => item.id === dieId)
-    return die ? [{ label: "Final Bin", value: die.binCode ?? die.finalBin }, ...(die.binDescription ? [{ label: "Bin Des", value: die.binDescription }] : [])] : []
-  }
-  if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
-    const die = wafer.dies.find((item) => item.id === dieId)
-    return die ? [
-      { label: input.parameter.label, value: die.value?.toLocaleString() ?? "—" },
-      { label: "Validity", value: die.status },
-      ...(die.finalBin ? [{ label: "Final Bin", value: die.finalBin }] : []),
-    ] : []
-  }
-  if (input.kind === "defect" && isDefectWafer(wafer)) {
-    const die = wafer.dies.find((item) => item.id === dieId)
-    return die ? [{ label: "Defect Record", value: defectRecordCountForLayer(die, input.selectedLayerId).toLocaleString() }] : []
-  }
-  return []
+export function diePopoverData(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
+  const details = selectedDieRows(input, wafer, dieId)
+  if (input.kind === "cp-parameter") return [
+    ...(details.status ? [{ label: "CP 状态", value: details.status.label }] : []),
+    ...details.items,
+  ]
+  if (input.kind === "cp-final-bin") return [
+    ...(details.status ? [{ label: "CP 状态", value: details.status.label }] : []),
+    ...details.items,
+  ]
+  return details.items
 }
 
 export type WaferMapCardProps = {
@@ -297,6 +311,7 @@ export function WaferMapCard({ input, wafer, mapState, className, onDieSelect, o
         <Metric label={input.kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary?.pass} />
         <Metric label={input.kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary?.fail} />
         {defectSummary && <CpDefectSummary summary={defectSummary} />}
+        {input.kind === "defect" && <span className="col-span-2 text-[11px] text-muted-foreground">当前 Layer 全部类型汇总</span>}
         {!wafer.summary && <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="col-span-2" />}
       </CardFooter>
     </Card>
@@ -467,6 +482,13 @@ function WaferMapInspectionDialog({
 }) {
   const [selectedDieId, setSelectedDieId] = useState<string | null>(() => wafer ? defaultInspectionDieId(input, wafer) : null)
   const [zoom, setZoom] = useState(100)
+  const [mapBaseSize, setMapBaseSize] = useState(400)
+  // Base UI mounts portal content after the initial open render. Bind to the
+  // actual node mount, and let React 19 run ref cleanup on close/replacement.
+  const viewportRef = useMemo(() => createWaferZoomViewportRef(
+    setMapBaseSize,
+    (delta) => setZoom((value) => boundedWaferZoom(value + delta)),
+  ), [])
 
   if (!wafer) return null
 
@@ -500,8 +522,8 @@ function WaferMapInspectionDialog({
                 variant="ghost"
                 size="icon-sm"
                 aria-label="缩小"
-                disabled={zoom <= 80}
-                onClick={() => setZoom((value) => Math.max(80, value - 20))}
+                disabled={zoom <= 60}
+                onClick={() => setZoom((value) => boundedWaferZoom(value - 20))}
               >
                 <ZoomOut />
               </Button>
@@ -511,8 +533,8 @@ function WaferMapInspectionDialog({
                 variant="ghost"
                 size="icon-sm"
                 aria-label="放大"
-                disabled={zoom >= 140}
-                onClick={() => setZoom((value) => Math.min(140, value + 20))}
+                disabled={zoom >= 300}
+                onClick={() => setZoom((value) => boundedWaferZoom(value + 20))}
               >
                 <ZoomIn />
               </Button>
@@ -529,17 +551,18 @@ function WaferMapInspectionDialog({
               <ChevronLeft />
             </Button>
 
-            <div
-              className="aspect-square h-full max-h-full max-w-full transition-transform duration-150"
-              style={{ transform: `scale(${zoom / 100})` }}
-            >
-              <WaferMapCore
-                input={input}
-                wafer={wafer}
-                className="size-full rounded-xl bg-transparent"
-                selectedDieId={selectedDieId}
-                onDieSelect={selectDie}
-              />
+            <div ref={viewportRef} className="absolute inset-0 overflow-auto overscroll-contain p-3" tabIndex={0} role="region" aria-label="Wafer Map 缩放区域">
+              <div className="grid place-items-center" style={{ width: `max(100%, ${mapBaseSize * zoom / 100}px)`, height: `max(100%, ${mapBaseSize * zoom / 100}px)` }}>
+                <div className="shrink-0" style={{ width: mapBaseSize * zoom / 100, height: mapBaseSize * zoom / 100 }}>
+                  <WaferMapCore
+                    input={input}
+                    wafer={wafer}
+                    className="size-full rounded-xl bg-transparent"
+                    selectedDieId={selectedDieId}
+                    onDieSelect={selectDie}
+                  />
+                </div>
+              </div>
             </div>
 
             <Button
@@ -565,6 +588,22 @@ function WaferMapInspectionDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+/** React callback-ref lifecycle: late portal mount and remount are both bound. */
+export function createWaferZoomViewportRef(onSize: (size: number) => void, onZoom: (delta: number) => void) {
+  return (viewport: HTMLDivElement | null) => {
+    if (!viewport) return
+    const observer = new ResizeObserver(([entry]) => onSize(Math.max(1, Math.min(entry.contentRect.width, entry.contentRect.height) - 24)))
+    observer.observe(viewport)
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0) return
+      event.preventDefault()
+      onZoom(event.deltaY < 0 ? 10 : -10)
+    }
+    viewport.addEventListener("wheel", handleWheel, { passive: false })
+    return () => { observer.disconnect(); viewport.removeEventListener("wheel", handleWheel) }
+  }
 }
 
 function InspectionContext({ input, parameterOptions, onParameterChange, onDefectFiltersChange }: {
@@ -625,6 +664,7 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
               {type.label}
             </span>
           ))}
+          <span className="flex items-center gap-1.5 text-muted-foreground"><i className="size-2.5 rounded-sm bg-slate-200" />无缺陷记录 / 未匹配筛选</span>
         </>
       )}
       <span className="ml-auto flex items-center gap-1.5 text-muted-foreground">
@@ -714,10 +754,10 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
       <InspectionTableShell waferId={wafer.waferId} meta={`Tested Die Count：${wafer.inspection.testedDieCount.toLocaleString()}`}>
         <div className="grid grid-cols-2 gap-2">
           <InspectionMetric label="Total Fail Bin Count" value={wafer.inspection.totalFailBinCount.toLocaleString()} />
-          <InspectionMetric label="Total Fail Bin Rate" value={formatPercent(wafer.inspection.totalFailBinRatePercent)} />
+          <InspectionMetric label="Total Fail Bin Rate" value={formatPercent(wafer.inspection.totalFailBinRatePercent)} help="本片完整 CP Map 中，上游 CP 分类为 Fail 的 Die 数 / Tested Die Count × 100%。Pass/Fail 按上游分类提供，不由 Bin 编号推断。" />
         </div>
         <Table className="domain-ui-report-table mt-3" aria-label="各 Bin Code 数量与占比">
-          <TableHeader><TableRow><TableHead>Bin Code</TableHead><TableHead>Bin Des</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Bin Code</TableHead><TableHead>Bin Des</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right"><span className="inline-flex items-center gap-1">Rate<InspectionHelp label="各 Bin Rate" text="该 Bin 的 Die Count / 本片完整 CP Map 的 Tested Die Count × 100%。统计不受当前选中 Die 影响。" /></span></TableHead></TableRow></TableHeader>
           <TableBody>{wafer.inspection.rows.map((row) => <TableRow key={row.binCode}><TableCell>Bin {row.binCode}</TableCell><TableCell>{row.binDescription}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
         </Table>
       </InspectionTableShell>
@@ -731,8 +771,8 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
       <InspectionTableShell waferId={wafer.waferId} meta={`参数有效样本数：${statistics.sampleCount?.toLocaleString() ?? "—"}`}>
         <ParameterCpSummary summary={wafer.cpSummary} />
         <div className="grid grid-cols-2 gap-2">
-          <InspectionMetric label="Uniformity (RsU)" value={statistics.uniformityPercent === null || statistics.uniformityPercent === undefined ? "—" : formatPercent(statistics.uniformityPercent)} />
-          <InspectionMetric label="Hi/Lo Var." value={statistics.hiLoVariationPercent === null || statistics.hiLoVariationPercent === undefined ? "—" : formatPercent(statistics.hiLoVariationPercent)} />
+          <InspectionMetric label="Uniformity (RsU)" value={statistics.uniformityPercent === null || statistics.uniformityPercent === undefined ? "—" : formatPercent(statistics.uniformityPercent)} hint={statistics.uniformityPercent == null ? variationStatusLabel(statistics.uniformityStatus) : undefined} />
+          <InspectionMetric label="Hi/Lo Var." value={statistics.hiLoVariationPercent === null || statistics.hiLoVariationPercent === undefined ? "—" : formatPercent(statistics.hiLoVariationPercent)} hint={statistics.hiLoVariationPercent == null ? variationStatusLabel(statistics.hiLoVariationStatus) : undefined} />
           <InspectionMetric label={`SPEC LSL${unit}`} value={formatParameterMetric(statistics.lsl)} />
           <InspectionMetric label={`SPEC USL${unit}`} value={formatParameterMetric(statistics.usl)} />
           <InspectionMetric label={`Mean${unit}`} value={formatParameterMetric(statistics.mean)} />
@@ -751,7 +791,7 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
     const inspection = wafer.inspection.byLayer.find((item) => item.layerId === input.selectedLayerId)
     if (!inspection) return <div className="p-4 text-sm text-muted-foreground">当前 Layer 暂无缺陷统计</div>
     return (
-      <InspectionTableShell waferId={wafer.waferId}>
+      <InspectionTableShell waferId={wafer.waferId} meta="当前 Layer 全部类型汇总；不随类型筛选变化">
         <div className="grid grid-cols-2 gap-2">
           <InspectionMetric label="Defect Die" value={inspection.defectDieCount.toLocaleString()} />
           <InspectionMetric label="Defect Record" value={inspection.defectRecordCount.toLocaleString()} />
@@ -795,6 +835,7 @@ function WaferSummaryPanel({ wafer, kind }: { wafer: AnyWafer; kind: WaferMapGal
   if (!wafer.summary) return <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="m-4" />
   return (
     <section className="grid grid-cols-2 gap-2 p-4" aria-label="Wafer 汇总">
+      {kind === "defect" && <p className="col-span-2 text-xs text-muted-foreground">当前 Layer 全部类型汇总</p>}
       {kind === "cp-parameter" && <p className="col-span-2 text-xs text-muted-foreground">所选 CP slice 汇总</p>}
       <InspectionMetric label={kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary.pass.toLocaleString()} />
       <InspectionMetric label={kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary.fail.toLocaleString()} />
@@ -833,9 +874,20 @@ function InspectionTableShell({ waferId, meta, children }: { waferId: string; me
   )
 }
 
-function InspectionMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg border bg-muted/20 p-2"><span className="block text-[11px] text-muted-foreground">{label}</span><b className="mt-1 block font-mono text-sm">{value}</b></div>
+function InspectionHelp({ label, text }: { label: string; text: string }) {
+  return <TooltipProvider><Tooltip><TooltipTrigger render={<Button type="button" variant="ghost" size="icon-xs" aria-label={`关于 ${label}`} />}><CircleHelp /></TooltipTrigger><TooltipContent>{text}</TooltipContent></Tooltip></TooltipProvider>
 }
+
+function InspectionMetric({ label, value, help, hint }: { label: string; value: string; help?: string; hint?: string }) {
+  return <div className="rounded-lg border bg-muted/20 p-2"><span className="flex items-center gap-1 text-[11px] text-muted-foreground">{label}{help && <InspectionHelp label={label} text={help} />}</span><b className="mt-1 block font-mono text-sm">{value}</b>{hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}</div>
+}
+
+function variationStatusLabel(status?: string | null) {
+  if (!status || status === "AVAILABLE") return undefined
+  const labels: Record<string, string> = { MISSING_STATISTICS: "统计未提供", ZERO_MEAN: "均值为零，无法计算", NON_FINITE_INPUT: "输入数值不可用", NON_FINITE_RESULT: "计算结果不可用" }
+  return labels[status] ?? inspectionReasonLabel(status)
+}
+
 
 export function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
   if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
@@ -857,7 +909,10 @@ export function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, di
         { label: "CP Parameter", value: input.parameter.label },
         { label: "Parameter Value", value: die.value === null ? "—" : `${die.value.toLocaleString()}${input.parameter.unit ? ` ${input.parameter.unit}` : ""}` },
         { label: "Validity", value: die.status },
-        ...(die.finalBin ? [{ label: "Final Bin", value: `Bin ${die.finalBin}` }] : []),
+        ...parameterSpecRows(wafer),
+        { label: "Final Bin", value: die.binCode == null ? "—" : `Bin ${die.binCode}` },
+        { label: "Bin Des", value: die.binDescription ?? die.finalBin ?? "—" },
+        ...(die.pass === undefined ? [{ label: "CP 状态", value: cpUnavailableLabel(die.cpUnavailableReason) }] : []),
       ] : [],
     }
   }
@@ -874,6 +929,16 @@ export function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, di
     }
   }
   return { status: null, items: [] }
+}
+
+/** SPEC belongs to this wafer's aligned inspection, never the global context. */
+function parameterSpecRows(wafer: WaferMapParameterWaferInput) {
+  const inspection = wafer.inspection
+  const unit = inspection?.unit ? ` ${inspection.unit}` : ""
+  return [
+    { label: `SPEC LSL${unit}`, value: inspection?.lsl == null ? "—" : String(inspection.lsl) },
+    { label: `SPEC USL${unit}`, value: inspection?.usl == null ? "—" : String(inspection.usl) },
+  ]
 }
 
 function defaultInspectionDieId(input: WaferMapGalleryInput, wafer: AnyWafer) {
@@ -941,9 +1006,16 @@ function inspectionReasonLabel(reason?: string) {
     PARAMETER_COORDINATE_DUPLICATE: "参数 Map 存在重复 Die 坐标。",
     CP_COORDINATE_DUPLICATE: "CP Map 存在重复 Die 坐标。",
     MAP_COORDINATE_COVERAGE_MISMATCH: "CP Map 与参数 Map 的 Die 坐标范围不一致。",
+    CP_DIE_COORDINATE_MISSING: "当前 Die 的 CP 坐标未提供。",
     CP_CLASSIFICATION_UNAVAILABLE: "CP Pass / Fail 分类未提供。",
   }
-  return reason ? labels[reason] ?? reason : undefined
+  return reason ? labels[reason] ?? (reason.startsWith("CP_") ? "CP 数据暂不可用。" : reason) : undefined
+}
+
+function cpUnavailableLabel(reason?: string | null) {
+  if (!reason) return "CP 状态未提供"
+  const label = inspectionReasonLabel(reason)
+  return label === reason && /^[A-Z][A-Z0-9_]+$/.test(reason) ? "CP 状态暂不可用" : label ?? "CP 状态未提供"
 }
 
 function formatParameterMetric(value: number | null) {
@@ -955,6 +1027,11 @@ function defectRecordCountForLayer(die: WaferMapDefectWaferInput["dies"][number]
 }
 
 /** Preserve supplied aggregates; records are a distinct optional delivery. */
+export function matchingDefectClasses(die: WaferMapDefectWaferInput["dies"][number], layerId: string, selectedTypeIds: readonly string[]) {
+  const selectedTypes = new Set(selectedTypeIds)
+  return defectClassesForLayer(die, layerId).filter((classification) => classification.count > 0 && (selectedTypes.size === 0 || selectedTypes.has(classification.typeId)))
+}
+
 export function defectClassesForLayer(die: WaferMapDefectWaferInput["dies"][number], layerId: string) {
   if (die.classBreakdown) return die.classBreakdown
   const byType = new Map<string, { typeId: string; label: string; count: number }>()
@@ -1022,7 +1099,7 @@ function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGaller
 
 type FilterOption = { id: string; label: string }
 
-function DefectFilterComboboxes({
+export function DefectFilterComboboxes({
   input,
   onChange,
 }: {
@@ -1039,7 +1116,11 @@ function DefectFilterComboboxes({
     { id: "__all__", label: "All Defect Type" },
     ...input.defectTypes,
   ]
-  const selectedTypeOption = selectedType ?? typeOptions[0]
+  const selectedTypeOption = selectedType ?? (input.selectedDefectTypeIds.length === 0 ? typeOptions[0] : {
+    id: "__unavailable_selection__",
+    label: input.selectedDefectTypeIds.length === 1 ? `当前 Layer 不可用 · ${input.selectedDefectTypeIds[0]}` : `已选择 ${input.selectedDefectTypeIds.length} 类`,
+  })
+  if (selectedTypeOption.id === "__unavailable_selection__") typeOptions.push(selectedTypeOption)
 
   return (
     <div className="flex flex-wrap gap-3">
@@ -1059,10 +1140,10 @@ function DefectFilterComboboxes({
         placeholder="搜索 Defect Type"
         items={typeOptions}
         value={selectedTypeOption}
-        onValueChange={(nextType) => onChange({
-          layerId: input.selectedLayerId,
-          typeIds: nextType && nextType.id !== "__all__" ? [nextType.id] : [],
-        })}
+        onValueChange={(nextType) => {
+          if (nextType?.id === "__unavailable_selection__") return
+          onChange({ layerId: input.selectedLayerId, typeIds: nextType && nextType.id !== "__all__" ? [nextType.id] : [] })
+        }}
       />
     </div>
   )

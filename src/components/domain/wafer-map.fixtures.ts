@@ -141,7 +141,7 @@ function parameterInspection(values: Array<number | null>, lsl: number | null, u
   // Mock derivation only; Domain UI consumes the Backend's percentages.
   const uniformityPercent = mean === 0 ? null : stddev / mean * 100
   const hiLoVariationPercent = mean === 0 ? null : (valid[valid.length - 1] - valid[0]) / (2 * mean) * 100
-  return { uniformityPercent, hiLoVariationPercent, sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "AVAILABLE", lsl, usl, unit }
+  return { uniformityPercent, hiLoVariationPercent, uniformityStatus: mean === 0 ? "ZERO_MEAN" : "AVAILABLE", hiLoVariationStatus: mean === 0 ? "ZERO_MEAN" : "AVAILABLE", sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "AVAILABLE", lsl, usl, unit }
 }
 
 /** Mock fixture computation only; production CP rates arrive from Backend. */
@@ -155,7 +155,7 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     const pass = (dieIndex + waferIndex * 29) % 173 !== 0
     const status = dieIndex % 541 === 0 ? "MISSING" as const : "VALID" as const
     const value = status === "MISSING" ? null : 0.72 + ((die.x * 3 + die.y * 5 + waferIndex * 17 + 500) % 260) / 1000
-    return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
+    return { ...die, finalBin: pass ? "PASS" : "FAIL", binCode: pass ? "1" : "10", binDescription: pass ? "PASS" : "FAIL", pass, value, status }
   })
   const summary = summaryFor(dies)
   return {

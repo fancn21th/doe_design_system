@@ -310,3 +310,26 @@ export function defectColor(typeId: string): string {
   }
   return colors[hash % colors.length]
 }
+
+/** Display geometry only: preserve exact supplied Die facts at every zoom. */
+export function boundedWaferZoom(zoom: number) {
+  return Math.max(60, Math.min(300, zoom))
+}
+
+export function canvasPointFromClient(client: { x: number; y: number }, rect: { left: number; top: number; width: number; height: number }, size: number) {
+  return { x: (client.x - rect.left) / rect.width * size, y: (client.y - rect.top) / rect.height * size }
+}
+
+export function waferTooltipPosition(pointer: { x: number; y: number }, tooltip: { width: number; height: number }, viewport: { width: number; height: number }) {
+  const margin = 16
+  const preferredLeft = pointer.x + 12 + tooltip.width + margin <= viewport.width ? pointer.x + 12 : pointer.x - tooltip.width - 12
+  return {
+    left: Math.max(margin, Math.min(preferredLeft, viewport.width - tooltip.width - margin)),
+    top: Math.max(margin, Math.min(pointer.y + 12, viewport.height - tooltip.height - margin)),
+  }
+}
+
+/** Every supplied matching class occupies an equal-width visual segment. */
+export function dieColorSegments(geometry: DieGeometry, colors: readonly string[]) {
+  return colors.map((fill, index) => ({ ...geometry, fill, x: geometry.x + geometry.width * index / colors.length, width: geometry.width / colors.length }))
+}

@@ -157,3 +157,37 @@ Defect map payload. UI opens these fields locally; images remain outside scope.
 Separately, CP cards may show default-layer Defect Die counts with explicit
 Layer and unavailable/empty states. These facts do not imply matching CP and
 Defect coordinates or authorize Overlay rendering.
+
+## Inspection parity follow-up · WM11–WM18 (2026-10-11)
+
+Approved after the read-only three-view audit. Parameter Die detail and hover
+show only this wafer's identity-aligned inspection SPEC, with each missing side
+`—`; global parameter context never fills a missing per-wafer SPEC. CP hover
+uses delivered Pass/Fail. Parameter Die `binCode`, `binDescription` and
+`cpUnavailableReason` are optional nullable source fields: no numeric code is
+inferred from a retained classification description. Missing CP state stays
+explicitly unavailable. Defect hover retains Layer, complete record count and
+all supplied numeric class counts.
+
+A Defect Die renders every positive matching class in equal-width segments;
+type filtering selects supplied segments, while full-Layer card/dialog totals
+retain their scope label. The gray legend explains no records / no matching
+filter; it is not a source Pass classification. Unknown controlled class IDs
+remain visibly unavailable until the consumer confirms options and reconciles
+selection; Domain UI emits no automatic filter reset.
+
+Expanded maps support bounded 60–300% button and wheel zoom. The map uses real
+layout dimensions inside a scroll viewport, so outer Dies remain reachable and
+pointer hit testing follows the supplied geometry at every zoom. Hover panels
+flip/clamp to viewport edges. Navigation roster and cyclic behavior are unchanged.
+
+Final Bin rate help explains the full-map Tested denominator and source-owned
+Fail classification, never a fixed Bin 1 rule. Optional nullable
+`uniformityStatus` / `hiLoVariationStatus` explain unavailable percentages
+without recalculating them. Existing shared P5–P95 scale policy, immutable source
+facts, no-image scope and disabled Overlay remain unchanged.
+
+Consumer adoption: component/model, relevant schema hunks, fixtures/scenarios
+and focused tests. App owns controlled Layer/class reconciliation and projection
+of the new optional facts. Browser critical-path acceptance belongs to the App
+consumer against its user-managed running service.

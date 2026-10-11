@@ -50,7 +50,7 @@ export const waferMapGalleryScenarios = {
         ...waferMapParameterOverviewFixture[0],
         mapId: "cp-parameter:ZERO_MEAN:W01",
         dies: waferMapParameterOverviewFixture[0].dies.map((die, index) => ({ ...die, value: index < 2049 ? -1 : index === 2049 ? 0 : 1, status: "VALID" as const })),
-        inspection: { sampleCount: 4099, mean: 0, stddev: 1, min: -1, max: 1, median: 0, cpk: null, cpkStatus: "NO_SPEC", lsl: null, usl: null, unit: "mA", uniformityPercent: null, hiLoVariationPercent: null },
+        inspection: { sampleCount: 4099, mean: 0, stddev: 1, min: -1, max: 1, median: 0, cpk: null, cpkStatus: "NO_SPEC", lsl: null, usl: null, unit: "mA", uniformityPercent: null, hiLoVariationPercent: null, uniformityStatus: "ZERO_MEAN", hiLoVariationStatus: "ZERO_MEAN" },
       }],
     },
   },
@@ -211,7 +211,10 @@ export const waferMapGalleryScenarios = {
         const dies = wafer.dies.map((sourceDie) => {
           const die = { ...sourceDie }
           delete die.finalBin
+          delete die.binCode
+          delete die.binDescription
           delete die.pass
+          die.cpUnavailableReason = "CP_MAP_IDENTITY_UNAVAILABLE"
           return die
         })
         return {
