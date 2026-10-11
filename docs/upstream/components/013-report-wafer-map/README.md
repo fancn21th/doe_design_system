@@ -130,3 +130,30 @@ full inspection denominator. Record aggregates do not imply real IDs/images
 have been delivered. Single-wafer Parameter and Layer selection emits existing
 consumer intents. Overlay is visibly disabled. No Uniformity / Hi-Lo / Particle
 Rate / image capability is introduced in this approved first slice.
+
+## Approved WM02 completion (2026-10-11)
+
+User approved completing the available first-slice gaps: Parameter inspection
+also presents CP Tested / Pass / Fail counts and supplied rates from the same
+CP test as the currently displayed Map. This is a separate input from parameter
+valid sample N and selected-slice overview summary. Missing identities retain
+unavailable state, and frontend never computes rates or fills counts from N.
+
+## Approved WM03 / WM04 prototype formulas (2026-10-11)
+
+Prototype evidence: `getWaferParameterStats` (lines 5189–5215) and
+`renderWaferParameterSummary` (6132–6165) in the inspected DOE report HTML.
+Statistics use raw Min / Max for Hi/Lo, rather than the prototype's P2/P98
+display limits. Uniformity (RsU) = sample sigma / mean × 100%; Hi/Lo Var. =
+(raw max − raw min) / (2 × mean) × 100%. User approved Backend Domain
+computation on the production PHYSICAL_VALID population and nullable UI
+delivery. Signed percentages are retained; mean zero stays unavailable.
+This supersedes these two fields' earlier first-slice deferral.
+
+## Approved WM06 / WM08 completion (2026-10-11)
+
+Actual record IDs and numeric details can be delivered from the existing frozen
+Defect map payload. UI opens these fields locally; images remain outside scope.
+Separately, CP cards may show default-layer Defect Die counts with explicit
+Layer and unavailable/empty states. These facts do not imply matching CP and
+Defect coordinates or authorize Overlay rendering.

@@ -138,7 +138,16 @@ function parameterInspection(values: Array<number | null>, lsl: number | null, u
   const mean = valid.reduce((sum, value) => sum + value, 0) / valid.length
   const stddev = Math.sqrt(valid.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (valid.length - 1))
   const sides = [lsl === null ? null : (mean - lsl) / (3 * stddev), usl === null ? null : (usl - mean) / (3 * stddev)].filter((value): value is number => value !== null)
-  return { sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "MOCK_EVALUABLE", lsl, usl, unit }
+  // Mock derivation only; Domain UI consumes the Backend's percentages.
+  const uniformityPercent = mean === 0 ? null : stddev / mean * 100
+  const hiLoVariationPercent = mean === 0 ? null : (valid[valid.length - 1] - valid[0]) / (2 * mean) * 100
+  return { uniformityPercent, hiLoVariationPercent, sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "AVAILABLE", lsl, usl, unit }
+}
+
+/** Mock fixture computation only; production CP rates arrive from Backend. */
+function parameterCpSummary(summary: { pass: number; fail: number }) {
+  const testedDieCount = summary.pass + summary.fail
+  return { status: "AVAILABLE" as const, testedDieCount, passDieCount: summary.pass, failDieCount: summary.fail, passRatePercent: ratePercent(summary.pass, testedDieCount), failRatePercent: ratePercent(summary.fail, testedDieCount) }
 }
 
 export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -155,6 +164,7 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     geometry,
     dies,
     summary,
+    cpSummary: parameterCpSummary(summary),
     inspection: parameterInspection(dies.map((die) => die.value), 0.7, 1, "mA"),
   }
 })
@@ -173,6 +183,7 @@ export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[
     geometry,
     dies,
     summary,
+    cpSummary: parameterCpSummary(summary),
     inspection: parameterInspection(dies.map((die) => die.value), 500, null, "V"),
   }
 })

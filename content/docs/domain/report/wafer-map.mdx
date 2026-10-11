@@ -149,3 +149,36 @@ supplied unresolved labels; the UI does not guess Particle / Scratch labels.
 Acceptance scenarios live in shared `oneSidedParameter` and `defectAggregates`;
 all new fixture values are Mock UI contract cases. Production facts are provided
 by the consumer, and raw-record / image drilldown remains deferred.
+
+## Consumer handoff · WM02 same-test CP totals (2026-10-11)
+
+Parameter wafer `cpSummary` supplies the current Map's same CP-test totals and
+rates independently of parameter-valid sample N. App maps the Backend
+`mapCpSummary` into this UI shape; identity validation belongs to Backend and
+raw provenance remains with App. No selected-slice overview Yield fallback is
+allowed. Unknown / unavailable data is not converted to zero; legacy summary
+counts keep a separate selected-slice label. Mock scenarios cover different
+N and Tested counts, unavailable test identity, and statistics independent
+from CP data availability.
+
+## Consumer handoff · WM03 / WM04 variation (2026-10-11)
+
+This approval supersedes the earlier deferral of Uniformity / Hi-Lo in this
+document. Backend supplies optional nullable `uniformityPercent` and
+`hiLoVariationPercent` in per-wafer inspection; App maps them literally and
+Domain UI formats them as percentages. Both use the current parameter's full
+valid population, independent of the P5/P95 color scale. No UI calculation,
+absolute-value transform or zero-fill is introduced. Missing fields and null
+results both display `—`; signed results are preserved.
+
+## Consumer handoff · WM06 / WM08 (2026-10-11)
+
+Same-snapshot Defect record details are injected with the map projection, not
+queried when clicked. Real IDs expose local numeric fields and classification;
+no image fetch/open action is present. Optional `defectRecordsStatus` distinguishes
+unavailable record delivery from aggregate counts, which remain authoritative.
+
+CP cards may consume a separately sourced default-layer `defectSummary`.
+Its Layer is explicitly displayed, while source identity remains in App raw
+provenance. It does not create a CP×Defect coordinate join or enable Overlay.
+Missing Layer maps stay EMPTY / `—`, independent of CP Pass/Fail availability.

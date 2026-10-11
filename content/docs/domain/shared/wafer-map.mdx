@@ -176,3 +176,72 @@ state and must retain inspection intent during queries.
 ### Mock multi-record Die with unresolved categories and outside-grid record
 
 <WaferMapGallery input={waferMapGalleryScenarios.defectAggregates.input} />
+
+## Parameter Map same-test CP summary · WM02 (2026-10-11)
+
+Each Parameter wafer optionally accepts `cpSummary`, distinct from both
+`inspection.sampleCount` (parameter-valid measurements) and legacy `summary`
+(selected CP slice totals):
+
+```ts
+type ParameterCpSummary = {
+  status: "AVAILABLE" | "UNAVAILABLE"
+  testedDieCount: number | null
+  passDieCount: number | null
+  failDieCount: number | null
+  passRatePercent: number | null
+  failRatePercent: number | null
+  unavailableReason?: string
+}
+```
+
+The expanded Parameter panel labels these as `CP Tested Die Count`, `CP Pass`,
+`CP Fail`, `CP Pass Rate`, `CP Fail Rate`; the parameter population is labelled
+“参数有效样本数”. CP rates are Backend facts formatted to two decimals, never
+calculated in UI. Missing or unavailable same-test facts display `—` plus the
+source reason; neither valid N nor legacy summary fills them. Zero tested Die
+with null rates preserves null percentages. Delivered CP facts remain visible
+when parameter statistics are absent. Legacy modal totals remain explicitly
+labelled “所选 CP slice 汇总”.
+
+### Mock parameter CP identity unavailable
+
+<WaferMapGallery input={waferMapGalleryScenarios.parameterCpSummaryUnavailable.input} />
+
+## Parameter variation · WM03 / WM04 (2026-10-11)
+
+The user approved the prototype definitions: `Uniformity (RsU)` is sample
+standard deviation / mean × 100%; `Hi/Lo Var.` is (raw max − raw min) /
+(2 × mean) × 100%. Backend Domain computes these on the same full
+`PHYSICAL_VALID` population used by per-wafer Mean / Std. Dev. / Min / Max.
+UI inspection adds optional nullable `uniformityPercent` and
+`hiLoVariationPercent`, only formatting supplied percentages to two decimals.
+Negative results remain negative; zero mean, missing input or nonfinite result
+stay unavailable (`—`), with no absolute-value transform or clamping.
+
+### Mock zero-mean unavailable variation
+
+<WaferMapGallery input={waferMapGalleryScenarios.parameterVariationUnavailable.input} />
+
+## Actual defect records · WM06 (2026-10-11)
+
+Each Defect Die may provide `defectRecordsStatus` (`AVAILABLE` / `UNAVAILABLE`)
+and actual `defects[]` record IDs. Records retain `classNumber`, `sizeX`, `sizeY`,
+`waferX`, `waferY`, `imageCount` as optional nullable facts. Selecting an ID
+locally expands that record's supplied dimensions, coordinates and class; it
+issues no query and attaches no image action. No unverified physical unit is
+assumed. Missing record delivery shows “逐条记录未提供”; aggregate counts remain
+unchanged. Mock IDs and values in `defectAggregates` are UI fixtures only.
+
+## Independent default-layer CP defect summary · WM08 (2026-10-11)
+
+Both CP wafer contracts optionally accept `defectSummary` with `status`
+(`AVAILABLE` / `EMPTY` / `UNAVAILABLE`), `layerId`, nullable `defectDieCount`
+and optional `unavailableReason`. Cards show `Defect Die · Layer {layerId}`;
+available zero remains zero, while EMPTY / UNAVAILABLE show `—` and source
+reason. An absent summary adds no metric. This observation is independent of
+CP geometry, has no overlay/join implication and never falls back to CP totals.
+
+### Mock CP cards with independent EOL defect coverage
+
+<WaferMapGallery input={waferMapGalleryScenarios.cpDefectSummary.input} />

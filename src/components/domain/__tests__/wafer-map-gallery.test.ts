@@ -11,7 +11,7 @@ import {
 } from "@/components/domain/wafer-map-model"
 import { waferMapW01Fixture } from "@/components/domain/wafer-map.fixtures"
 import { waferMapGalleryScenarios } from "@/components/domain/wafer-map.scenarios"
-import { WaferMapCard, InspectionStatistics, selectedDieRows, defectClassesForLayer } from "@/components/domain/wafer-map"
+import { WaferMapCard, InspectionStatistics, DefectRecordDetails, selectedDieRows, defectClassesForLayer } from "@/components/domain/wafer-map"
 import {
   reportWaferMapInputSchema,
   waferMapGalleryInputSchema,
@@ -94,11 +94,70 @@ describe("wafer map gallery contract", () => {
     expect(renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))).toContain("-0.12")
   })
 
+  it("formats supplied variation percentages, preserving null and negative values", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.parameterVariationUnavailable.input)
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
+    const wafer = input.wafers[0]!
+    const unavailable = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(unavailable).toContain("Uniformity (RsU)")
+    expect(unavailable).toContain("Hi/Lo Var.")
+    expect(unavailable).not.toContain("0.00%")
+    wafer.inspection!.uniformityPercent = -2.125
+    wafer.inspection!.hiLoVariationPercent = -4.25
+    expect(waferMapGalleryInputSchema.safeParse(input).success).toBe(true)
+    const negative = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(negative).toContain("-2.13%")
+    expect(negative).toContain("-4.25%")
+  })
+
+  it("keeps parameter-valid samples separate from same-test CP totals and supplied rates", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.parameterOverview.input)
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
+    const wafer = input.wafers[0]!
+    expect(wafer.inspection?.sampleCount).toBe(4091)
+    expect(wafer.cpSummary?.testedDieCount).toBe(4099)
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("参数有效样本数：4,091")
+    expect(html).toContain("CP Tested Die Count")
+    expect(html).toContain("4,099")
+    expect(html).toContain("CP Pass Rate")
+    expect(html).toContain(`${wafer.cpSummary!.passRatePercent!.toFixed(2)}%`)
+    expect(html).toContain(`${wafer.cpSummary!.failRatePercent!.toFixed(2)}%`)
+  })
+
+  it("does not replace absent same-test CP facts with valid samples or legacy slice summary", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.parameterCpSummaryUnavailable.input)
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
+    const wafer = input.wafers[0]!
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("Map 与参数统计的测试身份不一致。")
+    expect(html).not.toContain(wafer.summary!.pass.toLocaleString())
+    expect(html).not.toContain("0.00%")
+    wafer.cpSummary!.unavailableReason = "CP_COORDINATE_SOURCE_MISMATCH"
+    expect(renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))).toContain("CP Map 与参数 Map 的坐标来源不一致。")
+    delete wafer.cpSummary
+    expect(renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))).toContain("CP 测试统计未提供。")
+    wafer.cpSummary = { status: "AVAILABLE", testedDieCount: 0, passDieCount: 0, failDieCount: 0, passRatePercent: null, failRatePercent: null }
+    const emptyHtml = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(emptyHtml).not.toContain("0.00%")
+  })
+
+  it("presents delivered CP facts independently when parameter statistics are absent", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.parameterOverview.input)
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
+    const wafer = input.wafers[0]!
+    delete wafer.inspection
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("CP Tested Die Count")
+    expect(html).toContain("4,099")
+    expect(html).toContain("统计明细不可用")
+  })
+
   it("preserves multiple aggregate records and unresolved category identity without fake records", () => {
     const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
     if (input.kind !== "defect") throw new Error("Expected defect input")
     const wafer = input.wafers[0]!
-    expect(wafer.dies[0].defects).toEqual([])
+    expect(wafer.dies[0].defects.map((record) => record.id)).toEqual(["0", "DEMO-RECORD-2", "DEMO-RECORD-3"])
     expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Record", value: "3" })
     expect(defectClassesForLayer(wafer.dies[0], "EOL").map((item) => item.typeId)).toEqual(["class:206", "class:212"])
     const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
@@ -108,6 +167,39 @@ describe("wafer map gallery contract", () => {
     expect(html).not.toContain("Particle")
     wafer.dies[0].classBreakdownStatus = "UNAVAILABLE"
     expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Type", value: "分类明细未提供" })
+  })
+
+  it("renders delivered record identity, signed coordinates, nullable dimensions and zero image count", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
+    if (input.kind !== "defect") throw new Error("Expected defect input")
+    const record = input.wafers[0].dies[0].defects[0]
+    const html = renderToStaticMarkup(React.createElement(DefectRecordDetails, { record }))
+    expect(html).toContain("缺陷记录 0 明细")
+    expect(html).toContain("206（名称未解析）")
+    expect(html).toContain("1.25")
+    expect(html).toContain("-12.5")
+    expect(html).toContain("SIZE_Y")
+    expect(html).toContain("图片数量")
+    expect(html).not.toContain("<img")
+    expect(html).not.toContain("http")
+  })
+
+  it("keeps independent CP defect summary Layer scope and unavailable Map separate from zero", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.cpDefectSummary.input)
+    if (input.kind !== "cp-final-bin") throw new Error("Expected CP input")
+    const available = renderToStaticMarkup(React.createElement(WaferMapCard, { input, wafer: input.wafers[0] }))
+    expect(available).toContain("Defect Die · Layer EOL")
+    expect(available).toContain("142")
+    const missing = renderToStaticMarkup(React.createElement(WaferMapCard, { input, wafer: input.wafers[1] }))
+    expect(missing).toContain("该 Layer 无 Map 数据")
+    expect(missing).toContain("—")
+    expect(input.wafers[1].defectSummary?.defectDieCount).toBeNull()
+    input.wafers[1].defectSummary!.unavailableReason = "LAYER_NO_RECORD"
+    const translated = renderToStaticMarkup(React.createElement(WaferMapCard, { input, wafer: input.wafers[1] }))
+    expect(translated).toContain("当前 Layer 无检测记录。")
+    expect(translated).not.toContain("LAYER_NO_RECORD")
+    input.wafers[1].defectSummary!.unavailableReason = "当前检测尚未完成。"
+    expect(renderToStaticMarkup(React.createElement(WaferMapCard, { input, wafer: input.wafers[1] }))).toContain("当前检测尚未完成。")
   })
 
   it("passes disabled Overlay to the foundation Tabs trigger", () => {

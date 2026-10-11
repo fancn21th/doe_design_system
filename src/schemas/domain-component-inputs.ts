@@ -175,10 +175,17 @@ export const waferMapDefectSchema = z.object({
   layerId: z.string(),
   typeId: z.string(),
   typeLabel: z.string(),
+  classNumber: z.number().finite().nullable().optional(),
+  sizeX: z.number().finite().nullable().optional(),
+  sizeY: z.number().finite().nullable().optional(),
+  waferX: z.number().finite().nullable().optional(),
+  waferY: z.number().finite().nullable().optional(),
+  imageCount: z.number().int().nonnegative().nullable().optional(),
 })
 export const waferMapDefectDieSchema = waferMapDieSchema.extend({
   /** Actual records, when delivered; aggregates never fabricate record IDs. */
   defects: z.array(waferMapDefectSchema),
+  defectRecordsStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
   /** Authoritative selected-layer record count, independent of record delivery. */
   defectCount: z.number().int().nonnegative().optional(),
   classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
@@ -206,6 +213,8 @@ export const waferMapFinalBinInspectionSchema = z.object({
 })
 export const waferMapParameterInspectionSchema = z.object({
   /** Per-wafer full-population facts; color-scale percentiles are separate. */
+  uniformityPercent: z.number().finite().nullable().optional(),
+  hiLoVariationPercent: z.number().finite().nullable().optional(),
   sampleCount: z.number().int().nonnegative().nullable(),
   mean: z.number().finite().nullable(),
   stddev: z.number().finite().nonnegative().nullable(),
@@ -235,6 +244,13 @@ export const waferMapDefectInspectionSchema = z.object({
     })),
   })),
 })
+/** Independent default-layer defect observation; never a CP-coordinate overlay. */
+export const waferMapCpDefectSummarySchema = z.object({
+  status: z.enum(["AVAILABLE", "EMPTY", "UNAVAILABLE"]),
+  layerId: z.string().min(1),
+  defectDieCount: z.number().int().nonnegative().nullable(),
+  unavailableReason: z.string().min(1).optional(),
+})
 export const waferMapFinalBinWaferSchema = z.object({
   mapId: z.string().min(1),
   waferId: z.string(),
@@ -243,6 +259,7 @@ export const waferMapFinalBinWaferSchema = z.object({
   /** Optional authoritative wafer totals; never recomputed from the map. */
   summary: waferMapSummarySchema.nullable().optional(),
   summaryUnavailableReason: z.string().min(1).optional(),
+  defectSummary: waferMapCpDefectSummarySchema.optional(),
   /** Optional BFF-owned statistics; never reconstructed from rendered dies. */
   inspection: waferMapFinalBinInspectionSchema.optional(),
   inspectionUnavailableReason: z.string().min(1).optional(),
@@ -259,6 +276,16 @@ export const waferMapParameterContextSchema = z.object({
     domainMax: z.number().finite(),
   }),
 })
+/** CP facts bound to the current Parameter Map's test identity, not slice Yield. */
+export const waferMapParameterCpSummarySchema = z.object({
+  status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
+  testedDieCount: z.number().int().nonnegative().nullable(),
+  passDieCount: z.number().int().nonnegative().nullable(),
+  failDieCount: z.number().int().nonnegative().nullable(),
+  passRatePercent: z.number().finite().nonnegative().nullable(),
+  failRatePercent: z.number().finite().nonnegative().nullable(),
+  unavailableReason: z.string().min(1).optional(),
+})
 export const waferMapParameterWaferSchema = z.object({
   mapId: z.string().min(1),
   waferId: z.string(),
@@ -267,6 +294,9 @@ export const waferMapParameterWaferSchema = z.object({
   /** Selected-slice Parameter maps may not carry yield totals. */
   summary: waferMapSummarySchema.nullable().optional(),
   summaryUnavailableReason: z.string().min(1).optional(),
+  defectSummary: waferMapCpDefectSummarySchema.optional(),
+  /** Same-test CP totals/rates are separate from parameter-valid sample count. */
+  cpSummary: waferMapParameterCpSummarySchema.optional(),
   /** Single-wafer parameter statistics and capability are authoritative facts. */
   inspection: waferMapParameterInspectionSchema.optional(),
   inspectionUnavailableReason: z.string().min(1).optional(),

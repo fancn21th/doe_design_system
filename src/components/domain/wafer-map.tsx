@@ -274,6 +274,7 @@ export type WaferMapCardProps = {
 }
 
 export function WaferMapCard({ input, wafer, mapState, className, onDieSelect, onExpand }: WaferMapCardProps) {
+  const defectSummary = input.kind !== "defect" && "defectSummary" in wafer ? wafer.defectSummary : undefined
   return (
     <Card size="sm" className={cn("gap-2 border ring-0 shadow-none", className)}>
       <CardHeader className="flex items-center justify-between px-3">
@@ -292,13 +293,21 @@ export function WaferMapCard({ input, wafer, mapState, className, onDieSelect, o
       </CardHeader>
       <CardContent className="px-3"><WaferMapCore input={input} wafer={wafer} onDieSelect={onDieSelect} /></CardContent>
       {mapState?.availability === "partial" && <MapStateNote state={mapState} />}
-      <CardFooter className="grid grid-cols-2 gap-2 bg-transparent px-3 py-2 text-xs">
+      <CardFooter className={cn("grid gap-2 bg-transparent px-3 py-2 text-xs", defectSummary ? "grid-cols-3" : "grid-cols-2")}>
         <Metric label={input.kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary?.pass} />
         <Metric label={input.kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary?.fail} />
+        {defectSummary && <CpDefectSummary summary={defectSummary} />}
         {!wafer.summary && <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="col-span-2" />}
       </CardFooter>
     </Card>
   )
+}
+
+function CpDefectSummary({ summary }: { summary: NonNullable<WaferMapFinalBinWaferInput["defectSummary"]> }) {
+  return <div className="min-w-0">
+    <Metric label={`Defect Die · Layer ${summary.layerId}`} value={summary.status === "AVAILABLE" ? summary.defectDieCount : null} />
+    {summary.status !== "AVAILABLE" && <p className="mt-1 text-xs text-muted-foreground">{inspectionReasonLabel(summary.unavailableReason) ?? (summary.status === "EMPTY" ? "该 Layer 无 Map 数据" : "缺陷统计未提供")}</p>}
+  </div>
 }
 
 function Metric({ label, value }: { label: string; value?: number | null }) {
@@ -652,13 +661,53 @@ function SelectedDiePanel({ input, wafer, selectedDieId }: { input: WaferMapGall
           </div>
         ))}
       </dl>
+      {input.kind === "defect" && isDefectWafer(wafer) && <DefectRecordsPanel key={`${wafer.mapId}:${die.id}`} die={wafer.dies.find((item) => item.id === die.id)} layerId={input.selectedLayerId} />}
     </div>
   )
 }
 
+function DefectRecordsPanel({ die, layerId }: { die?: WaferMapDefectWaferInput["dies"][number]; layerId: string }) {
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
+  const detailId = useId()
+  const records = die?.defects.filter((record) => record.layerId === layerId) ?? []
+  const selectedRecord = records.find((record) => record.id === selectedRecordId)
+  if (die?.defectRecordsStatus === "UNAVAILABLE" || records.length === 0) {
+    return die?.defectCount === 0 ? null : <p className="text-xs text-muted-foreground">逐条记录未提供</p>
+  }
+  return <section className="grid gap-2" aria-label="当前 Die 缺陷记录">
+    <h5 className="text-xs font-medium">缺陷记录 ID</h5>
+    <div className="flex flex-wrap gap-2">
+      {records.map((record) => <Button key={record.id} type="button" variant="outline" size="sm" className="max-w-full font-mono" aria-expanded={selectedRecordId === record.id} aria-controls={detailId} onClick={() => setSelectedRecordId((current) => current === record.id ? null : record.id)}>{record.id}</Button>)}
+    </div>
+    {selectedRecord && <div id={detailId}><DefectRecordDetails record={selectedRecord} /></div>}
+  </section>
+}
+
+/** Renders delivered record fields only; no image or network action is attached. */
+export function DefectRecordDetails({ record }: { record: WaferMapDefectWaferInput["dies"][number]["defects"][number] }) {
+  const value = (number?: number | null) => number === null || number === undefined ? "—" : number.toLocaleString()
+  const fields = [
+    { label: "Defect ID", value: record.id },
+    { label: "Layer", value: record.layerId },
+    { label: "缺陷分类", value: record.typeLabel },
+    { label: "分类编号", value: value(record.classNumber) },
+    { label: "SIZE_X", value: value(record.sizeX) },
+    { label: "SIZE_Y", value: value(record.sizeY) },
+    { label: "WAFER_X", value: value(record.waferX) },
+    { label: "WAFER_Y", value: value(record.waferY) },
+    { label: "图片数量", value: value(record.imageCount) },
+  ]
+  return <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 rounded-lg border p-3 text-xs" aria-label={`缺陷记录 ${record.id} 明细`}>
+    {fields.map((field) => <div key={field.label} className="col-span-2 grid grid-cols-subgrid"><dt className="text-muted-foreground">{field.label}</dt><dd className="break-all text-right font-mono">{field.value}</dd></div>)}
+  </dl>
+}
+
 export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; wafer: AnyWafer }) {
   if (!wafer.inspection) {
-    return <DetailStatisticsUnavailable reason={wafer.inspectionUnavailableReason} />
+    return <>
+      {input.kind === "cp-parameter" && isParameterWafer(wafer) && <div className="p-4"><ParameterCpSummary summary={wafer.cpSummary} /></div>}
+      <DetailStatisticsUnavailable reason={wafer.inspectionUnavailableReason} />
+    </>
   }
   if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
     return (
@@ -679,8 +728,11 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
     const statistics = wafer.inspection
     const unit = statistics.unit ? ` ${statistics.unit}` : ""
     return (
-      <InspectionTableShell waferId={wafer.waferId} meta={`参数样本数：${statistics.sampleCount?.toLocaleString() ?? "—"}`}>
+      <InspectionTableShell waferId={wafer.waferId} meta={`参数有效样本数：${statistics.sampleCount?.toLocaleString() ?? "—"}`}>
+        <ParameterCpSummary summary={wafer.cpSummary} />
         <div className="grid grid-cols-2 gap-2">
+          <InspectionMetric label="Uniformity (RsU)" value={statistics.uniformityPercent === null || statistics.uniformityPercent === undefined ? "—" : formatPercent(statistics.uniformityPercent)} />
+          <InspectionMetric label="Hi/Lo Var." value={statistics.hiLoVariationPercent === null || statistics.hiLoVariationPercent === undefined ? "—" : formatPercent(statistics.hiLoVariationPercent)} />
           <InspectionMetric label={`SPEC LSL${unit}`} value={formatParameterMetric(statistics.lsl)} />
           <InspectionMetric label={`SPEC USL${unit}`} value={formatParameterMetric(statistics.usl)} />
           <InspectionMetric label={`Mean${unit}`} value={formatParameterMetric(statistics.mean)} />
@@ -717,10 +769,33 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
   return null
 }
 
+function ParameterCpSummary({ summary }: { summary: WaferMapParameterWaferInput["cpSummary"] }) {
+  // Only the same-test Backend projection owns these counts and percentages.
+  // Legacy wafer.summary and valid parameter sample N are never fallbacks.
+  const available = summary?.status === "AVAILABLE"
+  const count = (value?: number | null) => available && value !== null && value !== undefined ? value.toLocaleString() : "—"
+  const rate = (value?: number | null) => available && value !== null && value !== undefined ? formatPercent(value) : "—"
+  return (
+    <section className="grid gap-2" aria-label="当前 Parameter Map CP 测试统计">
+      <h5 className="text-xs font-medium">当前 Parameter Map CP 测试统计</h5>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2"><InspectionMetric label="CP Tested Die Count" value={count(summary?.testedDieCount)} /></div>
+        <InspectionMetric label="CP Pass" value={count(summary?.passDieCount)} />
+        <InspectionMetric label="CP Fail" value={count(summary?.failDieCount)} />
+        <InspectionMetric label="CP Pass Rate" value={rate(summary?.passRatePercent)} />
+        <InspectionMetric label="CP Fail Rate" value={rate(summary?.failRatePercent)} />
+      </div>
+      {!available && <p className="text-xs text-muted-foreground">{inspectionReasonLabel(summary?.unavailableReason) ?? "CP 测试统计未提供。"}</p>}
+      <p className="text-xs text-muted-foreground">CP Tested 为该测试的 Die 数，参数有效样本数为当前参数的有效量测数。</p>
+    </section>
+  )
+}
+
 function WaferSummaryPanel({ wafer, kind }: { wafer: AnyWafer; kind: WaferMapGalleryInput["kind"] }) {
   if (!wafer.summary) return <SummaryUnavailable reason={wafer.summaryUnavailableReason} className="m-4" />
   return (
     <section className="grid grid-cols-2 gap-2 p-4" aria-label="Wafer 汇总">
+      {kind === "cp-parameter" && <p className="col-span-2 text-xs text-muted-foreground">所选 CP slice 汇总</p>}
       <InspectionMetric label={kind === "defect" ? "无缺陷 Die" : "Pass"} value={wafer.summary.pass.toLocaleString()} />
       <InspectionMetric label={kind === "defect" ? "有缺陷 Die" : "Fail"} value={wafer.summary.fail.toLocaleString()} />
     </section>
@@ -848,6 +923,25 @@ function inspectionReasonLabel(reason?: string) {
     MISSING_STATISTICS: "参数统计未提供。",
     PARAMETER_MAP_MISSING: "当前参数的 Map 未提供。",
     BIN_MAP_MISSING: "Final Bin Map 未提供。",
+    LAYER_NO_RECORD: "当前 Layer 无检测记录。",
+    DEFECT_SUMMARY_UNAVAILABLE: "当前 Layer 缺陷统计未提供。",
+    DEFECT_INSPECTION_SUMMARY_INCOMPLETE: "缺陷检测统计不完整。",
+    DEFECT_MAP_UNAVAILABLE: "缺陷 Map 当前不可用。",
+    DEFECT_MAP_REF_MISSING: "缺陷 Map 快照引用未提供。",
+    DEFECT_DETAIL_IDENTITY_INCOMPLETE: "缺陷记录身份不完整。",
+    DEFECT_SNAPSHOT_NOT_FOUND: "该报告没有可用的缺陷快照。",
+    DEFECT_SNAPSHOT_UNAVAILABLE: "缺陷快照统计当前不可用。",
+    MAP_EMPTY: "当前 Map 无可绘制数据。",
+    AMBIGUOUS_CP_MAP_IDENTITY: "CP Map 对应多个测试，尚不能确定。",
+    CP_MAP_IDENTITY_MISMATCH: "CP Map 与参数 Map 的测试身份不一致。",
+    CP_MAP_IDENTITY_UNAVAILABLE: "CP Map 测试身份未提供。",
+    CP_BIN_MAP_MISSING: "同一 CP 测试的 Final Bin Map 未提供。",
+    CP_COORDINATE_SOURCE_MISSING: "CP 坐标来源未提供。",
+    CP_COORDINATE_SOURCE_MISMATCH: "CP Map 与参数 Map 的坐标来源不一致。",
+    PARAMETER_COORDINATE_DUPLICATE: "参数 Map 存在重复 Die 坐标。",
+    CP_COORDINATE_DUPLICATE: "CP Map 存在重复 Die 坐标。",
+    MAP_COORDINATE_COVERAGE_MISMATCH: "CP Map 与参数 Map 的 Die 坐标范围不一致。",
+    CP_CLASSIFICATION_UNAVAILABLE: "CP Pass / Fail 分类未提供。",
   }
   return reason ? labels[reason] ?? reason : undefined
 }
