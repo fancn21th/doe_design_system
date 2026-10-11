@@ -158,6 +158,8 @@ export const waferMapGeometrySchema = z.object({
 })
 export const waferMapFinalBinDieSchema = waferMapDieSchema.extend({
   finalBin: z.string(),
+  binCode: z.string().nullable().optional(),
+  binDescription: z.string().nullable().optional(),
   pass: z.boolean(),
 })
 export const waferMapParameterDieSchema = waferMapDieSchema.extend({
@@ -175,7 +177,17 @@ export const waferMapDefectSchema = z.object({
   typeLabel: z.string(),
 })
 export const waferMapDefectDieSchema = waferMapDieSchema.extend({
+  /** Actual records, when delivered; aggregates never fabricate record IDs. */
   defects: z.array(waferMapDefectSchema),
+  /** Authoritative selected-layer record count, independent of record delivery. */
+  defectCount: z.number().int().nonnegative().optional(),
+  classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
+  classBreakdown: z.array(z.object({
+    typeId: z.string(),
+    label: z.string(),
+    count: z.number().int().nonnegative(),
+    nameResolved: z.boolean().optional(),
+  })).optional(),
 })
 export const waferMapSummarySchema = z.object({
   pass: z.number().int().nonnegative(),
@@ -193,27 +205,31 @@ export const waferMapFinalBinInspectionSchema = z.object({
   })),
 })
 export const waferMapParameterInspectionSchema = z.object({
-  testedDieCount: z.number().int().nonnegative(),
-  rows: z.array(z.object({
-    classification: z.enum([
-      "cp-fail-defect",
-      "cp-pass-defect",
-      "cp-pass-no-defect",
-      "cp-fail-no-defect",
-    ]),
-    label: z.string(),
-    count: z.number().int().nonnegative(),
-    ratePercent: z.number().finite().nonnegative(),
-  })),
+  /** Per-wafer full-population facts; color-scale percentiles are separate. */
+  sampleCount: z.number().int().nonnegative().nullable(),
+  mean: z.number().finite().nullable(),
+  stddev: z.number().finite().nonnegative().nullable(),
+  min: z.number().finite().nullable(),
+  max: z.number().finite().nullable(),
+  median: z.number().finite().nullable(),
+  cpk: z.number().finite().nullable(),
+  cpkStatus: z.string().min(1),
+  lsl: z.number().finite().nullable(),
+  usl: z.number().finite().nullable(),
+  unit: z.string().nullable(),
 })
 export const waferMapDefectInspectionSchema = z.object({
   byLayer: z.array(z.object({
     layerId: z.string(),
+    classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
     defectDieCount: z.number().int().nonnegative(),
     defectRecordCount: z.number().int().nonnegative(),
+    inGridRecordCount: z.number().int().nonnegative().optional(),
+    outsideGridCount: z.number().int().nonnegative().optional(),
     rows: z.array(z.object({
       typeId: z.string(),
       label: z.string(),
+      nameResolved: z.boolean().optional(),
       count: z.number().int().nonnegative(),
       ratePercent: z.number().finite().nonnegative(),
     })),
@@ -235,6 +251,8 @@ export const waferMapParameterContextSchema = z.object({
   parameterCode: z.string(),
   label: z.string(),
   unit: z.string().nullable().optional(),
+  lsl: z.number().finite().nullable().optional(),
+  usl: z.number().finite().nullable().optional(),
   scale: z.object({
     domainMin: z.number().finite(),
     median: z.number().finite(),
@@ -249,7 +267,7 @@ export const waferMapParameterWaferSchema = z.object({
   /** Selected-slice Parameter maps may not carry yield totals. */
   summary: waferMapSummarySchema.nullable().optional(),
   summaryUnavailableReason: z.string().min(1).optional(),
-  /** CP × Defect classifications are optional authoritative detail facts. */
+  /** Single-wafer parameter statistics and capability are authoritative facts. */
   inspection: waferMapParameterInspectionSchema.optional(),
   inspectionUnavailableReason: z.string().min(1).optional(),
 })

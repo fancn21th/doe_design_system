@@ -30,6 +30,7 @@ export type ReportWaferMapSelection = {
   primaryView: PrimaryView
   cpView: CpView
   focusedWaferId?: string | null
+  expandedWaferId?: string | null
   parameterCode: string | null
   defectLayerId?: string | null
   defectTypeIds?: string[]
@@ -44,6 +45,7 @@ export type ReportWaferMapProps = {
    */
   selection?: ReportWaferMapSelection
   onPrimaryViewChange?: (view: PrimaryView) => void
+  onExpandedWaferChange?: (waferId: string | null) => void
   onCpViewChange?: (view: CpView) => void
   onParameterChange?: (parameterCode: string | null) => void
   onDefectLayerChange?: (layerId: string) => void
@@ -59,6 +61,7 @@ export function ReportWaferMap({
   className,
   selection,
   onPrimaryViewChange,
+  onExpandedWaferChange,
   onCpViewChange,
   onParameterChange,
   onDefectLayerChange,
@@ -81,6 +84,12 @@ export function ReportWaferMap({
   const [uncontrolledDefectTypeIds, setUncontrolledDefectTypeIds] = React.useState<string[]>(
     () => defectView?.selectedDefectTypeIds ?? []
   )
+  const [localExpandedWaferId, setLocalExpandedWaferId] = React.useState<string | null>(null)
+  const expandedWaferId = selection?.expandedWaferId !== undefined ? selection.expandedWaferId : localExpandedWaferId
+  const changeExpandedWafer = (waferId: string | null) => {
+    setLocalExpandedWaferId(waferId)
+    onExpandedWaferChange?.(waferId)
+  }
   const primaryView = selection?.primaryView ?? uncontrolledPrimaryView
   const cpView = selection?.cpView ?? uncontrolledCpView
   const selectedParameterCode = selection ? selection.parameterCode : uncontrolledParameterCode
@@ -120,6 +129,7 @@ export function ReportWaferMap({
   }
 
   const selectPrimaryView = (nextView: PrimaryView) => {
+    if (nextView === "overlay") return
     setUncontrolledPrimaryView(nextView)
     onPrimaryViewChange?.(nextView)
   }
@@ -160,7 +170,7 @@ export function ReportWaferMap({
             options={[
               ...(hasCp ? [{ value: "cp", label: "CP Map", icon: CircleDotIcon }] : []),
               ...(hasDefect ? [{ value: "defect", label: "Defect Map", icon: ScanSearchIcon }] : []),
-              { value: "overlay", label: "Overlay", icon: LayersIcon },
+              { value: "overlay", label: "Overlay", icon: LayersIcon, disabled: true },
             ]}
           />
 
@@ -209,6 +219,10 @@ export function ReportWaferMap({
             renderMissingMap={(state) => <ReportState className="min-h-40" title={state.availability === "empty" ? "当前 Wafer 无此 Map 数据" : "当前 Wafer Map 不可用"} description={state.reason} />}
             showParameterLegend
             focusedWaferId={selection?.focusedWaferId}
+            expandedWaferId={expandedWaferId}
+            onExpandedWaferChange={changeExpandedWafer}
+            parameterOptions={parameterOptions}
+            onParameterChange={selectParameter}
             onDefectFiltersChange={selectDefectFilters}
           />
         ) : visibleState ? (

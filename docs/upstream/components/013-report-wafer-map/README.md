@@ -113,3 +113,20 @@ map. Prototype inspection confirmed:
 The statistics are expected input facts. They are represented by mode-specific
 `inspection` schemas and must not be inferred from missing backend fields by the
 Report component.
+
+## Lineage-informed inspection revision (2026-10-11)
+
+User-approved evidence comes from the three wafer-map notebooks in
+`db-probe/notebooks/computed fileds/wafer-map/`: `total_fail_bin_rate.ipynb`,
+`parameter_cpk.ipynb` and `particle_rate.ipynb`. This supersedes the 2026-09-22
+Parameter CP × Defect table interpretation above: Parameter inspection presents
+single-wafer specifications and descriptive statistics plus capability. Exact
+codes are distinct; `BVDSS_100u` is not an alias of `BVDSS`.
+
+Final Bin inspection retains Tested / Fail Die and per-bin record totals/rates.
+Defect inspection distinguishes records from defect-bearing Die, retains
+unresolved numeric class identity, and includes outside-grid records in the
+full inspection denominator. Record aggregates do not imply real IDs/images
+have been delivered. Single-wafer Parameter and Layer selection emits existing
+consumer intents. Overlay is visibly disabled. No Uniformity / Hi-Lo / Particle
+Rate / image capability is introduced in this approved first slice.

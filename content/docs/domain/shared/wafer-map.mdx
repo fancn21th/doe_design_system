@@ -65,9 +65,9 @@ Defect gallery uses single-select, searchable Combobox controls for `Layer` and 
 Hover uses Canvas hit testing and one document portal tooltip, so a 4,099-die wafer never creates 4,099 React nodes. The tooltip currently shows wafer, DIE_X, DIE_Y, Final Bin and, where relevant, parameter value/validity or defect count.
 
 每片 wafer 卡片提供 `全屏查看` 入口。放大层复用同一个 Canvas renderer，并拥有局部
-Die 选择、80%–140% 缩放和前后 wafer 浏览；它不触发请求或改变外部筛选。右侧先展示
+Die 选择、80%–140% 缩放和前后 wafer 浏览。单片 Parameter / Layer / Defect Type 选择只发出 callback intent，由 consumer 查询并注入新数据。右侧先展示
 当前 Die 明细，再展示由输入合同提供的 wafer 统计表。三种视图分别使用 Final Bin、
-CP × Defect 分类和按 Layer 的 Defect Type 统计，组件不会从缺失字段推断这些业务事实。
+单片 Parameter 的 SPEC、样本数、Mean、Std. Dev.、Min、Max、Median、CPK 和按 Layer 的 Defect Type 统计，组件不会从缺失字段推断这些业务事实。
 
 ## Schema
 
@@ -103,13 +103,17 @@ type FinalBinInspection = {
 }
 
 type ParameterInspection = {
-  testedDieCount: number
-  rows: Array<{
-    classification: "cp-fail-defect" | "cp-pass-defect" | "cp-pass-no-defect" | "cp-fail-no-defect"
-    label: string
-    count: number
-    ratePercent: number
-  }>
+  sampleCount: number | null
+  mean: number | null
+  stddev: number | null
+  min: number | null
+  max: number | null
+  median: number | null
+  cpk: number | null
+  cpkStatus: string
+  lsl: number | null
+  usl: number | null
+  unit: string | null
 }
 
 type DefectInspection = {
@@ -117,7 +121,10 @@ type DefectInspection = {
     layerId: string
     defectDieCount: number
     defectRecordCount: number
-    rows: Array<{ typeId: string; label: string; count: number; ratePercent: number }>
+    inGridRecordCount?: number
+    outsideGridCount?: number
+    classBreakdownStatus?: "AVAILABLE" | "UNAVAILABLE"
+    rows: Array<{ typeId: string; label: string; nameResolved?: boolean; count: number; ratePercent: number }>
   }>
 }
 ```
@@ -140,3 +147,32 @@ The gallery input extends this geometry with rendering-specific die metadata. Th
 explicitly empty or unavailable map slot. ReportWaferMap uses ReportState with
 the source reason and 160px minimum height. Available/partial map rendering,
 summary facts, standalone gallery fallbacks and data semantics remain intact.
+
+## Single-wafer inspection contract · 2026-10-11
+
+Statistics are supplied full-population facts, independent of visible point filters.
+CPK displays two decimals, including negative values; missing SPEC sides display `—`
+without inferring a bound from the color scale. Parameter sample count is distinct
+from CP Tested Die. Uniformity / Hi-Lo / Particle Rate and images remain outside this slice.
+
+Selected-layer Defect dies can carry `defectCount`, `classBreakdown` and
+`classBreakdownStatus` separately from `defects[]` actual records. Aggregates carry
+stable `typeId`, supplied label, count and optional `nameResolved`; unresolved
+categories retain their numeric identity. Empty `defects[]` does not erase an
+authoritative aggregate count. No synthetic Defect ID or image is generated.
+Full inspection record totals include outside-grid records; type filters only
+change map presentation, never the statistics denominator. Unavailable class
+details display “分类明细未提供” rather than zero records.
+
+`expandedWaferId` and `onExpandedWaferChange` optionally make physical-wafer
+inspection intent controlled. New parameter/layer map identities reopen that
+same wafer; React map keys still use `mapId`. Consumer owns pending/failure data
+state and must retain inspection intent during queries.
+
+### Mock single-sided SPEC
+
+<WaferMapGallery input={waferMapGalleryScenarios.oneSidedParameter.input} />
+
+### Mock multi-record Die with unresolved categories and outside-grid record
+
+<WaferMapGallery input={waferMapGalleryScenarios.defectAggregates.input} />

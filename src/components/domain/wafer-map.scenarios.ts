@@ -32,6 +32,39 @@ export const waferMapScenarios = {
 } satisfies Record<string, WaferMapScenario>
 
 export const waferMapGalleryScenarios = {
+  oneSidedParameter: {
+    name: "single-sided-parameter-capability",
+    // Mock UI fixture: exercises nullable specifications and negative capability.
+    input: {
+      kind: "cp-parameter",
+      status: "ready",
+      parameter: { parameterCode: "LOWER_BOUND_PARAMETER", label: "单边规格参数（Mock）", unit: "V", lsl: 81.2, usl: null, scale: { domainMin: 70, median: 89, domainMax: 100 } },
+      wafers: [{
+        ...waferMapParameterOverviewFixture[0],
+        mapId: "cp-parameter:LOWER_BOUND_PARAMETER:W01",
+        inspection: { sampleCount: 4099, mean: 89.2707, stddev: 5.1994, min: null, max: null, median: null, cpk: 0.5174070712855903, cpkStatus: "MOCK_EVALUABLE", lsl: 81.2, usl: null, unit: "V" },
+      }],
+    },
+  },
+  defectAggregates: {
+    name: "multi-record-die-unresolved-classes",
+    // Mock aggregate fixture; empty records means no individual record delivery.
+    input: {
+      kind: "defect",
+      status: "ready",
+      layers: [{ id: "EOL", label: "EOL" }],
+      selectedLayerId: "EOL",
+      defectTypes: [{ id: "class:206", label: "206（名称未解析）" }, { id: "class:212", label: "212（名称未解析）" }],
+      selectedDefectTypeIds: [],
+      wafers: [{
+        mapId: "defect:EOL:W01", waferId: "W01",
+        geometry: { coordinateSystem: "DEFECT_INDEX_V1", dies: [{ id: "-19:5", x: -19, y: 5 }], bounds: { minX: -19, maxX: -19, minY: 5, maxY: 5 } },
+        dies: [{ id: "-19:5", x: -19, y: 5, defects: [], defectCount: 3, classBreakdownStatus: "AVAILABLE", classBreakdown: [{ typeId: "class:206", label: "206（名称未解析）", nameResolved: false, count: 1 }, { typeId: "class:212", label: "212（名称未解析）", nameResolved: false, count: 2 }] }],
+        summary: { pass: 0, fail: 1 },
+        inspection: { byLayer: [{ layerId: "EOL", defectDieCount: 1, defectRecordCount: 4, inGridRecordCount: 3, outsideGridCount: 1, rows: [{ typeId: "class:206", label: "206（名称未解析）", nameResolved: false, count: 1, ratePercent: 25 }, { typeId: "class:212", label: "212（名称未解析）", nameResolved: false, count: 3, ratePercent: 75 }] }] },
+      }],
+    },
+  },
   semanticFinalBins: {
     name: "mock-cp-status-over-bin-label",
     input: {
@@ -136,7 +169,7 @@ export const waferMapGalleryScenarios = {
         scale: { domainMin: 0.7, median: 0.85, domainMax: 1 },
       },
       // The value, validity and CP result are authoritative per-Die facts.
-      // CP × Defect classifications are intentionally absent, not inferred.
+      // Parameter statistics are intentionally absent, not inferred.
       wafers: waferMapParameterOverviewFixture.slice(0, 1).map((source) => {
         const wafer = { ...source }
         delete wafer.inspection
@@ -150,7 +183,7 @@ export const waferMapGalleryScenarios = {
         return {
           ...wafer,
           dies,
-          inspectionUnavailableReason: "BFF 尚未提供 CP × Defect 分类统计。",
+          inspectionUnavailableReason: "BFF 尚未提供单片 Parameter 统计。",
         }
       }),
       mapStates: availableMapStates(waferMapParameterOverviewFixture.slice(0, 1)),

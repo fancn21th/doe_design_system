@@ -133,20 +133,12 @@ function finalBinWafer(waferId: string, waferIndex: number): WaferMapFinalBinWaf
 
 export const waferMapFinalBinOverviewFixture: WaferMapFinalBinWaferInput[] = waferIds.map(finalBinWafer)
 
-function parameterInspection(pass: number, fail: number, waferIndex: number) {
-  const testedDieCount = pass + fail
-  const defectDieCount = Math.min(pass, 75 + ((waferIndex * 11) % 28))
-  const failDefectCount = Math.min(fail, waferIndex % 3)
-  const counts = [
-    { classification: "cp-fail-defect" as const, label: "CP Fail & Defect", count: failDefectCount },
-    { classification: "cp-pass-defect" as const, label: "CP Pass & Defect", count: defectDieCount },
-    { classification: "cp-pass-no-defect" as const, label: "CP Pass & No Defect", count: pass - defectDieCount },
-    { classification: "cp-fail-no-defect" as const, label: "CP Fail & No Defect", count: fail - failDefectCount },
-  ]
-  return {
-    testedDieCount,
-    rows: counts.map((row) => ({ ...row, ratePercent: ratePercent(row.count, testedDieCount) })),
-  }
+function parameterInspection(values: Array<number | null>, lsl: number | null, usl: number | null, unit: string) {
+  const valid = values.filter((value): value is number => value !== null).sort((a, b) => a - b)
+  const mean = valid.reduce((sum, value) => sum + value, 0) / valid.length
+  const stddev = Math.sqrt(valid.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (valid.length - 1))
+  const sides = [lsl === null ? null : (mean - lsl) / (3 * stddev), usl === null ? null : (usl - mean) / (3 * stddev)].filter((value): value is number => value !== null)
+  return { sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "MOCK_EVALUABLE", lsl, usl, unit }
 }
 
 export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -163,7 +155,7 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     geometry,
     dies,
     summary,
-    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+    inspection: parameterInspection(dies.map((die) => die.value), 0.7, 1, "mA"),
   }
 })
 
@@ -181,7 +173,7 @@ export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[
     geometry,
     dies,
     summary,
-    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+    inspection: parameterInspection(dies.map((die) => die.value), 500, null, "V"),
   }
 })
 

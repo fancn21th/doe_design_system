@@ -1,4 +1,6 @@
 import * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { LayersIcon } from "lucide-react"
 import { describe, expect, it, vi } from "vitest"
 
 import {
@@ -9,12 +11,13 @@ import {
 } from "@/components/domain/wafer-map-model"
 import { waferMapW01Fixture } from "@/components/domain/wafer-map.fixtures"
 import { waferMapGalleryScenarios } from "@/components/domain/wafer-map.scenarios"
-import { WaferMapCard } from "@/components/domain/wafer-map"
+import { WaferMapCard, InspectionStatistics, selectedDieRows, defectClassesForLayer } from "@/components/domain/wafer-map"
 import {
   reportWaferMapInputSchema,
   waferMapGalleryInputSchema,
   waferMapMapStateSchema,
 } from "@/schemas/domain-component-inputs"
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
 import {
   emitDefectFilterChange,
@@ -57,8 +60,60 @@ describe("wafer map gallery contract", () => {
     }
 
     expect(finalBin.wafers[0].inspection?.rows.reduce((sum, row) => sum + row.count, 0)).toBe(4099)
-    expect(parameter.wafers[0].inspection?.rows.reduce((sum, row) => sum + row.count, 0)).toBe(4099)
+    expect(parameter.wafers[0].inspection?.sampleCount).toBe(4091)
+    expect(parameter.wafers[0].inspection?.mean).toBeGreaterThan(0)
     expect(defect.wafers[0].inspection?.byLayer.map((item) => item.layerId)).toEqual(["M1", "M2"])
+  })
+
+  it("shows supplied numeric Bin identity separately from its display classification", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.finalBinOverview.input)
+    if (input.kind !== "cp-final-bin") throw new Error("Expected Final Bin input")
+    const wafer = input.wafers[0]!
+    const die = wafer.dies[0]!
+    die.finalBin = "PASS"
+    die.binCode = "0"
+    die.binDescription = "Source pass class"
+    expect(selectedDieRows(input, wafer, die.id).items).toEqual([
+      { label: "Final Bin", value: "Bin 0" },
+      { label: "Bin Des", value: "Source pass class" },
+    ])
+  })
+
+  it("renders one-sided SPEC and CPK without inventing an upper bound or clamping negatives", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.oneSidedParameter.input)
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
+    const wafer = input.wafers[0]!
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("SPEC LSL V")
+    expect(html).toContain("81.2")
+    expect(html).toContain("SPEC USL V")
+    expect(html).toContain("0.52")
+    expect(html).not.toContain("105.6")
+    expect(wafer.inspection?.usl).toBeNull()
+    wafer.inspection!.cpk = -0.123
+    expect(renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))).toContain("-0.12")
+  })
+
+  it("preserves multiple aggregate records and unresolved category identity without fake records", () => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
+    if (input.kind !== "defect") throw new Error("Expected defect input")
+    const wafer = input.wafers[0]!
+    expect(wafer.dies[0].defects).toEqual([])
+    expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Record", value: "3" })
+    expect(defectClassesForLayer(wafer.dies[0], "EOL").map((item) => item.typeId)).toEqual(["class:206", "class:212"])
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("网格外记录：1")
+    expect(html).toContain("25.00%")
+    expect(html).toContain("75.00%")
+    expect(html).not.toContain("Particle")
+    wafer.dies[0].classBreakdownStatus = "UNAVAILABLE"
+    expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Type", value: "分类明细未提供" })
+  })
+
+  it("passes disabled Overlay to the foundation Tabs trigger", () => {
+    const tree = ReportViewNavigation({ ariaLabel: "Wafer Map 视图", options: [{ value: "overlay", label: "Overlay", icon: LayersIcon, disabled: true }] })
+    const trigger = findElement(tree, (element) => element.props.value === "overlay")
+    expect(trigger?.props.disabled).toBe(true)
   })
 
   it("accepts drawable maps without inspection statistics instead of deriving them", () => {
@@ -68,7 +123,7 @@ describe("wafer map gallery contract", () => {
     expect(parameter.wafers[0].dies).toHaveLength(4099)
     expect(parameter.wafers[0].summary).toEqual({ pass: 4075, fail: 24 })
     expect(parameter.wafers[0].inspection).toBeUndefined()
-    expect(parameter.wafers[0].inspectionUnavailableReason).toBe("BFF 尚未提供 CP × Defect 分类统计。")
+    expect(parameter.wafers[0].inspectionUnavailableReason).toBe("BFF 尚未提供单片 Parameter 统计。")
     expect(parameter.wafers[0].dies[0]).not.toHaveProperty("finalBin")
     expect(parameter.wafers[0].dies[0]).not.toHaveProperty("pass")
   })
@@ -88,7 +143,8 @@ describe("wafer map gallery contract", () => {
       waferMapGalleryScenarios.parameterOverview.input,
       waferMapGalleryScenarios.defectOverview.input,
     ]) {
-      const input = structuredClone(source)
+      // Optionality is a per-wafer contract; 25-wafer coverage is checked above.
+      const input = structuredClone({ ...source, wafers: source.wafers.slice(0, 1), mapStates: source.mapStates?.slice(0, 1) })
       for (const wafer of input.wafers) delete wafer.inspection
       expect(waferMapGalleryInputSchema.safeParse(input).success).toBe(true)
     }
@@ -100,7 +156,8 @@ describe("wafer map gallery contract", () => {
       waferMapGalleryScenarios.parameterOverview.input,
       waferMapGalleryScenarios.defectOverview.input,
     ]) {
-      const input = structuredClone(source)
+      // Optionality is a per-wafer contract; 25-wafer coverage is checked above.
+      const input = structuredClone({ ...source, wafers: source.wafers.slice(0, 1), mapStates: source.mapStates?.slice(0, 1) })
       for (const wafer of input.wafers) delete wafer.summary
       expect(waferMapGalleryInputSchema.safeParse(input).success).toBe(true)
     }
@@ -186,6 +243,8 @@ type TestElement = React.ReactElement<{
   children?: React.ReactNode
   "aria-label"?: string
   onClick?: () => void
+  value?: string
+  disabled?: boolean
 }>
 
 function findElement(

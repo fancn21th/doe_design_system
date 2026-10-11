@@ -79,7 +79,7 @@ export type {
   WaferRenderConfig,
 } from "@/components/domain/wafer-map-model"
 
-type AnyWafer =
+export type AnyWafer =
   | WaferMapFinalBinWaferInput
   | WaferMapParameterWaferInput
   | WaferMapDefectWaferInput
@@ -155,8 +155,8 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
       if (input.kind === "defect" && isDefectWafer(wafer)) {
         const selectedTypes = new Set(input.selectedDefectTypeIds)
         for (const die of wafer.dies) {
-          const matching = die.defects.find(
-            (defect) => defect.layerId === input.selectedLayerId && (selectedTypes.size === 0 || selectedTypes.has(defect.typeId))
+          const matching = defectClassesForLayer(die, input.selectedLayerId).find(
+            (classification) => classification.count > 0 && (selectedTypes.size === 0 || selectedTypes.has(classification.typeId))
           )
           if (matching) drawDie(context, layout, die, defectColor(matching.typeId))
         }
@@ -247,7 +247,7 @@ function PopoverRow({ label, value }: { label: string; value: string }) {
 function diePopoverData(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
   if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
     const die = wafer.dies.find((item) => item.id === dieId)
-    return die ? [{ label: "Final Bin", value: die.finalBin }] : []
+    return die ? [{ label: "Final Bin", value: die.binCode ?? die.finalBin }, ...(die.binDescription ? [{ label: "Bin Des", value: die.binDescription }] : [])] : []
   }
   if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
     const die = wafer.dies.find((item) => item.id === dieId)
@@ -259,7 +259,7 @@ function diePopoverData(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: str
   }
   if (input.kind === "defect" && isDefectWafer(wafer)) {
     const die = wafer.dies.find((item) => item.id === dieId)
-    return die ? [{ label: "Defects", value: String(die.defects.length) }] : []
+    return die ? [{ label: "Defect Record", value: defectRecordCountForLayer(die, input.selectedLayerId).toLocaleString() }] : []
   }
   return []
 }
@@ -313,10 +313,15 @@ export type WaferMapGalleryProps = {
   onDieSelect?: (waferId: string, die: DieData) => void
   onDefectFiltersChange?: (filters: { layerId: string; typeIds: string[] }) => void
   focusedWaferId?: string | null
+  /** Physical wafer intent survives map identity changes; rendering uses mapId. */
+  expandedWaferId?: string | null
+  onExpandedWaferChange?: (waferId: string | null) => void
+  parameterOptions?: Array<{ label: string; value: string; disabled?: boolean }>
+  onParameterChange?: (parameterCode: string | null) => void
   showParameterLegend?: boolean
 }
 
-export function WaferMapGallery({ renderMissingMap, input, className, onDieSelect, onDefectFiltersChange, focusedWaferId, showParameterLegend = true }: WaferMapGalleryProps) {
+export function WaferMapGallery({ renderMissingMap, input, className, onDieSelect, onDefectFiltersChange, focusedWaferId, expandedWaferId: controlledExpandedWaferId, onExpandedWaferChange, parameterOptions, onParameterChange, showParameterLegend = true }: WaferMapGalleryProps) {
   const parsedInput = waferMapGalleryInputSchema.parse(input)
   const galleryRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -325,7 +330,12 @@ export function WaferMapGallery({ renderMissingMap, input, className, onDieSelec
     target?.scrollIntoView({ block: "nearest", behavior: "smooth" })
   }, [focusedWaferId, input])
   const [localDefectFilters, setLocalDefectFilters] = useState<{ layerId: string; typeIds: string[] } | null>(null)
-  const [expandedWaferId, setExpandedWaferId] = useState<string | null>(null)
+  const [localExpandedWaferId, setLocalExpandedWaferId] = useState<string | null>(null)
+  const expandedWaferId = controlledExpandedWaferId !== undefined ? controlledExpandedWaferId : localExpandedWaferId
+  const changeExpandedWafer = (waferId: string | null) => {
+    setLocalExpandedWaferId(waferId)
+    onExpandedWaferChange?.(waferId)
+  }
   // A parent callback makes filters controlled. Standalone gallery previews may
   // still retain local display state, but must not override a Report selection.
   const galleryInput = parsedInput.kind === "defect" && localDefectFilters && !onDefectFiltersChange
@@ -333,7 +343,7 @@ export function WaferMapGallery({ renderMissingMap, input, className, onDieSelec
     : parsedInput
   const galleryMaps = createGalleryMaps(galleryInput)
   const drawableMaps = galleryMaps.filter((map): map is GalleryMap & { wafer: AnyWafer } => Boolean(map.wafer))
-  const expandedMap = drawableMaps.find((map) => map.mapId === expandedWaferId)
+  const expandedMap = drawableMaps.find((map) => map.waferId === expandedWaferId)
 
   function changeDefectFilters(next: { layerId: string; typeIds: string[] }) {
     if (!onDefectFiltersChange) setLocalDefectFilters(next)
@@ -351,7 +361,7 @@ export function WaferMapGallery({ renderMissingMap, input, className, onDieSelec
             wafer={map.wafer}
             mapState={map}
             onDieSelect={onDieSelect}
-            onExpand={setExpandedWaferId}
+            onExpand={(mapId) => changeExpandedWafer(drawableMaps.find((candidate) => candidate.mapId === mapId)?.waferId ?? null)}
           />
           </div>
         ) : (
@@ -364,11 +374,14 @@ export function WaferMapGallery({ renderMissingMap, input, className, onDieSelec
         wafer={expandedMap?.wafer}
         open={Boolean(expandedMap)}
         onOpenChange={(open) => {
-          if (!open) setExpandedWaferId(null)
+          if (!open) changeExpandedWafer(null)
         }}
-        onPrevious={() => setExpandedWaferId(stepMapId(drawableMaps, expandedWaferId, -1))}
-        onNext={() => setExpandedWaferId(stepMapId(drawableMaps, expandedWaferId, 1))}
+        onPrevious={() => changeExpandedWafer(stepWaferId(drawableMaps, expandedWaferId, -1))}
+        onNext={() => changeExpandedWafer(stepWaferId(drawableMaps, expandedWaferId, 1))}
         onDieSelect={onDieSelect}
+        parameterOptions={parameterOptions}
+        onParameterChange={onParameterChange}
+        onDefectFiltersChange={changeDefectFilters}
       />
     </section>
   )
@@ -428,6 +441,9 @@ function WaferMapInspectionDialog({
   onPrevious,
   onNext,
   onDieSelect,
+  parameterOptions,
+  onParameterChange,
+  onDefectFiltersChange,
 }: {
   input: WaferMapGalleryInput
   wafer?: AnyWafer
@@ -436,6 +452,9 @@ function WaferMapInspectionDialog({
   onPrevious: () => void
   onNext: () => void
   onDieSelect?: (waferId: string, die: DieData) => void
+  parameterOptions?: WaferMapGalleryProps["parameterOptions"]
+  onParameterChange?: WaferMapGalleryProps["onParameterChange"]
+  onDefectFiltersChange: (filters: { layerId: string; typeIds: string[] }) => void
 }) {
   const [selectedDieId, setSelectedDieId] = useState<string | null>(() => wafer ? defaultInspectionDieId(input, wafer) : null)
   const [zoom, setZoom] = useState(100)
@@ -461,7 +480,7 @@ function WaferMapInspectionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <InspectionContext input={input} />
+        <InspectionContext input={input} parameterOptions={parameterOptions} onParameterChange={onParameterChange} onDefectFiltersChange={onDefectFiltersChange} />
         <InspectionLegend input={input} wafer={wafer} />
 
         <div className="domain-ui-wafer-inspection-layout min-h-0 gap-4 p-4 pt-3">
@@ -539,23 +558,30 @@ function WaferMapInspectionDialog({
   )
 }
 
-function InspectionContext({ input }: { input: WaferMapGalleryInput }) {
+function InspectionContext({ input, parameterOptions, onParameterChange, onDefectFiltersChange }: {
+  input: WaferMapGalleryInput
+  parameterOptions?: WaferMapGalleryProps["parameterOptions"]
+  onParameterChange?: WaferMapGalleryProps["onParameterChange"]
+  onDefectFiltersChange: (filters: { layerId: string; typeIds: string[] }) => void
+}) {
+  const parameterInputId = useId()
   if (input.kind === "cp-parameter") {
+    const options = (parameterOptions ?? []).filter((item) => !item.disabled).map((item) => ({ id: item.value, label: item.label }))
     return (
-      <div className="flex items-center gap-3 border-b px-5 py-3">
-        <span className="text-xs text-muted-foreground">CP Parameter</span>
-        <span className="min-w-56 rounded-lg border bg-background px-3 py-2 font-medium">{input.parameter.label}</span>
+      <div className="flex flex-wrap items-center gap-3 border-b px-5 py-3">
+        {onParameterChange && options.length > 0 ? <FilterCombobox
+          id={parameterInputId}
+          label="CP Parameter"
+          placeholder="搜索并选择 CP Parameter"
+          items={options}
+          value={options.find((item) => item.id === input.parameter.parameterCode) ?? null}
+          onValueChange={(item) => { if (item) onParameterChange(item.id) }}
+        /> : <><span className="text-xs text-muted-foreground">CP Parameter</span><span className="font-medium">{input.parameter.label}</span></>}
       </div>
     )
   }
   if (input.kind === "defect") {
-    const layer = input.layers.find((item) => item.id === input.selectedLayerId)
-    return (
-      <div className="flex items-center gap-3 border-b px-5 py-3">
-        <span className="text-xs text-muted-foreground">Layer</span>
-        <span className="min-w-56 rounded-lg border bg-background px-3 py-2 font-medium">{layer?.label ?? input.selectedLayerId}</span>
-      </div>
-    )
+    return <div className="border-b px-5 py-3"><DefectFilterComboboxes input={input} onChange={onDefectFiltersChange} /></div>
   }
   return null
 }
@@ -630,7 +656,7 @@ function SelectedDiePanel({ input, wafer, selectedDieId }: { input: WaferMapGall
   )
 }
 
-function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; wafer: AnyWafer }) {
+export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; wafer: AnyWafer }) {
   if (!wafer.inspection) {
     return <DetailStatisticsUnavailable reason={wafer.inspectionUnavailableReason} />
   }
@@ -650,12 +676,21 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
   }
 
   if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
+    const statistics = wafer.inspection
+    const unit = statistics.unit ? ` ${statistics.unit}` : ""
     return (
-      <InspectionTableShell waferId={wafer.waferId} meta={`Tested Die：${wafer.inspection.testedDieCount.toLocaleString()}`}>
-        <Table className="domain-ui-report-table mt-3" aria-label="CP 与缺陷分类数量及占比">
-          <TableHeader><TableRow><TableHead>Type</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
-          <TableBody>{wafer.inspection.rows.map((row) => <TableRow key={row.classification}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
-        </Table>
+      <InspectionTableShell waferId={wafer.waferId} meta={`参数样本数：${statistics.sampleCount?.toLocaleString() ?? "—"}`}>
+        <div className="grid grid-cols-2 gap-2">
+          <InspectionMetric label={`SPEC LSL${unit}`} value={formatParameterMetric(statistics.lsl)} />
+          <InspectionMetric label={`SPEC USL${unit}`} value={formatParameterMetric(statistics.usl)} />
+          <InspectionMetric label={`Mean${unit}`} value={formatParameterMetric(statistics.mean)} />
+          <InspectionMetric label={`Std. Dev.${unit}`} value={formatParameterMetric(statistics.stddev)} />
+          <InspectionMetric label={`Min${unit}`} value={formatParameterMetric(statistics.min)} />
+          <InspectionMetric label={`Max${unit}`} value={formatParameterMetric(statistics.max)} />
+          <InspectionMetric label={`Median${unit}`} value={formatParameterMetric(statistics.median)} />
+          <InspectionMetric label="CPK" value={statistics.cpk?.toFixed(2) ?? "—"} />
+        </div>
+        <p className="text-xs text-muted-foreground">CPK 状态：{cpkStatusLabel(statistics.cpkStatus)}</p>
       </InspectionTableShell>
     )
   }
@@ -669,6 +704,8 @@ function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryInput; w
           <InspectionMetric label="Defect Die" value={inspection.defectDieCount.toLocaleString()} />
           <InspectionMetric label="Defect Record" value={inspection.defectRecordCount.toLocaleString()} />
         </div>
+        {inspection.classBreakdownStatus === "UNAVAILABLE" && <p className="text-xs text-muted-foreground">分类明细未提供</p>}
+        {inspection.outsideGridCount !== undefined && <p className="text-xs text-muted-foreground">网格外记录：{inspection.outsideGridCount.toLocaleString()}；类型占比分母为完整缺陷记录。</p>}
         <Table className="domain-ui-report-table mt-3" aria-label="各类型缺陷记录总数与占比">
           <TableHeader><TableRow><TableHead>Defect Type</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
           <TableBody>{inspection.rows.map((row) => <TableRow key={row.typeId}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
@@ -703,7 +740,7 @@ function DetailStatisticsUnavailable({ reason }: { reason?: string }) {
     <section className="grid gap-2 p-4" aria-label="统计明细不可用">
       <h4 className="text-sm font-medium">统计明细不可用</h4>
       <p className="text-xs text-muted-foreground">
-        {reason ?? "当前地图暂无分类统计明细。"}
+        {inspectionReasonLabel(reason) ?? "当前地图暂无分类统计明细。"}
       </p>
     </section>
   )
@@ -725,15 +762,15 @@ function InspectionMetric({ label, value }: { label: string; value: string }) {
   return <div className="rounded-lg border bg-muted/20 p-2"><span className="block text-[11px] text-muted-foreground">{label}</span><b className="mt-1 block font-mono text-sm">{value}</b></div>
 }
 
-function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
+export function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: string) {
   if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
     const die = wafer.dies.find((item) => item.id === dieId)
-    const bin = wafer.inspection?.rows.find((row) => row.binCode === die?.finalBin)
+    const bin = wafer.inspection?.rows.find((row) => row.binCode === (die?.binCode ?? die?.finalBin))
     return {
       status: die ? { label: die.pass ? "CP Pass" : "CP Fail", tone: die.pass ? "pass" as const : "fail" as const } : null,
       items: die ? [
-        { label: "Final Bin", value: `Bin ${die.finalBin}` },
-        { label: "Bin Des", value: bin?.binDescription ?? "—" },
+        { label: "Final Bin", value: `Bin ${die.binCode ?? die.finalBin}` },
+        { label: "Bin Des", value: die.binDescription ?? bin?.binDescription ?? "—" },
       ] : [],
     }
   }
@@ -751,13 +788,13 @@ function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: st
   }
   if (input.kind === "defect" && isDefectWafer(wafer)) {
     const die = wafer.dies.find((item) => item.id === dieId)
-    const defects = die?.defects.filter((defect) => defect.layerId === input.selectedLayerId) ?? []
+    const classes = die ? defectClassesForLayer(die, input.selectedLayerId) : []
     return {
       status: null,
       items: [
         { label: "Layer", value: input.layers.find((item) => item.id === input.selectedLayerId)?.label ?? input.selectedLayerId },
-        { label: "Defect Record", value: defects.length.toLocaleString() },
-        { label: "Defect Type", value: defects.map((defect) => defect.typeLabel).join(", ") || "—" },
+        { label: "Defect Record", value: die ? defectRecordCountForLayer(die, input.selectedLayerId).toLocaleString() : "—" },
+        ...(die?.classBreakdownStatus === "UNAVAILABLE" ? [{ label: "Defect Type", value: "分类明细未提供" }] : classes.map((classification) => ({ label: classification.label, value: classification.count.toLocaleString() }))),
       ],
     }
   }
@@ -766,7 +803,7 @@ function selectedDieRows(input: WaferMapGalleryInput, wafer: AnyWafer, dieId: st
 
 function defaultInspectionDieId(input: WaferMapGalleryInput, wafer: AnyWafer) {
   if (input.kind === "defect" && isDefectWafer(wafer)) {
-    const match = wafer.dies.find((die) => die.defects.some((defect) => defect.layerId === input.selectedLayerId))
+    const match = wafer.dies.find((die) => defectRecordCountForLayer(die, input.selectedLayerId) > 0)
     if (match) return match.id
   }
   const sorted = [...wafer.geometry.dies].sort((left, right) => (Math.abs(left.x) + Math.abs(left.y)) - (Math.abs(right.x) + Math.abs(right.y)))
@@ -779,10 +816,60 @@ function inspectionTitle(input: WaferMapGalleryInput, waferId: string) {
   return `Defect Map ${waferId}`
 }
 
-function stepMapId(maps: Array<GalleryMap & { wafer: AnyWafer }>, currentMapId: string | null, direction: number) {
+function stepWaferId(maps: Array<GalleryMap & { wafer: AnyWafer }>, currentWaferId: string | null, direction: number) {
   if (maps.length === 0) return null
-  const index = Math.max(0, maps.findIndex((map) => map.mapId === currentMapId))
-  return maps[(index + direction + maps.length) % maps.length]?.mapId ?? null
+  const index = Math.max(0, maps.findIndex((map) => map.waferId === currentWaferId))
+  return maps[(index + direction + maps.length) % maps.length]?.waferId ?? null
+}
+
+/** Presentation labels only; source capability status remains untouched. */
+function cpkStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    AVAILABLE: "可计算",
+    NO_SPEC: "规格未提供",
+    INVALID_SPEC: "规格无效",
+    MISSING_STATISTICS: "统计未提供",
+    INSUFFICIENT_SAMPLE: "样本不足",
+    ZERO_SIGMA: "标准差为零",
+    INVALID_SIGMA: "标准差无效",
+    NON_FINITE_INPUT: "数值不可用",
+    NON_FINITE_RESULT: "数值不可用",
+  }
+  return labels[status] ?? "不可计算"
+}
+
+function inspectionReasonLabel(reason?: string) {
+  const labels: Record<string, string> = {
+    MAP_SLICE_MISMATCH: "Map 与所选 CP slice 不一致。",
+    MAP_TEST_IDENTITY_MISMATCH: "Map 与参数统计的测试身份不一致。",
+    MISSING_MAP_IDENTITY: "Map 身份未提供。",
+    MISSING_STATISTICS_IDENTITY: "参数统计身份未提供。",
+    AMBIGUOUS_STATISTICS: "参数统计对应多个测试，尚不能确定。",
+    MISSING_STATISTICS: "参数统计未提供。",
+    PARAMETER_MAP_MISSING: "当前参数的 Map 未提供。",
+    BIN_MAP_MISSING: "Final Bin Map 未提供。",
+  }
+  return reason ? labels[reason] ?? reason : undefined
+}
+
+function formatParameterMetric(value: number | null) {
+  return value?.toLocaleString("en-US", { maximumFractionDigits: 4 }) ?? "—"
+}
+
+function defectRecordCountForLayer(die: WaferMapDefectWaferInput["dies"][number], layerId: string) {
+  return die.defectCount ?? die.defects.filter((record) => record.layerId === layerId).length
+}
+
+/** Preserve supplied aggregates; records are a distinct optional delivery. */
+export function defectClassesForLayer(die: WaferMapDefectWaferInput["dies"][number], layerId: string) {
+  if (die.classBreakdown) return die.classBreakdown
+  const byType = new Map<string, { typeId: string; label: string; count: number }>()
+  for (const record of die.defects) {
+    if (record.layerId !== layerId) continue
+    const current = byType.get(record.typeId)
+    byType.set(record.typeId, { typeId: record.typeId, label: record.typeLabel, count: (current?.count ?? 0) + 1 })
+  }
+  return [...byType.values()]
 }
 
 function formatPercent(value: number) {
@@ -796,15 +883,15 @@ function FinalBinSwatches({ bin, wafers, palette }: {
 }) {
   // A bin can contain both supplied CP states. Show both instead of inferring
   // one state from its name or converting inspection counts into new facts.
-  const states = new Set<boolean>()
+  const suppliedColors = new Map<string, string>()
   for (const wafer of wafers) for (const die of wafer.dies) {
-    if (die.finalBin === bin) states.add(die.pass)
+    if (die.binCode === bin || die.finalBin === bin) {
+      suppliedColors.set(finalBinColor(die.finalBin, palette, die.pass), die.pass ? "Pass" : "Fail")
+    }
   }
-  const colors = states.size ? [...states].sort().map((pass) => ({
-    label: pass ? "Pass" : "Fail", color: finalBinColor(bin, palette, pass),
-  })) : [{ label: "状态未提供", color: finalBinColor(bin, palette) }]
+  const colors = suppliedColors.size ? [...suppliedColors.entries()].map(([color, label]) => ({ color, label })) : [{ label: "状态未提供", color: finalBinColor(bin, palette) }]
   return <span className="inline-flex gap-0.5">{colors.map(({ label, color }) => (
-    <i key={label} title={label} aria-label={label} className="size-2.5 rounded-sm" style={{ background: color }} />
+    <i key={color} title={label} aria-label={label} className="size-2.5 rounded-sm" style={{ background: color }} />
   ))}</span>
 }
 
@@ -827,7 +914,10 @@ function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGaller
   if (input.kind === "cp-parameter") return <GalleryLegendRow><ParameterLegend input={input} /></GalleryLegendRow>
   if (input.kind === "defect") return <DefectFilterComboboxes input={input} onChange={onDefectFiltersChange} />
   const binCounts = new Map<string, number>()
-  for (const wafer of input.wafers) for (const die of wafer.dies) binCounts.set(die.finalBin, (binCounts.get(die.finalBin) ?? 0) + 1)
+  for (const wafer of input.wafers) for (const die of wafer.dies) {
+    const bin = die.binCode ?? die.finalBin
+    binCounts.set(bin, (binCounts.get(bin) ?? 0) + 1)
+  }
   return <GalleryLegendRow><div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
     <span className="text-muted-foreground">绿色 Pass · 暖色 Fail</span>
     {[...binCounts.entries()].sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true })).map(([bin, count]) => (
