@@ -90,3 +90,9 @@ Verification: all four level-3 consumers share identical computed styles and one
 用户认可 Split Table 的24px外部/14px标题正文间距。推广至五个报告页面（Yield双Block）；三级/四级导航水平padding与border归零，用16px右margin保持有效间距。Median裸筛选；CP Data选择报告图表容器外观。规范见 `docs/patterns/navigation-and-blocks.md`。
 
 本轮验证：消费端188项、canonical83项测试通过；affected lint与两端最终隔离生产构建通过。桌面1430×984/窄屏390×984关键路径、Inline标题键盘Tooltip及Escape通过，纯鼠标悬浮未独立录制。
+
+2026-10-10补充：CP × Inline候选分析标题接入BlockTitle并移除旧CardHeader分割线。桌面1203×984和窄屏390×984间距、键盘Tooltip通过；两端188/83测试、affected lint与隔离生产构建通过。
+
+2026-10-10：用户将CP × Inline Step / All Steps认可为报告筛选器样式打样，记录于`docs/patterns/report-filters.md`。仅新增规范与实际量测，不修改运行组件；其他Tab尚未按新基准验收。
+
+2026-10-10：用户要求将七类已确认UI标准整理为DS独立文档，新增`docs/patterns/ui-acceptance-standards.md`及Patterns入口。保留专题规范与tokens的权威，明确量测、复用范围和参考边界；仅文档整理。

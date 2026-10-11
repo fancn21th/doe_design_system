@@ -14,3 +14,9 @@ cross-product assets.
 
 When adding one, record its purpose, composition, states, accessibility needs,
 accepted token usage, and known exclusions.
+
+## Confirmed UI acceptance reference
+
+- [DOE页面UI验收标准（七类，v1.0）](./ui-acceptance-standards.md)：后续项目复用的独立验收清单，包含状态、容器、导航、Block、筛选器、表格与图表。
+- [Navigation and blocks](./navigation-and-blocks.md)
+- [Report filters](./report-filters.md)

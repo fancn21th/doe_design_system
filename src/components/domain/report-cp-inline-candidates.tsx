@@ -5,7 +5,8 @@ import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon, List
 import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardFooter } from "@/components/ui/card"
+import { ReportBlock } from "@/components/domain/report-block"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,11 +49,12 @@ export function ReportCpInlineCandidates({
   return (
     <TooltipProvider>
       <div className="not-prose domain-ui-typography domain-ui-report-pane domain-ui-cp-inline min-w-0 p-4">
-        <Card className="min-w-0 gap-0 border-0 py-0 shadow-none ring-0">
-          <CardHeader className="border-b !px-0">
-            <CardTitle>{parsed.title}</CardTitle>
-            {parsed.subtitle ? <p className="text-sm text-muted-foreground">{parsed.subtitle}</p> : null}
-          </CardHeader>
+        <ReportBlock input={{
+          id: "wafer-level-candidate-analysis",
+          title: parsed.title,
+          helpText: "查看当前报告保存的 Wafer 级 CP 与 Inline 参数候选组合，可按推荐、已过滤或样本不足分类及参数筛选。配对晶圆数、Spearman 相关系数与评分来自上游结果，相关性不代表因果关系。",
+        }}>
+          {parsed.subtitle ? <p className="text-sm text-muted-foreground">{parsed.subtitle}</p> : null}
           <ReportViewNavigation
             value={parsed.filters.view}
             onValueChange={(value) => {
@@ -67,7 +69,7 @@ export function ReportCpInlineCandidates({
               { value: "insufficient", label: "Insufficient Sample", icon: TriangleAlertIcon },
             ]}
           />
-          <CardContent className="grid min-w-0 gap-(--doe-section-gap) px-0 py-4">
+          <div className="grid min-w-0 gap-(--doe-section-gap)">
             <div className="grid gap-3 md:grid-cols-3">
               <CandidateSelect label="Step" value={parsed.filters.step} allLabel="All Steps" options={parsed.stepOptions} onChange={(step) => patchFilters({ step })} />
               <CandidateSelect label="CP Parameter" value={parsed.filters.cpParameter} allLabel="All CP Parameters" options={parsed.cpParameterOptions} onChange={(cpParameter) => patchFilters({ cpParameter })} />
@@ -141,13 +143,13 @@ export function ReportCpInlineCandidates({
                 </Table>
               </div>
             )}
-          </CardContent>
+          </div>
           <CardFooter className="justify-end gap-3 !px-0">
             <Button type="button" variant="outline" size="icon" aria-label="Previous candidates page" disabled={busy || parsed.page <= 1} onClick={() => onPageChange?.(parsed.page - 1)}><ChevronLeftIcon /></Button>
             <span className="text-sm tabular-nums text-muted-foreground">{parsed.page} / {pageCount}</span>
             <Button type="button" variant="outline" size="icon" aria-label="Next candidates page" disabled={busy || parsed.page >= pageCount} onClick={() => onPageChange?.(parsed.page + 1)}><ChevronRightIcon /></Button>
           </CardFooter>
-        </Card>
+        </ReportBlock>
       </div>
     </TooltipProvider>
   )

@@ -40,3 +40,5 @@ Split Table 打样已由用户认可。沿用其标题字体（module-title 16px
 三级与四级 Tabs 的 list 和 trigger 水平方向内边距均为 0；去掉透明水平 border，使用非末项 16px 右外边距维持现有有效项间隔。三级保留图标 + 文字，四级保留纯文字；导航层级按语义切换范围确定，Block 内导航仍是三级。列表溢出局部滚动。
 
 Parameter Median 筛选区为裸筛选区域，不使用整体 border、圆角背景或外层 padding。保留原有筛选及规格事实。CP Data 的 Measurement 使用已确认报告图表 Card 标准：左右/上下 24px、标题区 gap 24px + 图表内容顶部 padding 24px，无 Header 分割线，标题 16px/600，副标题 14px，图例与元数据右上显示；窄屏允许换行并局部滚动。图表高度及数据逻辑保持原业务约定。
+
+同日补充：CP × Inline 的 Wafer-level Candidate Analysis 接入共同 BlockTitle/header-body 组合，移除原 CardHeader 的分割线及额外内边距。三级候选导航不增加层级，沿用已确认导航与Block间距。
