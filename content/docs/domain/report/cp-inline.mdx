@@ -50,6 +50,8 @@ import { ReportState } from "@/components/domain/report-state"
 - 以上映射由上游/消费者提供；组件不分类、不重算评分、不改变输入顺序。
 - 旧评分和推荐分类继续有效；8888 原型的 40% Inline Spread + 35% Spearman + 25% R² **未迁入**。
 - Step、CP、Inline、view、精确 `pairedN`、reason 与分页均为受控输入；callbacks 只表达查询意图。
+- 分页组合 shadcn Base UI Pagination，按官方 Next.js 用法以 `next/link` 渲染链接；显示当前页、相邻页、首末页及间隔省略号。窄屏允许控件局部换行，不撑宽页面。
+- 页码、上一页和下一页只发出 `onPageChange(page)` 查询意图，阻止链接导航并保持页面滚动位置；首末页越界、loading/error 或未提供 callback 时禁用对应链接。
 - 切换 view 重置列头 N/原因筛选；消费者重置 page=1，并注入同一查询的 rows 与 total。
 - Paired Wafers 表示有效同片配对数 / 实验组分配数；`pairedN` 精确匹配，不代表 Min N。
 - 推荐表六列；其他两层五列。原因保留现有算法语义，不伪装成新原型的 LOW_FIT 等原因。
@@ -163,3 +165,7 @@ Candidates 的 Recommended Candidates / Filtered / Insufficient Sample 是三级
 ## Candidate Block title
 
 候选分析使用共同 ReportBlock / BlockTitle，保留输入标题及可选副标题，稳定锚点为 `wafer-level-candidate-analysis`；问号说明已保存候选结果及相关性边界。移除旧 CardHeader 与标题下分割线，沿用 Split Table 标题与正文间距。三级导航、筛选、分页与 Fit callback 保持既有合同。
+
+## Candidate Pagination adoption — 2026-10-11
+
+用户批注要求替换 `1 / 413` 分页。采用 [shadcn Base Pagination 的 Next.js 用法](https://ui.shadcn.com/docs/components/base/pagination#nextjs)，本地来源为 `ui/apps/v4/registry/bases/base/ui/pagination.tsx` 和 `registry/styles/style-nova.css` 的 Pagination 部分。同步完整 primitive exports，以本地 Lucide 图标和 nova utilities 替换 registry placeholders；官方 `next/link` 适配保留。页码窗口与受控 callback 属于 Candidates 组合；schema、数据查询、评分和排序合同不变。

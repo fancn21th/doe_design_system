@@ -1,11 +1,14 @@
 "use client"
 
-import { ChevronLeftIcon, ChevronRightIcon, CircleHelpIcon, ListFilterIcon, ListChecksIcon, TriangleAlertIcon } from "lucide-react"
+import { CircleHelpIcon, ListFilterIcon, ListChecksIcon, TriangleAlertIcon } from "lucide-react"
 
 import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
 import { Button } from "@/components/ui/button"
-import { CardFooter } from "@/components/ui/card"
+import {
+  Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
+  PaginationLink, PaginationNext, PaginationPrevious,
+} from "@/components/ui/pagination"
 import { ReportBlock } from "@/components/domain/report-block"
 import {
   DropdownMenu,
@@ -45,6 +48,22 @@ export function ReportCpInlineCandidates({
   const firstRank = (parsed.page - 1) * parsed.pageSize + 1
   const pageCount = Math.max(1, Math.ceil(parsed.total / parsed.pageSize))
   const busy = parsed.status !== "ready"
+  const pages = candidatePaginationPages(parsed.page, pageCount)
+  const pageLinkProps = (page: number) => {
+    const disabled = busy || !onPageChange || page < 1 || page > pageCount
+    return {
+      href: "#",
+      prefetch: false,
+      scroll: false,
+      "aria-disabled": disabled,
+      tabIndex: disabled ? -1 : undefined,
+      onClick: (event: React.MouseEvent<HTMLAnchorElement>) => {
+        // Paging is a consumer-owned query intent; keep the route and scroll position.
+        event.preventDefault()
+        if (!disabled && page !== parsed.page) onPageChange?.(page)
+      },
+    }
+  }
 
   return (
     <TooltipProvider>
@@ -144,15 +163,44 @@ export function ReportCpInlineCandidates({
               </div>
             )}
           </div>
-          <CardFooter className="justify-end gap-3 !px-0">
-            <Button type="button" variant="outline" size="icon" aria-label="Previous candidates page" disabled={busy || parsed.page <= 1} onClick={() => onPageChange?.(parsed.page - 1)}><ChevronLeftIcon /></Button>
-            <span className="text-sm tabular-nums text-muted-foreground">{parsed.page} / {pageCount}</span>
-            <Button type="button" variant="outline" size="icon" aria-label="Next candidates page" disabled={busy || parsed.page >= pageCount} onClick={() => onPageChange?.(parsed.page + 1)}><ChevronRightIcon /></Button>
-          </CardFooter>
+          <Pagination aria-label="候选列表分页" className="justify-end">
+            <PaginationContent className="flex-wrap justify-end">
+              <PaginationItem>
+                <PaginationPrevious text="上一页" aria-label="Previous candidates page" {...pageLinkProps(parsed.page - 1)} />
+              </PaginationItem>
+              {pages.map((page, index) => (
+                <PaginationItem key={page ?? `ellipsis-${index}`}>
+                  {page == null ? <PaginationEllipsis /> : (
+                    <PaginationLink isActive={page === parsed.page} aria-label={`第 ${page} 页`} {...pageLinkProps(page)}>{page}</PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext text="下一页" aria-label="Next candidates page" {...pageLinkProps(parsed.page + 1)} />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </ReportBlock>
       </div>
     </TooltipProvider>
   )
+}
+
+// Bound the visible controls even for hundreds of pages; totals remain upstream facts.
+function candidatePaginationPages(page: number, pageCount: number): Array<number | null> {
+  const start = Math.max(1, Math.min(page - 1, pageCount - 2))
+  const end = Math.min(pageCount, Math.max(page + 1, 3))
+  const visible = new Set([1, pageCount])
+  for (let value = start; value <= end; value += 1) visible.add(value)
+  const pages: Array<number | null> = []
+  let previous = 0
+  for (const value of [...visible].sort((a, b) => a - b)) {
+    if (value - previous === 2) pages.push(value - 1)
+    else if (value - previous > 2) pages.push(null)
+    pages.push(value)
+    previous = value
+  }
+  return pages
 }
 
 function CandidateLink({ candidate, label, onOpen }: { candidate: ReportCpInlineCandidate; label: string; onOpen?: (candidate: ReportCpInlineCandidate) => void }) {

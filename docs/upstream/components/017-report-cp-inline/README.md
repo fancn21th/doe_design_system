@@ -252,3 +252,9 @@ User compared the production IGSSNSC Fit to the documented prototype. USL=1e-4 e
 ## 2026-10-10 Navigation and Block rule
 
 用户当前批注明确三级候选视图改为共同的带图标 Tabs 并左对齐。Wafer Pair、Scatter & Fits、Fit × Spec 交点区域均持续可见，撤销旧记录中的模块折叠约定；模型曲线显隐保留。信息架构规范见 `docs/patterns/navigation-and-blocks.md`，实际截图归 App UI 验收。
+
+## Candidate Pagination — 2026-10-11
+
+用户在 DOE App CP × Inline 的 `1 / 413` 处批注指定 [shadcn Base Pagination / Next.js](https://ui.shadcn.com/docs/components/base/pagination#nextjs)。本地 shadcn `ui` 来源 commit `7c9eaba1c`：`apps/v4/registry/bases/base/ui/pagination.tsx` 与 `registry/styles/style-nova.css`。新增完整 Pagination primitive exports，按照官方文档采用 `next/link`；Candidates 组合页码、省略号、前后翻页并沿用 `onPageChange`，消费方仍拥有查询与分页状态。Canonical 与 App 两个源码文件同步，MDX 已写回局部视觉及交接合同。
+
+验证：类型检查、定向 lint、Candidates 现有 6 个测试、full build 通过；Component Lab normal 单页前后禁用，dense 页码跳转显示 Rank 11–20。App 相关 56 个测试和 build 通过；真实 413 页候选首末页、上一页、分类重置、加载禁用及 390px 窄屏实测通过。详见 App `docs/exec-plans/2026-10-11-candidate-pagination.md`。
