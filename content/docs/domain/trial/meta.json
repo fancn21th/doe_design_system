@@ -4,6 +4,7 @@
     "experiment",
     "lot",
     "steps",
+    "split-matrix",
     "stage-dashboard-panel",
     "runcard",
     "wafer",

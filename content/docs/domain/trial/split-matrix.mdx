@@ -1,0 +1,25 @@
+---
+title: Split Matrix
+description: Lot Split 草稿与模板槽位的 Stage / Step × Wafer 编辑组件。
+---
+
+import { SplitMatrixPreview } from "@/components/domain/split-matrix.preview"
+
+## 预览
+
+<SplitMatrixPreview />
+
+## 输入与意图
+
+`SplitMatrix` 接收 `lot`、`draft`、`readOnly`、`lockedStepIds`，以及模板模式的 `templateSlots`。`onChange` 提交新的 UI 草稿；`onTemplateSlotChange` 发出槽位选择意图；`onReleaseStep` 发出下发意图。25 个槽位始终可见，Lot 模式只允许选择有明确物理位置的 Wafer，模板模式使用可移植的 #1–#25 槽位。
+
+组件拥有新增 Step、Variant 编辑、删除确认、Qtime / EDC Spec 配置弹窗的本地交互。已下发 Step 的草稿配置只读。
+
+DOE App 负责加载真实 Flow / Wafer、保存模板或草稿、模板导入映射、RunCard 预览与提交。组件不调用服务，也不推断 MES 协议字段。
+
+## 场景
+
+- `lotDraft`：真实 Lot Wafer 槽位
+- `empty`：尚无 Step
+- `templateReadonly`：模板槽位只读查看
+- `released`：已下发 Step 锁定
