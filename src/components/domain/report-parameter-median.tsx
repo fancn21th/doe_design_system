@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
 
 import { reportParameterMedianScenarios } from "@/components/domain/report-parameter-median.scenarios"
@@ -172,10 +174,16 @@ function ParameterCell({
   }
 
   const content = (
-    <div className="flex min-h-10 flex-col justify-center gap-1">
-      <span className="font-mono text-xs font-semibold text-sky-700">
+    <div className="flex min-h-10 min-w-0 flex-col justify-center gap-1 whitespace-normal break-words">
+      <span className="font-mono text-sm font-semibold text-sky-700">
         {formatParameterValue(cell.value)}
       </span>
+      {(cell.capability || cell.cpk !== undefined) && (
+        <span className="font-mono text-xs leading-4 text-muted-foreground" title={cell.capability ? `正式规格 · ${cell.capability.status} · LSL ${formatParameterValue(cell.capability.lsl)} / USL ${formatParameterValue(cell.capability.usl)}` : "场景提供的 CPK"}>
+          {cell.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "CPK"}: {formatParameterValue(cell.capability ? cell.capability.cpk : cell.cpk)}
+          {cell.capability?.cpk === null && <span className="ml-1 font-sans">({cell.capability.status})</span>}
+        </span>
+      )}
       <span className="flex items-center gap-1.5 text-[10px] leading-none text-muted-foreground">
         {cell.oos && (
           <span className="rounded bg-amber-600 px-1 py-0.5 text-[9px] font-bold text-white">
@@ -192,7 +200,7 @@ function ParameterCell({
   return (
     <button
       type="button"
-      className="w-full text-left"
+      className="w-full min-w-0 text-left"
       onClick={() =>
         onWaferCellSelect({ parameter, waferId: cell.waferId, cell })
       }
@@ -232,33 +240,38 @@ function ParameterMedianMatrix({
 
   return (
     <div
-      className="max-h-(--doe-parameter-median-matrix-height) overflow-auto rounded-lg border"
+      className="min-w-0 max-w-full max-h-(--doe-parameter-median-matrix-height) overflow-auto rounded-(--doe-radius-control) border"
       role="region"
       aria-label="Parameter Median matrix"
       tabIndex={0}
     >
-      <Table className="min-w-(--doe-parameter-median-matrix-min-width) border-separate border-spacing-0 text-xs">
+      <Table className="domain-ui-report-table min-w-(--doe-parameter-median-matrix-min-width) table-fixed border-separate border-spacing-0" style={{ width: 568 + waferIds.length * 144 }}>
+        <colgroup>
+          <col style={{ width: 160 }} /><col style={{ width: 56 }} />
+          <col style={{ width: 112 }} /><col style={{ width: 112 }} /><col style={{ width: 128 }} />
+          {waferIds.map((waferId) => <col key={waferId} style={{ width: 144 }} />)}
+        </colgroup>
         <TableHeader>
           <TableRow>
-            <TableHead className={cn("w-44 min-w-44", cornerClass)}>
+            <TableHead className={cn("whitespace-normal break-all", cornerClass)}>
               CP Parameter
             </TableHead>
-            <TableHead className={cn("w-20 min-w-20", headerClass)}>
+            <TableHead className={cn("whitespace-normal", headerClass)}>
               Unit
             </TableHead>
-            <TableHead className={cn("w-28 min-w-28", headerClass)}>
+            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
               Mock LSL
             </TableHead>
-            <TableHead className={cn("w-28 min-w-28", headerClass)}>
+            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
               Mock USL
             </TableHead>
-            <TableHead className={cn("w-28 min-w-28", headerClass)}>
+            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
               Mock Spec
             </TableHead>
             {waferIds.map((waferId) => (
               <TableHead
                 key={waferId}
-                className={cn("w-32 min-w-32", headerClass)}
+                className={cn("whitespace-normal", headerClass)}
               >
                 {waferId}
               </TableHead>
@@ -274,17 +287,17 @@ function ParameterMedianMatrix({
 
             return (
               <TableRow key={row.parameter}>
-                <TableCell className={cn("w-44 min-w-44", firstColumnClass)}>
+                <TableCell className={cn("whitespace-normal break-all", firstColumnClass)}>
                   {onParameterSelect ? (
                     <button
                       type="button"
-                      className="font-mono text-xs font-semibold text-sky-700 underline-offset-2 hover:underline"
+                      className="font-mono text-sm font-semibold text-sky-700 underline-offset-2 hover:underline"
                       onClick={() => onParameterSelect(row.parameter)}
                     >
                       {row.parameter}
                     </button>
                   ) : (
-                    <span className="font-mono text-xs font-semibold text-sky-700">
+                    <span className="font-mono text-sm font-semibold text-sky-700">
                       {row.parameter}
                     </span>
                   )}
@@ -294,14 +307,14 @@ function ParameterMedianMatrix({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="w-20 min-w-20">{row.unit}</TableCell>
-                <TableCell className="w-28 min-w-28 font-mono text-xs">
+                <TableCell className="whitespace-normal">{row.unit}</TableCell>
+                <TableCell className="whitespace-nowrap font-mono">
                   {formatParameterValue(row.lsl)}
                 </TableCell>
-                <TableCell className="w-28 min-w-28 font-mono text-xs">
+                <TableCell className="whitespace-nowrap font-mono">
                   {formatParameterValue(row.usl)}
                 </TableCell>
-                <TableCell className="w-28 min-w-28">
+                <TableCell className="whitespace-normal break-words [&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:whitespace-normal [&_[data-slot=badge]]:break-all [&_[data-slot=badge]]:py-1 [&_[data-slot=badge]]:text-left">
                   <ReportBadge tone={row.specKind === "UNAVAILABLE" ? "neutral" : "good"}>
                     {row.specKind ?? "UNAVAILABLE"}
                   </ReportBadge>
@@ -314,7 +327,7 @@ function ParameterMedianMatrix({
                     <TableCell
                       key={waferId}
                       className={cn(
-                        "w-32 min-w-32",
+                        "whitespace-normal",
                         tone === "bad" && "bg-red-50",
                         tone === "watch" && "bg-amber-50"
                       )}
@@ -374,7 +387,8 @@ export function ReportParameterMedian({
       {rows.length === 0 ? (
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4">
+          <ReportBlock input={{ id: "cp-parameter-analysis", title: "CP Parameter Analysis", helpText: "按 CP 参数对比各 Wafer 的中位数和规格状态，可搜索参数或仅显示 OOS；规格及状态以当前报告快照为准。" }}>
           <ParameterMedianFilterBar
             parameterQuery={parameterQuery}
             parameterOptions={parameterOptions}
@@ -391,6 +405,7 @@ export function ReportParameterMedian({
             onParameterSelect={onParameterSelect}
             onWaferCellSelect={onWaferCellSelect}
           />
+          </ReportBlock>
         </div>
       )}
     </div>

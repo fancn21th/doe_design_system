@@ -227,3 +227,34 @@ changes belong to the next implementation step.
   score or order. Filter, page, and `View fit` actions are callback intents.
 - The consumer composes the ranking above `ReportCpInline` and owns the handoff
   from a candidate key to the selected analysis plus any scroll behavior.
+
+## 2026-10-09 Candidates / Fit Revision (Supersedes Previous Anatomy)
+
+- User-approved evidence: `DOE Workbench 单文件版(1).html` on localhost:8888,
+  packed `cp-inline-candidate-prototype/index.html` and `real-data.js`, and two annotated screenshots.
+- Two independently consumable components are named Candidates and Fit; the MDX has their two standalone previews plus a combined preview.
+- Candidates preserves existing generation-fixed score/classification, with Recommended / Filtered / Insufficient Sample views, Step/CP/Inline filters, exact paired-N and primary reason column filters, and pagination.
+- The new prototype's score formula is not adopted. Old INLINE_CONSTANT/CP_CONSTANT and unfiltered LOW semantics remain honest. Keep experiment-group identity even though the new prototype has only one row per parameter pair.
+- Fit contains only Wafer Pair detail plus three Wafer Scatter & Fits (CP Median/Min/Max). It displays supplied regression/correlation/spec/root evidence and does not decide availability from N. Local collapses and per-chart model visibility are presentation only.
+- Removed from this revision: Condition aggregation, business fit-config selectors, Control Window and Leave-One-Out Stability. This supersedes the prior three-section anatomy and Condition gate contract for this tab.
+- Combined preview uses the exact local shadcn Base Drawer non-modal pattern from `ui/apps/v4/examples/base/drawer-non-modal.tsx`: modal=false, disablePointerDismissal, swipeDirection=right. Product content replaces the demonstration placeholder; existing local Drawer is reused without a competing primitive.
+- Only the selected group's matching evidence is shown. Candidate/detail requests remain consumer-owned; mismatched identity remains waiting rather than revealing stale detail.
+- Existing data evidence: reviewed `db-probe/notebooks/tabs/computed fileds/inline-condition-vs-cp/cp_x_inline.ipynb`, Generation 13. Three persisted ranking rows are retained; kelvinS wafer summaries are transcribed exactly. Fit curves/metrics/roots are derived offline for fixtures, never at runtime. QG_QgTOT2 remains a separate prototype-backed Fit scenario.
+- Correct the prototype scientific-formatting error (e-10 became e-1) and avoid fixed-decimal tiny CP values rendering as zero. Prototype meta counts are not copied; counts come from the rendered dataset.
+- Visual revision: bounded responsive chart within its evidence column, existing DOE table local overflow and a named Fit Drawer inspection-width token. Positive/negative Spearman use existing chart-2/chart-5 with a signed numeric value, without indicating causal/pass judgment.
+
+
+## 2026-10-10 measured-scale correction
+
+User compared the production IGSSNSC Fit to the documented prototype. USL=1e-4 expanded the axis around Median≈3e-8; generated model paths spanned only 0.01–0.02 px. Distinct Max≈3e-4 values collapsed under six-decimal formatting. The approved correction keeps axes around observations/visible models, preserves out-of-range spec values with explicit labels, and retains precision. Backend availability remains supplied evidence. See the CP × Inline MDX measured-scale contract.
+
+
+## 2026-10-10 Navigation and Block rule
+
+用户当前批注明确三级候选视图改为共同的带图标 Tabs 并左对齐。Wafer Pair、Scatter & Fits、Fit × Spec 交点区域均持续可见，撤销旧记录中的模块折叠约定；模型曲线显隐保留。信息架构规范见 `docs/patterns/navigation-and-blocks.md`，实际截图归 App UI 验收。
+
+## Candidate Pagination — 2026-10-11
+
+用户在 DOE App CP × Inline 的 `1 / 413` 处批注指定 [shadcn Base Pagination / Next.js](https://ui.shadcn.com/docs/components/base/pagination#nextjs)。本地 shadcn `ui` 来源 commit `7c9eaba1c`：`apps/v4/registry/bases/base/ui/pagination.tsx` 与 `registry/styles/style-nova.css`。新增完整 Pagination primitive exports，按照官方文档采用 `next/link`；Candidates 组合页码、省略号、前后翻页并沿用 `onPageChange`，消费方仍拥有查询与分页状态。Canonical 与 App 两个源码文件同步，MDX 已写回局部视觉及交接合同。
+
+验证：类型检查、定向 lint、Candidates 现有 6 个测试、full build 通过；Component Lab normal 单页前后禁用，dense 页码跳转显示 Rank 11–20。App 相关 56 个测试和 build 通过；真实 413 页候选首末页、上一页、分类重置、加载禁用及 390px 窄屏实测通过。详见 App `docs/exec-plans/2026-10-11-candidate-pagination.md`。

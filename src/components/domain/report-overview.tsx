@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportState } from "@/components/domain/report-state"
 import { reportOverviewScenarios } from "@/components/domain/report-overview.scenarios"
 import {
   EmptyState,
@@ -39,7 +40,7 @@ export function ReportOverview({
       {!identity && metrics.length === 0 ? (
         <EmptyState>暂无 Report Overview 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
           {identity && (
             <OverviewCard>
               <CardHeader>
@@ -153,7 +154,7 @@ function ItemPanel({ title, items }: { title: string; items: ReportListItem[] })
       </CardHeader>
       <CardContent className="grid gap-2">
         {items.length === 0 ? (
-          <span className="text-sm text-muted-foreground">暂无记录</span>
+          <ReportState title="暂无记录" className="min-h-40" />
         ) : (
           items.map((item) => (
             <div

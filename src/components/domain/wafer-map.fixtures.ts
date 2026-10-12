@@ -36,6 +36,23 @@ export const waferMapSmallFixture: WaferMapData = {
   bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
 }
 
+/** Mock colour-contract case: source CP status intentionally contradicts bin names. */
+export const waferMapSemanticColorFixture: WaferMapFinalBinWaferInput = {
+  mapId: "mock-semantic-final-bin",
+  waferId: "MOCK-CP-STATUS",
+  geometry: {
+    coordinateSystem: "CP_DIE_GRID_V1",
+    dies: [...waferMapSmallFixture.dies],
+    bounds: waferMapSmallFixture.bounds,
+  },
+  dies: waferMapSmallFixture.dies.map((die, index) => ({
+    ...die,
+    finalBin: ["PASS", "PASS", "NON_NUMERIC_FAILURE", "1", "FAIL"][index],
+    pass: index === 0 || index === 4,
+  })),
+  summary: { pass: 2, fail: 3 },
+}
+
 export const waferMapEmptyFixture: WaferMapData = {
   id: "EMPTY",
   dies: [],
@@ -116,20 +133,21 @@ function finalBinWafer(waferId: string, waferIndex: number): WaferMapFinalBinWaf
 
 export const waferMapFinalBinOverviewFixture: WaferMapFinalBinWaferInput[] = waferIds.map(finalBinWafer)
 
-function parameterInspection(pass: number, fail: number, waferIndex: number) {
-  const testedDieCount = pass + fail
-  const defectDieCount = Math.min(pass, 75 + ((waferIndex * 11) % 28))
-  const failDefectCount = Math.min(fail, waferIndex % 3)
-  const counts = [
-    { classification: "cp-fail-defect" as const, label: "CP Fail & Defect", count: failDefectCount },
-    { classification: "cp-pass-defect" as const, label: "CP Pass & Defect", count: defectDieCount },
-    { classification: "cp-pass-no-defect" as const, label: "CP Pass & No Defect", count: pass - defectDieCount },
-    { classification: "cp-fail-no-defect" as const, label: "CP Fail & No Defect", count: fail - failDefectCount },
-  ]
-  return {
-    testedDieCount,
-    rows: counts.map((row) => ({ ...row, ratePercent: ratePercent(row.count, testedDieCount) })),
-  }
+function parameterInspection(values: Array<number | null>, lsl: number | null, usl: number | null, unit: string) {
+  const valid = values.filter((value): value is number => value !== null).sort((a, b) => a - b)
+  const mean = valid.reduce((sum, value) => sum + value, 0) / valid.length
+  const stddev = Math.sqrt(valid.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (valid.length - 1))
+  const sides = [lsl === null ? null : (mean - lsl) / (3 * stddev), usl === null ? null : (usl - mean) / (3 * stddev)].filter((value): value is number => value !== null)
+  // Mock derivation only; Domain UI consumes the Backend's percentages.
+  const uniformityPercent = mean === 0 ? null : stddev / mean * 100
+  const hiLoVariationPercent = mean === 0 ? null : (valid[valid.length - 1] - valid[0]) / (2 * mean) * 100
+  return { uniformityPercent, hiLoVariationPercent, uniformityStatus: mean === 0 ? "ZERO_MEAN" : "AVAILABLE", hiLoVariationStatus: mean === 0 ? "ZERO_MEAN" : "AVAILABLE", sampleCount: valid.length, mean, stddev, min: valid[0], max: valid[valid.length - 1], median: valid[Math.floor(valid.length / 2)], cpk: Math.min(...sides), cpkStatus: "AVAILABLE", lsl, usl, unit }
+}
+
+/** Mock fixture computation only; production CP rates arrive from Backend. */
+function parameterCpSummary(summary: { pass: number; fail: number }) {
+  const testedDieCount = summary.pass + summary.fail
+  return { status: "AVAILABLE" as const, testedDieCount, passDieCount: summary.pass, failDieCount: summary.fail, passRatePercent: ratePercent(summary.pass, testedDieCount), failRatePercent: ratePercent(summary.fail, testedDieCount) }
 }
 
 export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = waferIds.map((waferId, waferIndex) => {
@@ -137,7 +155,7 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     const pass = (dieIndex + waferIndex * 29) % 173 !== 0
     const status = dieIndex % 541 === 0 ? "MISSING" as const : "VALID" as const
     const value = status === "MISSING" ? null : 0.72 + ((die.x * 3 + die.y * 5 + waferIndex * 17 + 500) % 260) / 1000
-    return { ...die, finalBin: pass ? "1" : "10", pass, value, status }
+    return { ...die, finalBin: pass ? "PASS" : "FAIL", binCode: pass ? "1" : "10", binDescription: pass ? "PASS" : "FAIL", pass, value, status }
   })
   const summary = summaryFor(dies)
   return {
@@ -146,7 +164,8 @@ export const waferMapParameterOverviewFixture: WaferMapParameterWaferInput[] = w
     geometry,
     dies,
     summary,
-    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+    cpSummary: parameterCpSummary(summary),
+    inspection: parameterInspection(dies.map((die) => die.value), 0.7, 1, "mA"),
   }
 })
 
@@ -164,7 +183,8 @@ export const waferMapParameterBvdssOverviewFixture: WaferMapParameterWaferInput[
     geometry,
     dies,
     summary,
-    inspection: parameterInspection(summary.pass, summary.fail, waferIndex),
+    cpSummary: parameterCpSummary(summary),
+    inspection: parameterInspection(dies.map((die) => die.value), 500, null, "V"),
   }
 })
 

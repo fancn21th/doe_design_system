@@ -1,0 +1,37 @@
+---
+title: Block Title
+description: 业务模块标题、稳定锚点和辅助信息。
+---
+
+import { BlockTitle } from "@/components/domain/block-title"
+import { blockTitleScenarios } from "@/components/domain/block-title.scenarios"
+
+## Preview
+
+<div className="not-prose domain-ui-typography p-4">
+  <BlockTitle input={blockTitleScenarios.normal.input} />
+</div>
+
+## Contract
+
+`BlockTitle` 接收 `input: { id, title, helpText }` 和可选 `className`。
+标题为 h2，使用已有 module-title 字体 token；`id` 由消费者提供稳定且页面唯一的
+锚点，必须以字母开头，仅含字母、数字、下划线或连字符。消费者的业务 section
+通过 `aria-labelledby` 引用标题，并组合独立 body；标题不替消费者建立外框、
+折叠状态、导航、请求或业务计算。
+
+小问号使用本地 shadcn Button + Base UI Tooltip。按钮可键盘聚焦，
+辅助标签为 `关于 {title}`，Tooltip 在悬浮或键盘聚焦时显示，Escape 关闭。
+局部 TooltipProvider 保证组件在独立 Component Lab 和已有 provider 的应用里
+均可消费；帮助文案是消费者提供的简短纯文本，不隐藏必要数据或操作入口。
+
+此组件的依据是用户在 2026-10-10 确认的业务 block 信息结构：标题与 body 上下
+排列、无展开/收缩功能。Split Table 是已认可打样；后续推广至 Yield 双 Block、Wafer Map、CP Parameter Analysis 与 Inline Data。标题和 body 组合规范见 `docs/patterns/navigation-and-blocks.md`。
+
+## Long title scenario
+
+<div className="not-prose domain-ui-typography max-w-xs p-4">
+  <BlockTitle input={blockTitleScenarios.longTitle.input} />
+</div>
+
+报告内使用内部 `ReportBlock` 组合：section 通过 aria-labelledby 引用标题；header/body 使用 gap-4（当前密度14px）。首块外部24px、相邻Block24px；导航层级不随Block嵌套变化。

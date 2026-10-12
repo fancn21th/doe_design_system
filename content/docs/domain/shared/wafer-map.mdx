@@ -12,6 +12,10 @@ import { waferMapGalleryScenarios, waferMapScenarios } from "@/components/domain
 
 <WaferMapGallery input={waferMapGalleryScenarios.finalBinOverview.input} />
 
+### Mock CP status · bin labels do not determine Pass/Fail
+
+<WaferMapGallery input={waferMapGalleryScenarios.semanticFinalBins.input} />
+
 ### CP Parameter Gradient
 
 <WaferMapGallery input={waferMapGalleryScenarios.parameterOverview.input} />
@@ -37,10 +41,20 @@ not place a Gallery beside a separately reimplemented Report control bar. Every 
 carries its own geometry and data payload; no fixture or component assumes that 25
 wafers share values.
 
-Final Bin presentation accepts the BFF-preserved bin label literally. The default
-palette gives semantic `PASS` the same green treatment as numeric Bin `1`; a
-different authoritative bin palette may be supplied through the input. The App
-must not infer a numeric bin code from a label.
+Final Bin presentation preserves the BFF bin label and supplied `die.pass` literally.
+Explicit Pass uses a green colour family; explicit Fail uses a contrasting warm
+colour family, with stable bin-specific shades. Neither numeric Bin `1`, a label,
+nor a colour hash can override `die.pass`. The legacy input palette is a fallback
+only when CP status is absent; the Final Bin schema requires that status. Thumbnail,
+fullscreen and legend use the same resolver. Mixed-state bins show both swatches;
+supplied inspection counts and summary facts remain unchanged.
+
+All modes share a neutral grey legal-die base. Defect types use saturated contrasting
+colours so selected defects remain visible against the base. Parameter legends in
+the gallery and fullscreen show the supplied `scale.domainMin` / `domainMax` and unit,
+using the same continuous value-to-colour function as the map. Grey means no valid
+value; red outlines denote only explicitly supplied CP Fail. The component never
+computes a new range, interprets the range as specification, or invents OOS cutoffs.
 
 `WaferMapCore` owns three stacked Canvas layers: an immediate base layer for all legal dies, a data layer for Final Bin / parameter / defect color, and an interaction layer. The shallow grey circular boundary is presentation only; the supplied legal-die coordinates define the actual footprint.
 
@@ -51,9 +65,9 @@ Defect gallery uses single-select, searchable Combobox controls for `Layer` and 
 Hover uses Canvas hit testing and one document portal tooltip, so a 4,099-die wafer never creates 4,099 React nodes. The tooltip currently shows wafer, DIE_X, DIE_Y, Final Bin and, where relevant, parameter value/validity or defect count.
 
 每片 wafer 卡片提供 `全屏查看` 入口。放大层复用同一个 Canvas renderer，并拥有局部
-Die 选择、80%–140% 缩放和前后 wafer 浏览；它不触发请求或改变外部筛选。右侧先展示
+Die 选择、80%–140% 缩放和前后 wafer 浏览。单片 Parameter / Layer / Defect Type 选择只发出 callback intent，由 consumer 查询并注入新数据。右侧先展示
 当前 Die 明细，再展示由输入合同提供的 wafer 统计表。三种视图分别使用 Final Bin、
-CP × Defect 分类和按 Layer 的 Defect Type 统计，组件不会从缺失字段推断这些业务事实。
+单片 Parameter 的 SPEC、样本数、Mean、Std. Dev.、Min、Max、Median、CPK 和按 Layer 的 Defect Type 统计，组件不会从缺失字段推断这些业务事实。
 
 ## Schema
 
@@ -89,13 +103,17 @@ type FinalBinInspection = {
 }
 
 type ParameterInspection = {
-  testedDieCount: number
-  rows: Array<{
-    classification: "cp-fail-defect" | "cp-pass-defect" | "cp-pass-no-defect" | "cp-fail-no-defect"
-    label: string
-    count: number
-    ratePercent: number
-  }>
+  sampleCount: number | null
+  mean: number | null
+  stddev: number | null
+  min: number | null
+  max: number | null
+  median: number | null
+  cpk: number | null
+  cpkStatus: string
+  lsl: number | null
+  usl: number | null
+  unit: string | null
 }
 
 type DefectInspection = {
@@ -103,7 +121,10 @@ type DefectInspection = {
     layerId: string
     defectDieCount: number
     defectRecordCount: number
-    rows: Array<{ typeId: string; label: string; count: number; ratePercent: number }>
+    inGridRecordCount?: number
+    outsideGridCount?: number
+    classBreakdownStatus?: "AVAILABLE" | "UNAVAILABLE"
+    rows: Array<{ typeId: string; label: string; nameResolved?: boolean; count: number; ratePercent: number }>
   }>
 }
 ```
@@ -119,3 +140,142 @@ The gallery input extends this geometry with rendering-specific die metadata. Th
 - `parameterOverview`
 - `defectOverview`
 - `pending`
+
+## Consumer missing-map presentation
+
+`WaferMapGallery.renderMissingMap(state)` optionally supplies the body of an
+explicitly empty or unavailable map slot. ReportWaferMap uses ReportState with
+the source reason and 160px minimum height. Available/partial map rendering,
+summary facts, standalone gallery fallbacks and data semantics remain intact.
+
+## Single-wafer inspection contract · 2026-10-11
+
+Statistics are supplied full-population facts, independent of visible point filters.
+CPK displays two decimals, including negative values; missing SPEC sides display `—`
+without inferring a bound from the color scale. Parameter sample count is distinct
+from CP Tested Die. Uniformity / Hi-Lo / Particle Rate and images remain outside this slice.
+
+Selected-layer Defect dies can carry `defectCount`, `classBreakdown` and
+`classBreakdownStatus` separately from `defects[]` actual records. Aggregates carry
+stable `typeId`, supplied label, count and optional `nameResolved`; unresolved
+categories retain their numeric identity. Empty `defects[]` does not erase an
+authoritative aggregate count. No synthetic Defect ID or image is generated.
+Full inspection record totals include outside-grid records; type filters only
+change map presentation, never the statistics denominator. Unavailable class
+details display “分类明细未提供” rather than zero records.
+
+`expandedWaferId` and `onExpandedWaferChange` optionally make physical-wafer
+inspection intent controlled. New parameter/layer map identities reopen that
+same wafer; React map keys still use `mapId`. Consumer owns pending/failure data
+state and must retain inspection intent during queries.
+
+### Mock single-sided SPEC
+
+<WaferMapGallery input={waferMapGalleryScenarios.oneSidedParameter.input} />
+
+### Mock multi-record Die with unresolved categories and outside-grid record
+
+<WaferMapGallery input={waferMapGalleryScenarios.defectAggregates.input} />
+
+## Parameter Map same-test CP summary · WM02 (2026-10-11)
+
+Each Parameter wafer optionally accepts `cpSummary`, distinct from both
+`inspection.sampleCount` (parameter-valid measurements) and legacy `summary`
+(selected CP slice totals):
+
+```ts
+type ParameterCpSummary = {
+  status: "AVAILABLE" | "UNAVAILABLE"
+  testedDieCount: number | null
+  passDieCount: number | null
+  failDieCount: number | null
+  passRatePercent: number | null
+  failRatePercent: number | null
+  unavailableReason?: string
+}
+```
+
+The expanded Parameter panel labels these as `CP Tested Die Count`, `CP Pass`,
+`CP Fail`, `CP Pass Rate`, `CP Fail Rate`; the parameter population is labelled
+“参数有效样本数”. CP rates are Backend facts formatted to two decimals, never
+calculated in UI. Missing or unavailable same-test facts display `—` plus the
+source reason; neither valid N nor legacy summary fills them. Zero tested Die
+with null rates preserves null percentages. Delivered CP facts remain visible
+when parameter statistics are absent. Legacy modal totals remain explicitly
+labelled “所选 CP slice 汇总”.
+
+### Mock parameter CP identity unavailable
+
+<WaferMapGallery input={waferMapGalleryScenarios.parameterCpSummaryUnavailable.input} />
+
+## Parameter variation · WM03 / WM04 (2026-10-11)
+
+The user approved the prototype definitions: `Uniformity (RsU)` is sample
+standard deviation / mean × 100%; `Hi/Lo Var.` is (raw max − raw min) /
+(2 × mean) × 100%. Backend Domain computes these on the same full
+`PHYSICAL_VALID` population used by per-wafer Mean / Std. Dev. / Min / Max.
+UI inspection adds optional nullable `uniformityPercent` and
+`hiLoVariationPercent`, only formatting supplied percentages to two decimals.
+Negative results remain negative; zero mean, missing input or nonfinite result
+stay unavailable (`—`), with no absolute-value transform or clamping.
+
+### Mock zero-mean unavailable variation
+
+<WaferMapGallery input={waferMapGalleryScenarios.parameterVariationUnavailable.input} />
+
+## Actual defect records · WM06 (2026-10-11)
+
+Each Defect Die may provide `defectRecordsStatus` (`AVAILABLE` / `UNAVAILABLE`)
+and actual `defects[]` record IDs. Records retain `classNumber`, `sizeX`, `sizeY`,
+`waferX`, `waferY`, `imageCount` as optional nullable facts. Selecting an ID
+locally expands that record's supplied dimensions, coordinates and class; it
+issues no query and attaches no image action. No unverified physical unit is
+assumed. Missing record delivery shows “逐条记录未提供”; aggregate counts remain
+unchanged. Mock IDs and values in `defectAggregates` are UI fixtures only.
+
+## Independent default-layer CP defect summary · WM08 (2026-10-11)
+
+Both CP wafer contracts optionally accept `defectSummary` with `status`
+(`AVAILABLE` / `EMPTY` / `UNAVAILABLE`), `layerId`, nullable `defectDieCount`
+and optional `unavailableReason`. Cards show `Defect Die · Layer {layerId}`;
+available zero remains zero, while EMPTY / UNAVAILABLE show `—` and source
+reason. An absent summary adds no metric. This observation is independent of
+CP geometry, has no overlay/join implication and never falls back to CP totals.
+
+### Mock CP cards with independent EOL defect coverage
+
+<WaferMapGallery input={waferMapGalleryScenarios.cpDefectSummary.input} />
+
+## Inspection parity follow-up · WM11–WM18 (2026-10-11)
+
+Approved after the read-only three-view audit. Parameter Die detail and hover
+show only this wafer's identity-aligned inspection SPEC, with each missing side
+`—`; global parameter context never fills a missing per-wafer SPEC. CP hover
+uses delivered Pass/Fail. Parameter Die `binCode`, `binDescription` and
+`cpUnavailableReason` are optional nullable source fields: no numeric code is
+inferred from a retained classification description. Missing CP state stays
+explicitly unavailable. Defect hover retains Layer, complete record count and
+all supplied numeric class counts.
+
+A Defect Die renders every positive matching class in equal-width segments;
+type filtering selects supplied segments, while full-Layer card/dialog totals
+retain their scope label. The gray legend explains no records / no matching
+filter; it is not a source Pass classification. Unknown controlled class IDs
+remain visibly unavailable until the consumer confirms options and reconciles
+selection; Domain UI emits no automatic filter reset.
+
+Expanded maps support bounded 60–300% button and wheel zoom. The map uses real
+layout dimensions inside a scroll viewport, so outer Dies remain reachable and
+pointer hit testing follows the supplied geometry at every zoom. Hover panels
+flip/clamp to viewport edges. Navigation roster and cyclic behavior are unchanged.
+
+Final Bin rate help explains the full-map Tested denominator and source-owned
+Fail classification, never a fixed Bin 1 rule. Optional nullable
+`uniformityStatus` / `hiLoVariationStatus` explain unavailable percentages
+without recalculating them. Existing shared P5–P95 scale policy, immutable source
+facts, no-image scope and disabled Overlay remain unchanged.
+
+Consumer adoption: component/model, relevant schema hunks, fixtures/scenarios
+and focused tests. App owns controlled Layer/class reconciliation and projection
+of the new optional facts. Browser critical-path acceptance belongs to the App
+consumer against its user-managed running service.

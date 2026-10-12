@@ -130,3 +130,33 @@ selected chips display both counts (for example, `CPX-S01 · 25 facts / 5
 displayed`) while the local filter continues to operate only on injected active
 `rows`. The component must not derive or substitute either count from those
 rows.
+
+## 2026-09-29 Nullable Yield Contract
+
+Runtime evidence established that a Split Table assignment may not have a Yield
+observation. The report-specific snapshot therefore models `yield` as
+`number | null`: numeric zero remains a real `0.00%` observation, while `null`
+renders as `Unavailable` with neutral tone. Consumers and adapters must not
+coerce absent or null Yield to zero.
+
+## 2026-10-09 Loading / Empty Pilot
+
+User requested the supplied shadcn Spinner / Empty screenshot without Cancel.
+The approved first slice is Split Table only. Loading uses a muted rounded icon
+background, arc spinner, Chinese title and description; no data and filtered
+empty use only centered text. Consumer request state remains outside the
+component. See the Split Table MDX contract and its three status previews.
+
+## 2026-10-10 Container alignment evidence
+
+用户提供 Split Table 的 6 条对齐批注，随后纠正要求按容器边界量测，并明确确认以 Header 内容区为基准、桌面左右各 24px。原 App 1224px 下 Header / navigation 为 24px，而 Split filters / table shell 为 14px。该新证据修订工作区横向布局；具体 contract 见 Split Table MDX 的 container alignment pilot。原数据和局部表格交互不变。
+
+## Business block title pilot — 2026-10-10
+
+用户的新指令将业务模块称为 block，要求 header/title 与 body 上下组合，
+并明确不采用原型 8888 的展开/收缩容器。Split Table 是本轮唯一标题试点：
+`Wafer Split Table`，小问号悬浮/键盘聚焦显示本地 shadcn Base UI Tooltip。
+说明按当前组件契约总结 Stage / Step / Seq 分组、六列 snapshot 事实、
+BSL / split 分配角色和 Stage / Step 筛选，不新增推断事实。
+共享 `BlockTitle` 契约见 `content/docs/domain/shared/block-title.mdx`，
+锚点为 `wafer-split-table`，帮助按钮辅助标签为 `关于 Wafer Split Table`。

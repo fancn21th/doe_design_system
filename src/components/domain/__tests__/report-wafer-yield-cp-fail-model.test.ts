@@ -4,6 +4,7 @@ import {
   groupConsecutiveWaferSteps,
   visibleCpFailParameters,
   visibleCpFails,
+  waferYieldPlotGeometry,
 } from "@/components/domain/report-wafer-yield-cp-fail-model"
 import type { ReportWaferYieldCpFail } from "@/schemas/domain-component-inputs"
 
@@ -77,5 +78,34 @@ describe("report wafer yield and CP fail model", () => {
     }
 
     expect(visibleCpFails(wafer, 2)).toEqual([])
+  })
+})
+
+
+describe("Yield responsive plot geometry", () => {
+  it("fills both smaller and larger desktop containers for 25 wafers", () => {
+    for (const width of [570, 866, 1300]) {
+      const plot = waferYieldPlotGeometry(width, 25, false)
+      expect(plot.width).toBe(width)
+      expect(plot.columnWidth * 25).toBeCloseTo(width)
+      expect(plot.barWidth).toBeLessThan(plot.columnWidth)
+    }
+  })
+  it("keeps 44px columns only when the narrow viewport needs scrolling", () => {
+    expect(waferYieldPlotGeometry(286, 25, true).width).toBe(1100)
+    expect(waferYieldPlotGeometry(500, 3, true).width).toBe(500)
+  })
+  it("does not leave columns wider than the plot after a resize", () => {
+    const before = waferYieldPlotGeometry(1300, 25, false)
+    const after = waferYieldPlotGeometry(570, 25, false)
+    expect(after.columnWidth).toBeLessThan(before.columnWidth)
+    expect(after.columnWidth * 24.5 + after.barWidth / 2).toBeLessThan(after.width)
+  })
+  it("has a finite pre-measurement and empty-population layout", () => {
+    for (const width of [0, Number.NaN]) {
+      const plot = waferYieldPlotGeometry(width, 0, false)
+      expect(Number.isFinite(plot.columnWidth)).toBe(true)
+      expect(plot.width).toBeGreaterThan(0)
+    }
   })
 })

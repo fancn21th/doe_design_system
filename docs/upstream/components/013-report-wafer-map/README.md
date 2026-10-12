@@ -113,3 +113,81 @@ map. Prototype inspection confirmed:
 The statistics are expected input facts. They are represented by mode-specific
 `inspection` schemas and must not be inferred from missing backend fields by the
 Report component.
+
+## Lineage-informed inspection revision (2026-10-11)
+
+User-approved evidence comes from the three wafer-map notebooks in
+`db-probe/notebooks/computed fileds/wafer-map/`: `total_fail_bin_rate.ipynb`,
+`parameter_cpk.ipynb` and `particle_rate.ipynb`. This supersedes the 2026-09-22
+Parameter CP × Defect table interpretation above: Parameter inspection presents
+single-wafer specifications and descriptive statistics plus capability. Exact
+codes are distinct; `BVDSS_100u` is not an alias of `BVDSS`.
+
+Final Bin inspection retains Tested / Fail Die and per-bin record totals/rates.
+Defect inspection distinguishes records from defect-bearing Die, retains
+unresolved numeric class identity, and includes outside-grid records in the
+full inspection denominator. Record aggregates do not imply real IDs/images
+have been delivered. Single-wafer Parameter and Layer selection emits existing
+consumer intents. Overlay is visibly disabled. No Uniformity / Hi-Lo / Particle
+Rate / image capability is introduced in this approved first slice.
+
+## Approved WM02 completion (2026-10-11)
+
+User approved completing the available first-slice gaps: Parameter inspection
+also presents CP Tested / Pass / Fail counts and supplied rates from the same
+CP test as the currently displayed Map. This is a separate input from parameter
+valid sample N and selected-slice overview summary. Missing identities retain
+unavailable state, and frontend never computes rates or fills counts from N.
+
+## Approved WM03 / WM04 prototype formulas (2026-10-11)
+
+Prototype evidence: `getWaferParameterStats` (lines 5189–5215) and
+`renderWaferParameterSummary` (6132–6165) in the inspected DOE report HTML.
+Statistics use raw Min / Max for Hi/Lo, rather than the prototype's P2/P98
+display limits. Uniformity (RsU) = sample sigma / mean × 100%; Hi/Lo Var. =
+(raw max − raw min) / (2 × mean) × 100%. User approved Backend Domain
+computation on the production PHYSICAL_VALID population and nullable UI
+delivery. Signed percentages are retained; mean zero stays unavailable.
+This supersedes these two fields' earlier first-slice deferral.
+
+## Approved WM06 / WM08 completion (2026-10-11)
+
+Actual record IDs and numeric details can be delivered from the existing frozen
+Defect map payload. UI opens these fields locally; images remain outside scope.
+Separately, CP cards may show default-layer Defect Die counts with explicit
+Layer and unavailable/empty states. These facts do not imply matching CP and
+Defect coordinates or authorize Overlay rendering.
+
+## Inspection parity follow-up · WM11–WM18 (2026-10-11)
+
+Approved after the read-only three-view audit. Parameter Die detail and hover
+show only this wafer's identity-aligned inspection SPEC, with each missing side
+`—`; global parameter context never fills a missing per-wafer SPEC. CP hover
+uses delivered Pass/Fail. Parameter Die `binCode`, `binDescription` and
+`cpUnavailableReason` are optional nullable source fields: no numeric code is
+inferred from a retained classification description. Missing CP state stays
+explicitly unavailable. Defect hover retains Layer, complete record count and
+all supplied numeric class counts.
+
+A Defect Die renders every positive matching class in equal-width segments;
+type filtering selects supplied segments, while full-Layer card/dialog totals
+retain their scope label. The gray legend explains no records / no matching
+filter; it is not a source Pass classification. Unknown controlled class IDs
+remain visibly unavailable until the consumer confirms options and reconciles
+selection; Domain UI emits no automatic filter reset.
+
+Expanded maps support bounded 60–300% button and wheel zoom. The map uses real
+layout dimensions inside a scroll viewport, so outer Dies remain reachable and
+pointer hit testing follows the supplied geometry at every zoom. Hover panels
+flip/clamp to viewport edges. Navigation roster and cyclic behavior are unchanged.
+
+Final Bin rate help explains the full-map Tested denominator and source-owned
+Fail classification, never a fixed Bin 1 rule. Optional nullable
+`uniformityStatus` / `hiLoVariationStatus` explain unavailable percentages
+without recalculating them. Existing shared P5–P95 scale policy, immutable source
+facts, no-image scope and disabled Overlay remain unchanged.
+
+Consumer adoption: component/model, relevant schema hunks, fixtures/scenarios
+and focused tests. App owns controlled Layer/class reconciliation and projection
+of the new optional facts. Browser critical-path acceptance belongs to the App
+consumer against its user-managed running service.

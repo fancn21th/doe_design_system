@@ -174,9 +174,14 @@ export const waferMapGeometrySchema = z.object({
 })
 export const waferMapFinalBinDieSchema = waferMapDieSchema.extend({
   finalBin: z.string(),
+  binCode: z.string().nullable().optional(),
+  binDescription: z.string().nullable().optional(),
   pass: z.boolean(),
 })
 export const waferMapParameterDieSchema = waferMapDieSchema.extend({
+  binCode: z.string().nullable().optional(),
+  binDescription: z.string().nullable().optional(),
+  cpUnavailableReason: z.string().nullable().optional(),
   // Parameter L1 can provide value/validity without CP Final Bin facts.
   finalBin: z.string().optional(),
   pass: z.boolean().optional(),
@@ -189,9 +194,26 @@ export const waferMapDefectSchema = z.object({
   layerId: z.string(),
   typeId: z.string(),
   typeLabel: z.string(),
+  classNumber: z.number().finite().nullable().optional(),
+  sizeX: z.number().finite().nullable().optional(),
+  sizeY: z.number().finite().nullable().optional(),
+  waferX: z.number().finite().nullable().optional(),
+  waferY: z.number().finite().nullable().optional(),
+  imageCount: z.number().int().nonnegative().nullable().optional(),
 })
 export const waferMapDefectDieSchema = waferMapDieSchema.extend({
+  /** Actual records, when delivered; aggregates never fabricate record IDs. */
   defects: z.array(waferMapDefectSchema),
+  defectRecordsStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
+  /** Authoritative selected-layer record count, independent of record delivery. */
+  defectCount: z.number().int().nonnegative().optional(),
+  classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
+  classBreakdown: z.array(z.object({
+    typeId: z.string(),
+    label: z.string(),
+    count: z.number().int().nonnegative(),
+    nameResolved: z.boolean().optional(),
+  })).optional(),
 })
 export const waferMapSummarySchema = z.object({
   pass: z.number().int().nonnegative(),
@@ -209,31 +231,46 @@ export const waferMapFinalBinInspectionSchema = z.object({
   })),
 })
 export const waferMapParameterInspectionSchema = z.object({
-  testedDieCount: z.number().int().nonnegative(),
-  rows: z.array(z.object({
-    classification: z.enum([
-      "cp-fail-defect",
-      "cp-pass-defect",
-      "cp-pass-no-defect",
-      "cp-fail-no-defect",
-    ]),
-    label: z.string(),
-    count: z.number().int().nonnegative(),
-    ratePercent: z.number().finite().nonnegative(),
-  })),
+  /** Per-wafer full-population facts; color-scale percentiles are separate. */
+  uniformityPercent: z.number().finite().nullable().optional(),
+  hiLoVariationPercent: z.number().finite().nullable().optional(),
+  uniformityStatus: z.string().nullable().optional(),
+  hiLoVariationStatus: z.string().nullable().optional(),
+  sampleCount: z.number().int().nonnegative().nullable(),
+  mean: z.number().finite().nullable(),
+  stddev: z.number().finite().nonnegative().nullable(),
+  min: z.number().finite().nullable(),
+  max: z.number().finite().nullable(),
+  median: z.number().finite().nullable(),
+  cpk: z.number().finite().nullable(),
+  cpkStatus: z.string().min(1),
+  lsl: z.number().finite().nullable(),
+  usl: z.number().finite().nullable(),
+  unit: z.string().nullable(),
 })
 export const waferMapDefectInspectionSchema = z.object({
   byLayer: z.array(z.object({
     layerId: z.string(),
+    classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
     defectDieCount: z.number().int().nonnegative(),
     defectRecordCount: z.number().int().nonnegative(),
+    inGridRecordCount: z.number().int().nonnegative().optional(),
+    outsideGridCount: z.number().int().nonnegative().optional(),
     rows: z.array(z.object({
       typeId: z.string(),
       label: z.string(),
+      nameResolved: z.boolean().optional(),
       count: z.number().int().nonnegative(),
       ratePercent: z.number().finite().nonnegative(),
     })),
   })),
+})
+/** Independent default-layer defect observation; never a CP-coordinate overlay. */
+export const waferMapCpDefectSummarySchema = z.object({
+  status: z.enum(["AVAILABLE", "EMPTY", "UNAVAILABLE"]),
+  layerId: z.string().min(1),
+  defectDieCount: z.number().int().nonnegative().nullable(),
+  unavailableReason: z.string().min(1).optional(),
 })
 export const waferMapFinalBinWaferSchema = z.object({
   mapId: z.string().min(1),
@@ -243,6 +280,7 @@ export const waferMapFinalBinWaferSchema = z.object({
   /** Optional authoritative wafer totals; never recomputed from the map. */
   summary: waferMapSummarySchema.nullable().optional(),
   summaryUnavailableReason: z.string().min(1).optional(),
+  defectSummary: waferMapCpDefectSummarySchema.optional(),
   /** Optional BFF-owned statistics; never reconstructed from rendered dies. */
   inspection: waferMapFinalBinInspectionSchema.optional(),
   inspectionUnavailableReason: z.string().min(1).optional(),
@@ -251,11 +289,23 @@ export const waferMapParameterContextSchema = z.object({
   parameterCode: z.string(),
   label: z.string(),
   unit: z.string().nullable().optional(),
+  lsl: z.number().finite().nullable().optional(),
+  usl: z.number().finite().nullable().optional(),
   scale: z.object({
     domainMin: z.number().finite(),
     median: z.number().finite(),
     domainMax: z.number().finite(),
   }),
+})
+/** CP facts bound to the current Parameter Map's test identity, not slice Yield. */
+export const waferMapParameterCpSummarySchema = z.object({
+  status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
+  testedDieCount: z.number().int().nonnegative().nullable(),
+  passDieCount: z.number().int().nonnegative().nullable(),
+  failDieCount: z.number().int().nonnegative().nullable(),
+  passRatePercent: z.number().finite().nonnegative().nullable(),
+  failRatePercent: z.number().finite().nonnegative().nullable(),
+  unavailableReason: z.string().min(1).optional(),
 })
 export const waferMapParameterWaferSchema = z.object({
   mapId: z.string().min(1),
@@ -265,7 +315,10 @@ export const waferMapParameterWaferSchema = z.object({
   /** Selected-slice Parameter maps may not carry yield totals. */
   summary: waferMapSummarySchema.nullable().optional(),
   summaryUnavailableReason: z.string().min(1).optional(),
-  /** CP × Defect classifications are optional authoritative detail facts. */
+  defectSummary: waferMapCpDefectSummarySchema.optional(),
+  /** Same-test CP totals/rates are separate from parameter-valid sample count. */
+  cpSummary: waferMapParameterCpSummarySchema.optional(),
+  /** Single-wafer parameter statistics and capability are authoritative facts. */
   inspection: waferMapParameterInspectionSchema.optional(),
   inspectionUnavailableReason: z.string().min(1).optional(),
 })
@@ -497,6 +550,12 @@ export const measurementSummarySchema = z.object({
   mean: z.number().finite().nullable(),
   sampleSigma: z.number().finite().nullable(),
 })
+export const measurementReferenceLineSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.number().finite(),
+  kind: z.enum(["formal-spec", "mock-spec", "target", "guide"]),
+})
 export const measurementGroupSchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -514,9 +573,15 @@ export const measurementGroupSchema = z.object({
   }).optional(),
   capability: z.object({
     cpk: z.number().finite().nullable(),
-    cpu: z.number().finite().nullable(),
-    cpl: z.number().finite().nullable(),
+    cpu: z.number().finite().nullable().optional(),
+    cpl: z.number().finite().nullable().optional(),
+    status: z.string().optional(),
+    specSource: z.string().optional(),
+    lsl: z.number().finite().nullable().optional(),
+    usl: z.number().finite().nullable().optional(),
   }).optional(),
+  /** Effective references supplied for this group; no source-spec inference occurs here. */
+  referenceLines: z.array(measurementReferenceLineSchema).optional(),
   summary: measurementSummarySchema,
   points: z.array(measurementPointSchema),
 }).superRefine((group, context) => {
@@ -527,12 +592,6 @@ export const measurementGroupSchema = z.object({
       path: ["summary", "count"],
     })
   }
-})
-export const measurementReferenceLineSchema = z.object({
-  id: z.string(),
-  label: z.string(),
-  value: z.number().finite(),
-  kind: z.enum(["formal-spec", "mock-spec", "target", "guide"]),
 })
 export const measurementInputSchema = z.object({
   status: z.enum(["ready", "pending", "unavailable"]),
@@ -609,7 +668,7 @@ export const reportSplitTableRowSchema = z.object({
   isBaseline: z.boolean().optional(),
   excluded: z.boolean().optional(),
   coverageStatus: z.string().optional(),
-  yield: z.number(),
+  yield: z.number().nullable(),
   topFail: z.string(),
   topFailCount: z.number().int().nonnegative(),
   topFails: z.array(reportSplitTableTopFailSchema).optional(),
@@ -659,6 +718,7 @@ export const reportYieldMatrixRowSchema = z.object({
   baselineWaferId: z.string().nullable(),
   deltaPp: z.number().nullable(),
   yield: z.number().nullable(),
+  goodDies: z.number().int().nonnegative().nullable().optional(),
   passDies: z.number().int().nonnegative().nullable(),
   testedDies: z.number().int().nonnegative().nullable(),
   failCounts: z.record(
@@ -704,6 +764,7 @@ export const reportYieldAnalysisInputSchema = z.object({
   wafers: z.array(reportYieldWaferSchema).optional(),
   detailModeOptions: z.array(reportYieldDetailModeOptionSchema).optional(),
   selectedDetailMode: reportYieldDetailModeSchema.optional(),
+  focusedWaferId: z.string().optional(),
   matrixColumns: z.array(z.string()).optional(),
   matrixRows: z.array(reportYieldMatrixRowSchema).optional(),
   lossYieldRows: z.array(reportYieldLossRowSchema).optional(),
@@ -734,7 +795,7 @@ export const reportWaferMapInputSchema = z.object({
   mapViews: z.array(waferMapGalleryInputSchema).optional(),
   viewStates: z.array(z.object({
     view: z.enum(["cp-final-bin", "cp-parameter", "defect", "overlay"]),
-    status: z.enum(["ready", "loading", "unavailable", "failed"]),
+    status: z.enum(["idle", "ready", "loading", "unavailable", "failed"]),
     reason: z.string().optional(),
   })).optional(),
   /** Overlay has no render payload until CP and Defect share a coordinate contract. */
@@ -752,6 +813,16 @@ export const reportParameterMedianCellSchema = z.object({
   waferId: z.string(),
   value: z.number(),
   cpk: z.number().nullable().optional(),
+  capability: z.object({
+    cpk: z.number().finite().nullable(),
+    status: z.string(),
+    specSource: z.string(),
+    lsl: z.number().finite().nullable(),
+    usl: z.number().finite().nullable(),
+    mean: z.number().finite().nullable(),
+    sampleSigma: z.number().finite().nullable(),
+    n: z.number().int().nonnegative().nullable(),
+  }).optional(),
   oos: z.boolean().optional(),
   lowYield: z.boolean().optional(),
   failLinked: z.boolean().optional(),
@@ -825,35 +896,19 @@ export const reportInlineDataInputSchema = z.object({
     reason: z.string().nullable().optional(),
   }).optional(),
 })
-export const reportCpInlineRowSchema = z.object({
-  id: z.string(),
-  stage: z.string(),
-  condition: z.string(),
-  role: z.string(),
-  requestedWafers: z.array(z.string()),
-  inlineWafers: z.array(z.string()),
-  cpWafers: z.array(z.string()),
-  meanInline: z.number().finite().nullable(),
-  medianInline: z.number().finite().nullable(),
-  meanCp: z.number().finite().nullable(),
-  medianCp: z.number().finite().nullable(),
+const cpInlineProvenanceSchema = z.object({
+  classification: z.enum(["real", "redacted-real", "prototype-backed", "derived", "mock"]),
+  source: z.string(),
+  limitation: z.string().optional(),
 })
-export const reportCpInlineCandidateLevelSchema = z.enum([
-  "HIGH_TREND",
-  "MEDIUM_TREND",
-  "LOW",
-  "FILTERED",
-])
-export const reportCpInlineCandidateDirectionSchema = z.enum([
-  "POSITIVE",
-  "NEGATIVE",
-  "NONE",
-])
+export const reportCpInlineCandidateLevelSchema = z.enum(["HIGH_TREND", "MEDIUM_TREND", "LOW", "FILTERED"])
+export const reportCpInlineCandidateDirectionSchema = z.enum(["POSITIVE", "NEGATIVE", "NONE"])
 export const reportCpInlineCandidateSchema = z.object({
   experimentGroupId: z.string(),
   stepLabel: z.string(),
   factorLabel: z.string(),
   cpParameter: z.string(),
+  cpUnit: z.string().nullable().optional(),
   inlineParameter: z.string(),
   pairedCount: z.number().int().nonnegative(),
   assignedWaferCount: z.number().int().nonnegative(),
@@ -867,79 +922,60 @@ export const reportCpInlineCandidateSchema = z.object({
   level: reportCpInlineCandidateLevelSchema,
   sampleBand: z.string(),
   filterReason: z.string().nullable(),
+  calculationEvidence: z.string().nullable().optional(),
+  detailAvailable: z.boolean(),
   algorithmVersion: z.string(),
 })
 export const reportCpInlineCandidateFilterSchema = z.object({
+  step: z.string().nullable(),
   cpParameter: z.string().nullable(),
   inlineParameter: z.string().nullable(),
-  level: z.enum([
-    "RECOMMENDED",
-    "HIGH_TREND",
-    "MEDIUM_TREND",
-    "LOW",
-    "ALL",
-  ]),
-  direction: z.enum(["POSITIVE", "NEGATIVE"]).nullable(),
-  minN: z.number().int().nonnegative().nullable(),
+  view: z.enum(["recommended", "filtered", "insufficient"]),
+  pairedN: z.number().int().nonnegative().nullable(),
+  reason: z.string().nullable(),
 })
 export const reportCpInlineCandidatesInputSchema = z.object({
-  title: z.string().default("Recommended CP × Inline Candidates"),
+  title: z.string().default("Wafer-level Candidate Analysis"),
   subtitle: z.string().optional(),
+  stepOptions: z.array(z.string()).default([]),
   cpParameterOptions: z.array(z.string()).default([]),
   inlineParameterOptions: z.array(z.string()).default([]),
+  pairedNOptions: z.array(z.number().int().nonnegative()).default([]),
+  reasonOptions: z.array(z.string()).default([]),
   filters: reportCpInlineCandidateFilterSchema,
   items: z.array(reportCpInlineCandidateSchema).default([]),
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
   total: z.number().int().nonnegative(),
+  status: z.enum(["ready", "loading", "error"]),
+  errorMessage: z.string().optional(),
   calculationVersion: z.string(),
-  provenance: z.object({
-    classification: z.enum([
-      "real",
-      "redacted-real",
-      "prototype-backed",
-      "derived",
-      "mock",
-    ]),
-    source: z.string(),
-    limitation: z.string().optional(),
-  }),
+  scoreDescription: z.string().optional(),
+  provenance: cpInlineProvenanceSchema,
 })
-export const reportCpInlineOptionSchema = z.object({
-  value: z.string(),
-  label: z.string(),
-  disabled: z.boolean().optional(),
-})
-export const reportCpInlineCoverageStatusSchema = z.enum([
-  "PAIRED",
-  "INLINE_ONLY",
-  "CP_ONLY",
-  "NO_DATA",
-])
-export const reportCpInlineWaferOptionSchema = reportCpInlineOptionSchema.extend({
+export const reportCpInlineCoverageStatusSchema = z.enum(["PAIRED", "INLINE_ONLY", "CP_ONLY", "NO_DATA"])
+export const reportCpInlineWaferPairSchema = z.object({
+  waferId: z.string(),
+  role: z.enum(["BSL", "SPLIT"]),
+  condition: z.string(),
+  inlineMedian: z.number().finite().nullable(),
+  cpMedian: z.number().finite().nullable(),
+  cpMin: z.number().finite().nullable(),
+  cpMax: z.number().finite().nullable(),
   coverageStatus: reportCpInlineCoverageStatusSchema,
-  coverageLabel: z.string(),
-  description: z.string().optional(),
 })
-export const reportCpInlineFitGrainSchema = z.enum(["condition", "wafer"])
-export const reportCpInlineMetricSchema = z.enum(["median", "mean"])
-export const reportCpInlineCpAggregationSchema = z.enum(["median", "mean"])
-export const reportCpInlineExtremePolicySchema = z.enum(["typical", "worst"])
 export const reportCpInlineFitPointSchema = z.object({
   id: z.string(),
   label: z.string(),
   role: z.enum(["BSL", "SPLIT"]),
-  grain: z.enum(["CONDITION", "WAFER"]),
+  grain: z.literal("WAFER"),
   x: z.number().finite(),
   y: z.number().finite(),
   waferId: z.string().optional(),
   inlineWafers: z.array(z.string()),
   cpWafers: z.array(z.string()),
 })
-export const reportCpInlineSeriesPointSchema = z.object({
-  x: z.number().finite(),
-  y: z.number().finite(),
-})
+export const reportCpInlineSeriesPointSchema = z.object({ x: z.number().finite(), y: z.number().finite() })
 export const reportCpInlineFitModelSchema = z.object({
   kind: z.enum(["linear", "quadratic"]),
   label: z.string(),
@@ -948,103 +984,42 @@ export const reportCpInlineFitModelSchema = z.object({
   diagnostic: z.string(),
   r2: z.number().finite().nullable().optional(),
   rmse: z.number().finite().nullable().optional(),
+  residualN: z.number().int().nonnegative().nullable().optional(),
   residualDf: z.number().int().nullable().optional(),
   unavailableReason: z.string().optional(),
   series: z.array(reportCpInlineSeriesPointSchema).default([]),
 })
-export const reportCpInlineFitGateSchema = z.object({
-  mode: z.enum(["NO_DATA", "REPEATABILITY", "FACTOR_REVIEW"]),
-  conditionLevelCount: z.number().int().nonnegative(),
-  linearAllowed: z.boolean(),
-  quadraticAllowed: z.boolean(),
-  reason: z.string(),
-})
-export const reportCpInlineThresholdKindSchema = z.enum([
-  "target",
-  "lsl",
-  "usl",
-])
+export const reportCpInlineThresholdKindSchema = z.enum(["target", "lsl", "usl"])
 export const reportCpInlineRootSchema = z.object({
-  id: z.string(),
-  model: z.enum(["linear", "quadratic"]),
+  id: z.string(), model: z.enum(["linear", "quadratic"]),
   threshold: reportCpInlineThresholdKindSchema,
-  x: z.number().finite(),
-  y: z.number().finite(),
+  x: z.number().finite(), y: z.number().finite(),
   domainStatus: z.enum(["in-domain", "out-of-domain"]),
 })
 export const reportCpInlineFitPanelSchema = z.object({
-  id: z.enum(["median", "min", "max"]),
-  title: z.string(),
-  metricLabel: z.string(),
-  thresholdKind: reportCpInlineThresholdKindSchema,
-  thresholdRelation: z.enum([">=", "<="]),
+  id: z.enum(["median", "min", "max"]), title: z.string(), metricLabel: z.string(),
   points: z.array(reportCpInlineFitPointSchema).default([]),
   models: z.array(reportCpInlineFitModelSchema).default([]),
   roots: z.array(reportCpInlineRootSchema).default([]),
-  gate: reportCpInlineFitGateSchema,
-  unavailableReason: z.string().optional(),
-  provenance: z.string(),
+  pearson: z.number().finite().nullable(), spearman: z.number().finite().nullable(),
+  unavailableReason: z.string().optional(), provenance: z.string(),
 })
 export const reportCpInlineSpecSchema = z.object({
-  target: z.number().finite().nullable(),
-  lsl: z.number().finite().nullable(),
-  usl: z.number().finite().nullable(),
-  sourceLabel: z.string(),
-  classification: z.enum(["confirmed", "source-provisional", "unavailable"]),
+  target: z.number().finite().nullable(), lsl: z.number().finite().nullable(), usl: z.number().finite().nullable(),
+  sourceLabel: z.string(), classification: z.enum(["confirmed", "source-provisional", "unavailable"]),
 })
-export const reportCpInlineControlWindowSchema = z.object({
-  model: z.enum(["linear", "quadratic"]),
-  status: z.enum(["available", "unavailable"]),
-  domain: z.object({
-    min: z.number().finite(),
-    max: z.number().finite(),
-  }).nullable(),
-  intervals: z.array(z.object({
-    min: z.number().finite(),
-    max: z.number().finite(),
-  })).default([]),
-  basis: z.array(z.string()).default([]),
-  reason: z.string().optional(),
-  provenance: z.string(),
+export const reportCpInlineFitInputSchema = z.object({
+  experimentGroupId: z.string(), cpParameter: z.string(), inlineParameter: z.string(),
+  stepLabel: z.string(), factorLabel: z.string(), cpUnit: z.string().nullable().optional(),
+  waferPairs: z.array(reportCpInlineWaferPairSchema).default([]),
+  fitPanels: z.array(reportCpInlineFitPanelSchema).default([]),
+  spec: reportCpInlineSpecSchema.optional(), provenance: cpInlineProvenanceSchema.optional(),
 })
 export const reportCpInlineInputSchema = z.object({
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  sourceLabel: z.string().optional(),
-  stepOptions: z.array(reportCpInlineOptionSchema).default([]),
-  step: z.string().optional(),
-  inlineParameterOptions: z.array(reportCpInlineOptionSchema).default([]),
-  inlineParameter: z.string().optional(),
-  cpParameterOptions: z.array(reportCpInlineOptionSchema).default([]),
-  cpParameter: z.string().optional(),
-  baselineWaferOptions: z.array(reportCpInlineWaferOptionSchema).default([]),
-  baselineWafers: z.array(z.string()).optional(),
-  splitWaferOptions: z.array(reportCpInlineWaferOptionSchema).default([]),
-  splitWafers: z.array(z.string()).optional(),
-  fitGrainOptions: z.array(reportCpInlineOptionSchema).default([]),
-  fitGrain: reportCpInlineFitGrainSchema.optional(),
-  inlineMetricOptions: z.array(reportCpInlineOptionSchema).default([]),
-  inlineMetric: reportCpInlineMetricSchema.optional(),
-  cpAggregationOptions: z.array(reportCpInlineOptionSchema).default([]),
-  cpAggregation: reportCpInlineCpAggregationSchema.optional(),
-  extremePolicyOptions: z.array(reportCpInlineOptionSchema).default([]),
-  extremePolicy: reportCpInlineExtremePolicySchema.optional(),
-  quadraticEnabled: z.boolean().default(true),
-  spec: reportCpInlineSpecSchema.optional(),
-  rows: z.array(reportCpInlineRowSchema).default([]),
-  fitPanels: z.array(reportCpInlineFitPanelSchema).default([]),
-  controlWindows: z.array(reportCpInlineControlWindowSchema).default([]),
-  provenance: z.object({
-    classification: z.enum([
-      "real",
-      "redacted-real",
-      "prototype-backed",
-      "derived",
-      "mock",
-    ]),
-    source: z.string(),
-    limitation: z.string().optional(),
-  }).optional(),
+  candidates: reportCpInlineCandidatesInputSchema,
+  fit: reportCpInlineFitInputSchema.nullable(),
+  fitStatus: z.enum(["ready", "loading", "error"]),
+  fitError: z.string().optional(),
 })
 export const layoutShellNavItemSchema = z.object({
   id: z.string(),
@@ -1197,51 +1172,17 @@ export type ReportParameterMedianInput = z.infer<
 >
 export type ReportCpDataInput = z.infer<typeof reportCpDataInputSchema>
 export type ReportInlineDataInput = z.infer<typeof reportInlineDataInputSchema>
-export type ReportCpInlineRow = z.infer<typeof reportCpInlineRowSchema>
-export type ReportCpInlineCandidateLevel = z.infer<
-  typeof reportCpInlineCandidateLevelSchema
->
-export type ReportCpInlineCandidateDirection = z.infer<
-  typeof reportCpInlineCandidateDirectionSchema
->
-export type ReportCpInlineCandidate = z.infer<
-  typeof reportCpInlineCandidateSchema
->
-export type ReportCpInlineCandidateFilter = z.infer<
-  typeof reportCpInlineCandidateFilterSchema
->
-export type ReportCpInlineCandidatesInput = z.infer<
-  typeof reportCpInlineCandidatesInputSchema
->
-export type ReportCpInlineOption = z.infer<typeof reportCpInlineOptionSchema>
-export type ReportCpInlineCoverageStatus = z.infer<
-  typeof reportCpInlineCoverageStatusSchema
->
-export type ReportCpInlineWaferOption = z.infer<
-  typeof reportCpInlineWaferOptionSchema
->
-export type ReportCpInlineFitGrain = z.infer<
-  typeof reportCpInlineFitGrainSchema
->
-export type ReportCpInlineMetric = z.infer<typeof reportCpInlineMetricSchema>
-export type ReportCpInlineCpAggregation = z.infer<
-  typeof reportCpInlineCpAggregationSchema
->
-export type ReportCpInlineExtremePolicy = z.infer<
-  typeof reportCpInlineExtremePolicySchema
->
-export type ReportCpInlineFitPoint = z.infer<
-  typeof reportCpInlineFitPointSchema
->
-export type ReportCpInlineFitModel = z.infer<
-  typeof reportCpInlineFitModelSchema
->
-export type ReportCpInlineFitPanel = z.infer<
-  typeof reportCpInlineFitPanelSchema
->
-export type ReportCpInlineControlWindow = z.infer<
-  typeof reportCpInlineControlWindowSchema
->
+export type ReportCpInlineCandidateLevel = z.infer<typeof reportCpInlineCandidateLevelSchema>
+export type ReportCpInlineCandidateDirection = z.infer<typeof reportCpInlineCandidateDirectionSchema>
+export type ReportCpInlineCandidate = z.infer<typeof reportCpInlineCandidateSchema>
+export type ReportCpInlineCandidateFilter = z.infer<typeof reportCpInlineCandidateFilterSchema>
+export type ReportCpInlineCandidatesInput = z.infer<typeof reportCpInlineCandidatesInputSchema>
+export type ReportCpInlineCoverageStatus = z.infer<typeof reportCpInlineCoverageStatusSchema>
+export type ReportCpInlineWaferPair = z.infer<typeof reportCpInlineWaferPairSchema>
+export type ReportCpInlineFitPoint = z.infer<typeof reportCpInlineFitPointSchema>
+export type ReportCpInlineFitModel = z.infer<typeof reportCpInlineFitModelSchema>
+export type ReportCpInlineFitPanel = z.infer<typeof reportCpInlineFitPanelSchema>
+export type ReportCpInlineFitInput = z.infer<typeof reportCpInlineFitInputSchema>
 export type ReportCpInlineInput = z.infer<typeof reportCpInlineInputSchema>
 export type LayoutShellNavItem = z.infer<typeof layoutShellNavItemSchema>
 export type LayoutShellInput = z.infer<typeof layoutShellInputSchema>
@@ -1255,3 +1196,11 @@ export type LayoutSidebarShellInput = z.infer<
   typeof layoutSidebarShellInputSchema
 >
 export type RunCardHistoryInput = z.infer<typeof runCardHistoryInputSchema>
+
+/** Presentation metadata for a business block; no query or workflow semantics. */
+export const blockTitleInputSchema = z.object({
+  id: z.string().trim().min(1).regex(/^[A-Za-z][A-Za-z0-9_-]*$/),
+  title: z.string().trim().min(1),
+  helpText: z.string().trim().min(1),
+})
+export type BlockTitleInput = z.infer<typeof blockTitleInputSchema>

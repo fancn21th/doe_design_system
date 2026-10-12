@@ -33,5 +33,14 @@ export const reportSplitTableScenarios = {
       })),
     },
   },
+  unavailableYield: {
+    name: "unavailable-yield",
+    input: {
+      ...reportSplitTableFixture,
+      rows: rows.map((row, index) => index === 0
+        ? { ...row, yield: null, tone: "neutral" as const }
+        : row),
+    },
+  },
   empty: { name: "empty", input: { rows: [] } },
 } satisfies Record<string, ReportSplitTableScenario>

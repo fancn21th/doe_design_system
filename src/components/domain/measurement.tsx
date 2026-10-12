@@ -4,11 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   createMeasurementDomain,
+  createMeasurementGroupReferenceLabels,
   createMeasurementHitIndex,
   createMeasurementLayout,
+  createMeasurementReferenceLabels,
   groupBounds,
   groupIndexAt,
   measurementY,
+  measurementChartWidth,
+  measurementGroupLabel,
   nearestMeasurementPoint,
   stableJitter,
   type MeasurementDomain,
@@ -31,7 +35,6 @@ import {
 } from "@/components/ui/card"
 
 const CHART_HEIGHT = 560
-const MIN_GROUP_WIDTH = 68
 
 type ActivePoint = PositionedMeasurementPoint & { groupIndex: number }
 type CanvasLayerProps = {
@@ -41,6 +44,10 @@ type CanvasLayerProps = {
 }
 
 export type MeasurementProps = {
+  /** Opt into the approved Report chart card without changing other Measurement consumers. */
+  appearance?: "report-chart"
+  /** A consumer may supply fallback presentation without changing evidence state. */
+  renderState?: (status: "pending" | "unavailable" | "empty") => React.ReactNode
   /** The UI-facing rendering contract. Apps adapt their upstream DTO before passing it here. */
   input: MeasurementInput
   /** Reports a whole wafer-column click without creating a persistent visual selection. */
@@ -51,11 +58,14 @@ export type MeasurementProps = {
 }
 
 export function Measurement({
+  appearance,
+  renderState,
   input,
   onGroupSelect,
   headerAction,
   className,
 }: MeasurementProps) {
+  const reportChart = appearance === "report-chart"
   const parsedInput = useMemo(() => measurementInputSchema.parse(input), [input])
   const [viewportWidth, setViewportWidth] = useState(0)
   const [activePoint, setActivePoint] = useState<ActivePoint | null>(null)
@@ -74,7 +84,7 @@ export function Measurement({
     return () => observer.disconnect()
   }, [])
 
-  const width = Math.max(viewportWidth, parsedInput.groups.length * MIN_GROUP_WIDTH + 76)
+  const width = measurementChartWidth(viewportWidth, parsedInput.groups.length)
   const domain = useMemo(() => createMeasurementDomain(parsedInput), [parsedInput])
   const layout = useMemo(
     () => createMeasurementLayout(width, CHART_HEIGHT, parsedInput.groups.length),
@@ -106,13 +116,13 @@ export function Measurement({
   const metricLabel = `${parsedInput.metric.label}${parsedInput.metric.unit ? ` (${parsedInput.metric.unit})` : ""}`
 
   if (parsedInput.status === "pending") {
-    return <MeasurementState className={className} label="Measurement 数据加载中" />
+    return renderState?.("pending") ?? <MeasurementState className={className} label="Measurement 数据加载中" />
   }
   if (parsedInput.status === "unavailable") {
-    return <MeasurementState className={className} label="Measurement 数据当前不可用" />
+    return renderState?.("unavailable") ?? <MeasurementState className={className} label="Measurement 数据当前不可用" />
   }
   if (!parsedInput.groups.length || !domain) {
-    return <MeasurementState className={className} label="暂无 Measurement 数据" />
+    return renderState?.("empty") ?? <MeasurementState className={className} label="暂无 Measurement 数据" />
   }
 
   const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -141,28 +151,29 @@ export function Measurement({
   }
 
   return (
-    <Card size="sm" className={cn("border ring-0 shadow-none", className)}>
-      <CardHeader className="flex flex-wrap items-start justify-between gap-3 border-b">
-        <div>
-          <CardTitle>{parsedInput.title ?? "Measurement"}</CardTitle>
-          {parsedInput.subtitle && <CardDescription>{parsedInput.subtitle}</CardDescription>}
+    <Card size={reportChart ? "default" : "sm"} className={cn("min-w-0 w-full max-w-full border ring-0 shadow-none", reportChart && "gap-[24px] py-[24px] rounded-xl shadow-sm", className)}>
+      <CardHeader className={cn("flex flex-wrap items-start justify-between gap-3", reportChart ? "min-h-0! px-[24px]! py-0!" : "border-b")}>
+        <div className={cn("min-w-0 break-words", reportChart && "grid gap-[8px]")}>
+          <CardTitle className={reportChart ? "text-[16px] font-semibold leading-[16px]" : undefined}>{parsedInput.title ?? "Measurement"}</CardTitle>
+          {parsedInput.subtitle && <CardDescription className={reportChart ? "text-[14px] leading-[20px]" : undefined}>{parsedInput.subtitle}</CardDescription>}
         </div>
-        <CardAction className="flex flex-wrap items-center justify-end gap-2 text-xs text-muted-foreground">
+        <CardAction className="min-w-0 max-w-full flex flex-wrap items-center justify-end gap-2 break-words text-xs text-muted-foreground">
           {headerAction}
           {parsedInput.sourceLabel && <span className="rounded-md border px-2 py-1">{parsedInput.sourceLabel}</span>}
           <span className="rounded-md border px-2 py-1">{parsedInput.groups.length} wafers</span>
           <span className="rounded-md border px-2 py-1">{parsedInput.metric.label}</span>
+
+          {reportChart && <MeasurementLegend />}
         </CardAction>
       </CardHeader>
-      <CardContent className="px-0">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 text-xs text-muted-foreground">
-          <LegendMark color="#2563a6" label="die point" />
-          <LegendMark color="#0f766e" label="mean" />
-          <LegendMark color="#c53a3a" label="median" />
-          <LegendMark color="#7c3aed" label="mean ±3σ" />
-          <LegendMark color="#b45309" dashed label="reference" />
-        </div>
-        <div className="overflow-x-auto p-3" ref={hostRef}>
+      <CardContent className={cn("min-w-0", reportChart ? "px-[8px] pt-[16px] sm:px-[24px] sm:pt-[24px]" : "px-0")}>
+        {!reportChart && <MeasurementLegend className="px-3" />}
+        <dl className="sr-only" aria-label="晶圆专属参考线">
+          {parsedInput.groups.flatMap((group) => (group.referenceLines ?? []).map((line) => (
+            <div key={`${group.id}:${line.id}`}><dt>{group.label} · {line.label}</dt><dd>{line.value}</dd></div>
+          )))}
+        </dl>
+        <div className={cn("min-w-0 max-w-full overflow-x-auto", !reportChart && "p-3")} ref={hostRef} tabIndex={0} aria-label="Measurement 图表横向滚动区">
           <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
             <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
             <CanvasLayer canvasRef={pointCanvasRef} width={width} height={CHART_HEIGHT} />
@@ -176,9 +187,10 @@ export function Measurement({
               onPointerMove={onPointerMove}
               ref={interactionCanvasRef}
               role="img"
+              title={hoveredGroupIndex === null ? undefined : groupIdentity(parsedInput.groups[hoveredGroupIndex])}
               width={width}
             />
-            {activePoint && (
+            {activePoint && parsedInput.groups[activePoint.groupIndex] && (
               <PointPopover
                 group={parsedInput.groups[activePoint.groupIndex]}
                 metric={parsedInput.metric}
@@ -215,9 +227,11 @@ function PointPopover({ group, metric, point, width }: { group: MeasurementGroup
     ["Source Status", point.point.sourceStatus],
     ["Final Bin", point.point.finalBin ?? "—"],
     ["Die Result", point.point.result ?? "UNKNOWN"],
-    ["Cpk", formatValue(group.capability?.cpk)],
+    [group.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "Cpk", formatValue(group.capability?.cpk)],
+    ...(group.capability?.status ? [["CPK 状态", group.capability.status]] : []),
     ["CPU", formatValue(group.capability?.cpu)],
     ["CPL", formatValue(group.capability?.cpl)],
+    ...(group.referenceLines ?? []).map((line) => [line.label, formatValue(line.value)]),
   ]
   return (
     <aside className="pointer-events-none absolute z-10 w-[298px] rounded-xl border border-teal-800/25 bg-background/95 p-4 shadow-xl backdrop-blur" style={{ left, top: Math.max(10, point.y - 26) }}>
@@ -236,6 +250,7 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
   context.font = "12px ui-sans-serif, system-ui, sans-serif"
   context.textAlign = "right"
   const ticks = 8
+  const tickWidth = layout.left - 42
   for (let index = 0; index <= ticks; index++) {
     const value = domain.minimum + ((domain.maximum - domain.minimum) * index) / ticks
     const y = measurementY(value, domain, layout)
@@ -243,14 +258,14 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
     context.lineWidth = 1
     context.beginPath(); context.moveTo(layout.left, y); context.lineTo(layout.width - layout.right, y); context.stroke()
     context.fillStyle = "#64748b"
-    context.fillText(formatValue(value), layout.left - 10, y + 4)
+    context.fillText(fitCanvasText(context, formatValue(value), tickWidth), layout.left - 10, y + 4)
   }
   context.save()
   context.translate(18, layout.top + layout.plotHeight / 2)
   context.rotate(-Math.PI / 2)
   context.textAlign = "center"
   context.fillStyle = "#475569"
-  context.fillText(`${input.metric.label}${input.metric.unit ? ` (${input.metric.unit})` : ""}`, 0, 0)
+  context.fillText(fitCanvasText(context, `${input.metric.label}${input.metric.unit ? ` (${input.metric.unit})` : ""}`, layout.plotHeight - 16), 0, 0)
   context.restore()
   input.referenceLines.forEach((line) => {
     const y = measurementY(line.value, domain, layout)
@@ -258,19 +273,61 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
     context.setLineDash([7, 5])
     context.beginPath(); context.moveTo(layout.left, y); context.lineTo(layout.width - layout.right, y); context.stroke()
     context.setLineDash([])
+  })
+  context.font = "12px ui-sans-serif, system-ui, sans-serif"
+  context.textAlign = "left"
+  createMeasurementReferenceLabels(input.referenceLines, domain, layout).forEach(({ lines, value, anchorY, labelY }) => {
+    context.fillStyle = lines[0].kind === "mock-spec" ? "#b45309" : "#a94b3b"
+    const text = fitCanvasText(context, `${lines.map((line) => line.label).join(" / ")} ${formatValue(value)}`, layout.plotWidth - 12)
+    // A quiet label backing preserves readability where a reference crosses the die cloud.
+    context.save()
+    context.fillStyle = "rgba(255, 255, 255, 0.92)"
+    context.fillRect(layout.left + 2, labelY - 13, context.measureText(text).width + 6, 16)
+    context.restore()
+    context.fillText(text, layout.left + 4, labelY)
+    if (Math.abs(labelY - (anchorY - 6)) > 6) {
+      context.strokeStyle = context.fillStyle
+      context.beginPath(); context.moveTo(layout.left + 2, Math.max(layout.top, Math.min(anchorY, layout.top + layout.plotHeight))); context.lineTo(layout.left + 2, labelY - 4); context.stroke()
+    }
+  })
+  createMeasurementGroupReferenceLabels(input, domain, layout).forEach(({ lines, value, anchorY, labelY, left, right }) => {
+    context.strokeStyle = lines[0].kind === "mock-spec" ? "#b45309" : "#a94b3b"
+    context.setLineDash([7, 5])
+    context.beginPath(); context.moveTo(left, anchorY); context.lineTo(right, anchorY); context.stroke()
+    context.setLineDash([])
     context.textAlign = "left"
     context.fillStyle = context.strokeStyle
-    context.fillText(`${line.label} ${formatValue(line.value)}`, layout.left + 4, Math.max(14, y - 6))
+    const text = fitCanvasText(context, `${lines.map((line) => line.label).join(" / ")} ${formatValue(value)}`, right - left - 4)
+    context.save()
+    context.fillStyle = "rgba(255, 255, 255, 0.92)"
+    context.fillRect(left, labelY - 13, context.measureText(text).width + 4, 16)
+    context.restore()
+    context.fillText(text, left + 2, labelY)
+    if (Math.abs(labelY - (anchorY - 6)) > 6) {
+      context.beginPath(); context.moveTo(left, anchorY); context.lineTo(left, labelY - 4); context.stroke()
+    }
   })
   input.groups.forEach((group, index) => {
     const bounds = groupBounds(index, layout)
     context.textAlign = "center"
     context.fillStyle = group.role === "baseline" ? "#1d4ed8" : "#475569"
     context.font = "600 12px ui-sans-serif, system-ui, sans-serif"
-    context.fillText(group.label, bounds.center, layout.height - 24)
+    context.fillText(fitCanvasText(context, measurementGroupLabel(group.label), layout.groupWidth - 12), bounds.center, layout.height - 26)
     const detail = group.context?.stage ?? (group.role === "baseline" ? "BSL" : "")
-    if (detail) { context.font = "11px ui-sans-serif, system-ui, sans-serif"; context.fillStyle = "#64748b"; context.fillText(detail, bounds.center, layout.height - 8) }
+    if (detail) { context.font = "11px ui-sans-serif, system-ui, sans-serif"; context.fillStyle = "#64748b"; context.fillText(fitCanvasText(context, detail, layout.groupWidth - 12), bounds.center, layout.height - 10) }
   })
+}
+
+function groupIdentity(group: MeasurementGroup | undefined) {
+  if (!group) return undefined
+  return [group.label, group.context?.stage, group.context?.step, group.context?.sequence, group.context?.condition, ...(group.referenceLines ?? []).map((line) => `${line.label} ${formatValue(line.value)}`)].filter(Boolean).join(" · ")
+}
+
+function fitCanvasText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  if (context.measureText(text).width <= maxWidth) return text
+  let length = text.length
+  while (length > 0 && context.measureText(`${text.slice(0, length)}…`).width > maxWidth) length--
+  return `${text.slice(0, length)}…`
 }
 
 function drawPointLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput, domain: MeasurementDomain, layout: MeasurementLayout) {
@@ -364,4 +421,14 @@ function formatValue(value: number | null | undefined) {
   if (value === null || value === undefined) return "—"
   if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) return value.toExponential(3)
   return value.toFixed(Math.abs(value) < 1 ? 4 : 3).replace(/\.?(0+)$/, "")
+}
+
+function MeasurementLegend({ className }: { className?: string }) {
+  return <div className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground", className)}>
+    <LegendMark color="#2563a6" label="die point" />
+    <LegendMark color="#0f766e" label="mean" />
+    <LegendMark color="#c53a3a" label="median" />
+    <LegendMark color="#7c3aed" label="mean ±3σ" />
+    <LegendMark color="#b45309" dashed label="reference" />
+  </div>
 }

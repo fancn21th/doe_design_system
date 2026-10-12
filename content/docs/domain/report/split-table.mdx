@@ -3,6 +3,7 @@ title: split-table
 description: DOE Report Split Table 业务组件。
 ---
 
+import { ReportState } from "@/components/domain/report-state"
 import { ReportSplitTable } from "@/components/domain/report-split-table"
 import { reportSplitTableScenarios } from "@/components/domain/report-split-table.scenarios"
 
@@ -10,7 +11,6 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 
 <div className="domain-ui-preview-wide">
   <div className="not-prose overflow-hidden rounded-xl border">
-    <div className="border-b px-4 py-3 text-sm font-medium">Wafer Split Table</div>
     <ReportSplitTable input={reportSplitTableScenarios.normal.input} />
   </div>
 </div>
@@ -18,7 +18,7 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 ## Contract
 
 `ReportSplitTable` 是只读 report snapshot，不负责编辑 split、recipe 或 MES release。
-组件由过滤区域和逐 wafer 的 Split Table 组成；
+组件由业务标题与 body 组成，body 包含过滤区域和逐 wafer 的 Split Table；
 过滤区域使用多选 Combobox 按 `stageOptions` / `stepOptions` 过滤，空选中表示 `全部`。
 当 consumer 提供 `stepFacets` 时，Step 选项和已选 chip 会显示 BFF 提供的
 `sourceCount facts / displayCount displayed`；前者是权威 assignment 事实数，后者是
@@ -33,6 +33,10 @@ Wafer 共享同一个 split 标签。表格投影固定为 `Stage / Step / Seq`�
 `Top Fail` 直接消费 report snapshot 注入的 CP 参数与数量。`topFails` 有值时可展示
 多个 `CP Parameter · Count`；未提供时兼容单值 `topFail` / `topFailCount`。组件不从
 raw die data 推算阈值或 Top Fail，也不推断实际工艺事实。
+
+`Yield` 为 nullable snapshot fact：数字 `0` 表示真实的 `0.00%`，`null` 表示上游没有
+可用 Yield 证据并显示 `Unavailable`。组件不会把缺失值转换为零；缺失值使用 neutral
+视觉语义，也不参与 Yield 阈值分级。
 
 过滤区使用无外框的紧凑控制行，只保留控件自身边界；表格保持自己的单层中性边界
 与浅色结构表头。较宽的业务投影通过组件自身的横向滚动容器展示，不能撑破 MDX
@@ -68,4 +72,71 @@ type ReportSplitTableInput = {
 - `normal`
 - `baseline-after-splits`
 - `authoritative-step-facets`
+- `unavailable-yield`
 - `empty`
+
+## POC consumer handoff
+
+`onWaferSelect(row)` 表达从当前 Assignment 进入 Yield Analysis 的意图；`onTopFailSelect(row)` 表达进入 Final Bin Map 的意图。App 接收完整行以保留 Wafer 和分配上下文；组件不负责 URL 或跨 Tab 工作流。
+
+## Split Table 状态样式试点 — 2026-10-09
+
+参考用户截图和 [shadcn Spinner / Empty](https://ui.shadcn.com/docs/components/base/spinner#empty)。
+Split Table 试点已获用户确认，此样式现同步到全部 Report tabs。
+
+`ReportState` 接收 `status: "loading" | "empty"`（默认 `empty`）及可选 `title`、`description`、`className`。
+三个状态都以无外框、居中的 Empty Header 展示标题和说明，最小高度 320px。
+加载时在文字上方展示 48px 浅灰圆角底座和 24px arc Spinner；标题为「正在加载报告数据」，
+说明为「请稍候，数据加载完成后将自动显示。」。空数据和筛选无结果只显示相应文字，
+不显示图标、Spinner 或按钮。较窄宽度时说明自然换行。使用现有中性色与 shadcn Empty
+文字层级，不新增全局 DOE token；减少动画偏好停止 Spinner 旋转，但保留加载文案。
+
+App 在读取 Report Source、Bootstrap 或 Split Table 请求时（全部 Report tabs）
+使用 loading 状态；请求生命周期、失败重试与数据事实仍由 consumer 拥有。
+`ReportSplitTable` 的空 rows 和本地筛选无结果使用对应的文字状态。
+
+### Loading preview
+
+<div className="not-prose"><ReportState status="loading" /></div>
+
+### No data preview
+
+<div className="not-prose"><ReportSplitTable input={reportSplitTableScenarios.empty.input} /></div>
+
+### Filtered empty preview
+
+<div className="not-prose"><ReportState title="暂无匹配数据" description="当前筛选条件下暂无 Wafer Split Table 数据，请调整 Stage 或 Step。" /></div>
+
+Primitive 源码同步自本地 `ui/apps/v4/styles/base-nova/ui/{empty,spinner}.tsx`，
+上游 revision `7c9eaba1c0a6404c990c144a654792e3313c650d`。仅将 `cn` 导入适配为本工程
+`@/lib/utils`；Spinner 保留上游 Loader2Icon。按已确认的截图适配为较大媒体和
+18px 标题，删除 Cancel 并采用中文文案。
+
+## Grouped cell hover — 2026-10-10
+
+Each Stage / Step / Seq group occupies one semantic tbody. Hovering its rowspan cell highlights all cells in that group. Hovering an ordinary cell highlights only ordinary cells in its row, including when that row owns the rowspan; adjacent groups and the merged cell retain their normal/selected background. Pointer exit clears hover without changing grouping, ordering or callbacks.
+
+## Report workspace content spacing — 2026-10-10
+
+Within ReportWorkspaceLayout, the common content stack owns 16px top spacing below 768px and 24px from 768px upward. Report panes remove their additional top padding only in that workspace, retaining horizontal and bottom padding and standalone preview spacing. Consumer diagnostic buttons belong in the navigation action slot and must not add a separate line above the first report control.
+
+## Split Table container alignment pilot — 2026-10-10
+
+在 ReportWorkspaceLayout 内，Split Table 横向留白消费其局部 gutter，桌面（>=1024px）左右各 24px，其他宽度各 16px。Stage / Step 筛选容器和表格外框共享页头内容区的左右边界；单元格仍保留既有内部 padding。单独的 Component Lab 预览没有工作区 gutter 时，保留原来按 density 计算的 p-4 留白。用户随后授权推广到其他 Report Tab；共同布局负责横向留白，具体见 [Layout Shell Contract](/docs/domain/shared/layout-shell)。分组 hover、排序、筛选、业务输入及 callback 保持原契约。
+
+## Block title pilot — 2026-10-10
+
+本轮用户授权 Split Table 打样业务 block：使用共享 `BlockTitle`，标题文案为
+`Wafer Split Table`。标题是带稳定 `id="wafer-split-table"` 的 h2，外层 section
+通过 `aria-labelledby` 引用它，作为后续锚点定位的目标。小问号是可键盘聚焦的
+按钮，悬浮或聚焦时通过本地 shadcn / Base UI Tooltip 显示辅助说明，Escape 关闭。
+标题和 body 之间用已有 section gap，不画分割线、不增加折叠容器或展开/收缩控件。
+
+辅助说明：按 Stage / Step / Seq 分组查看 Wafer 的 Recipe、Condition、Yield 与 Top Fail，
+BSL / split 标签标识基准与实验条件分配。可通过 Stage 和 Step 筛选缩小查看范围；
+结果来自当前报告快照。
+
+标题在正常、空数据和筛选无结果状态中保持可见；body 保留已有输入、分组 hover、
+本地筛选、表格局部横向滚动与 callback，标题本身不请求数据或生成业务结论。
+本轮只接入 Split Table，其他业务标题不自动推广。共享组件契约见
+[Block Title](/docs/domain/shared/block-title)。

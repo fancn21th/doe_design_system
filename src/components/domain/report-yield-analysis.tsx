@@ -1,5 +1,7 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import {
   GitCompareArrowsIcon,
   Table2Icon,
@@ -25,6 +27,7 @@ import {
   ComboboxList,
   ComboboxValue,
 } from "@/components/ui/combobox"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -33,12 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { TabsContent } from "@/components/ui/tabs"
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 import {
   reportYieldAnalysisInputSchema,
   type ReportYieldAnalysisInput,
@@ -55,6 +54,7 @@ type ReportYieldAnalysisProps = {
   onStageFilterChange?: (stages: string[]) => void
   onStepFilterChange?: (steps: string[]) => void
   onDetailModeChange?: (mode: ReportYieldDetailMode) => void
+  onWaferSelect?: (waferId: string) => void
 }
 
 type ComboboxOption = {
@@ -195,88 +195,89 @@ function MultiFilterCombobox({
   )
 }
 
-function MatrixTable({
-  rows,
-  matrixColumns,
-}: {
+export function groupMatrixRows(rows: ReportYieldMatrixRow[], sortByYield: boolean) {
+  const groups = new Map<string, ReportYieldMatrixRow[]>()
+  for (const row of rows) {
+    const members = groups.get(row.groupId) ?? []
+    members.push(row)
+    groups.set(row.groupId, members)
+  }
+  return Array.from(groups, ([groupId, members]) => ({
+    groupId,
+    rows: sortByYield ? [...members].sort((a, b) => {
+      if (a.yield === null) return b.yield === null ? 0 : 1
+      if (b.yield === null) return -1
+      return a.yield - b.yield
+    }) : members,
+  }))
+}
+
+function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
   rows: ReportYieldMatrixRow[]
   matrixColumns: string[]
+  onWaferSelect?: (waferId: string) => void
+  focusedWaferId?: string
 }) {
-  if (rows.length === 0) {
-    return <EmptyState>暂无 Wafer x CP Matrix 数据</EmptyState>
-  }
-
+  const [sortByYield, setSortByYield] = React.useState(false)
+  const regionRef = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    if (!focusedWaferId) return
+    const target = Array.from(regionRef.current?.querySelectorAll<HTMLElement>("[data-wafer-id]") ?? []).find((element) => element.dataset.waferId === focusedWaferId)
+    target?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }, [focusedWaferId, rows])
+  if (rows.length === 0) return <EmptyState>暂无 Wafer x CP Matrix 数据</EmptyState>
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-(--doe-yield-matrix-min-width)">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="sticky left-0 z-10 w-24 bg-muted/80">
-              Wafer ID
-            </TableHead>
-            <TableHead className="w-52 bg-muted/30">Stage / Step / Seq</TableHead>
-            <TableHead className="w-40 bg-muted/30">Condition</TableHead>
-            <TableHead className="w-24 bg-muted/30">Yield</TableHead>
-            <TableHead className="w-28 bg-muted/30">Δ vs BSL</TableHead>
-            <TableHead className="w-36 bg-muted/30">Pass / Tested Dies</TableHead>
-            {matrixColumns.map((column) => (
-              <TableHead key={column} className="w-24 text-right">
-                {column}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.rowId}>
-              <TableCell className="sticky left-0 z-10 bg-background">
-                <b className="font-mono text-sky-700">{row.waferId}</b>
-                {row.role && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {row.role}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                <span className="font-medium">{row.stage}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {row.step} · {row.seq}
-                </span>
-              </TableCell>
-              <TableCell className="font-mono text-xs">{row.condition}</TableCell>
-              <TableCell>
-                <ReportBadge tone={row.tone ?? "neutral"}>
-                  {formatOptionalPercent(row.yield)}
-                </ReportBadge>
-              </TableCell>
-              <TableCell className="font-mono text-xs" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
-                {row.deltaPp === null
-                  ? "Unavailable"
-                  : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
-              </TableCell>
-              <TableCell className="font-mono text-xs">
-                {formatOptionalCount(row.passDies)} / {formatOptionalCount(row.testedDies)}
-              </TableCell>
-              {matrixColumns.map((column) => {
-                const count = row.failCounts[column]
-                const rate = row.failRates[column]
-
-                return (
-                  <TableCell
-                    key={column}
-                    className="text-right font-mono text-xs"
-                    title={count === undefined || count === null ? undefined : `${formatCount(count)} failed dies`}
-                  >
-                    {rate === undefined || rate === null
-                      ? "Unavailable"
-                      : formatPercent(rate)}
-                  </TableCell>
-                )
-              })}
+    <div className="grid min-w-0 gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">按比较组展示 · — 表示已确认零失败，缺少数据单独标注</span>
+        <Button size="sm" variant="outline" aria-pressed={sortByYield} onClick={() => setSortByYield((value) => !value)}>
+          {sortByYield ? "恢复组内顺序" : "组内按 Yield 排序"}
+        </Button>
+      </div>
+      <div ref={regionRef} role="region" aria-label="Wafer × CP Matrix" tabIndex={0} className="min-w-0 max-w-full max-h-(--doe-yield-matrix-height) domain-ui-split-table-shell domain-ui-yield-matrix-shell">
+        <Table className="domain-ui-report-table domain-ui-grouped-table min-w-(--doe-yield-matrix-min-width)">
+          <TableHeader className="sticky top-0 z-20 bg-background">
+            <TableRow>
+              <TableHead className="w-52 bg-muted">Stage / Step / Seq</TableHead>
+              <TableHead className="w-24 bg-muted">Wafer ID</TableHead>
+              <TableHead className="w-40 bg-muted">Condition</TableHead>
+              <TableHead className="w-24 bg-muted">Yield</TableHead>
+              <TableHead className="w-28 bg-muted">Δ vs BSL</TableHead>
+              <TableHead className="w-36 bg-muted">Good / Tested Dies</TableHead>
+              {matrixColumns.map((column) => <TableHead key={column} className="w-24 bg-muted text-right">{column}</TableHead>)}
             </TableRow>
+          </TableHeader>
+          {groupMatrixRows(rows, sortByYield).map((group) => (
+            <TableBody key={group.groupId}>
+              {group.rows.map((row, index) => (
+              <TableRow key={row.rowId} data-wafer-id={row.waferId} data-state={focusedWaferId === row.waferId ? "selected" : undefined}>
+                {index === 0 && <TableCell rowSpan={group.rows.length} className="align-middle">
+                  <span className="font-medium">{row.stage}</span>
+                  <span className="block text-xs text-muted-foreground">{row.step} · {row.seq}</span>
+                </TableCell>}
+                <TableCell>
+                  {onWaferSelect ? <button type="button" className="font-mono text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(row.waferId)}>{row.waferId}</button> : <b className="font-mono text-sky-700">{row.waferId}</b>}
+                  {row.role && <span className="ml-2 text-xs text-muted-foreground">{row.role}</span>}
+                </TableCell>
+                <TableCell className="font-mono">{row.condition}</TableCell>
+                <TableCell><ReportBadge tone={row.tone ?? "neutral"}>{formatOptionalPercent(row.yield)}</ReportBadge></TableCell>
+                <TableCell className="font-mono" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
+                  {row.deltaPp === null ? (row.role?.toUpperCase() === "BASELINE" || row.baselineWaferId === row.waferId ? "—" : row.baselineWaferId ? "缺少有效 Yield" : "缺少比较对象") : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
+                </TableCell>
+                <TableCell className="font-mono">{row.goodDies === null || row.goodDies === undefined ? "—" : formatCount(row.goodDies)} / {formatOptionalCount(row.testedDies)}</TableCell>
+                {matrixColumns.map((column) => {
+                  const count = row.failCounts[column]
+                  const rate = row.failRates[column]
+                  return <TableCell key={column} className="text-right font-mono" title={count === undefined || count === null ? undefined : `${formatCount(count)} failed dies`}>
+                    {rate === undefined || rate === null ? "缺少数据" : rate === 0 ? "—" : formatPercent(rate)}
+                  </TableCell>
+                })}
+              </TableRow>
+              ))}
+            </TableBody>
           ))}
-        </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   )
 }
@@ -285,16 +286,16 @@ function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
   if (rows.length === 0) return <EmptyState>暂无 Loss Yield 数据</EmptyState>
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-[48rem]">
-        <TableHeader>
+    <div className="domain-ui-split-table-shell">
+      <Table className="domain-ui-report-table min-w-[48rem]">
+        <TableHeader className="bg-muted/60">
           <TableRow>
             <TableHead className="w-16">Rank</TableHead>
-            <TableHead>Parameter</TableHead>
-            <TableHead className="text-right">Fail Die Count</TableHead>
+            <TableHead>Failed CP Parameters</TableHead>
+            <TableHead className="text-right">Failed Die Count</TableHead>
             <TableHead className="text-right">Pareto</TableHead>
             <TableHead className="text-right">Yield Loss</TableHead>
-            <TableHead className="text-right">Cumulative Loss</TableHead>
+            <TableHead className="text-right">Cumulative Yield Loss</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -324,23 +325,22 @@ function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
   )
 }
 
-function ConditionYieldTable({
-  rows,
-}: {
+function ConditionYieldTable({ rows, onWaferSelect }: {
   rows: ReportYieldConditionRow[]
+  onWaferSelect?: (waferId: string) => void
 }) {
   if (rows.length === 0) {
     return <EmptyState>暂无 Condition Yield Comparison 数据</EmptyState>
   }
 
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
-      <Table className="min-w-[78rem]">
-        <TableHeader>
+    <div className="domain-ui-split-table-shell">
+      <Table className="domain-ui-report-table min-w-[78rem]">
+        <TableHeader className="bg-muted/60">
           <TableRow>
-            <TableHead className="w-40">Wafers</TableHead>
             <TableHead className="w-52">Stage / Step / Seq</TableHead>
             <TableHead>Condition</TableHead>
+            <TableHead className="w-40">Wafers</TableHead>
             <TableHead className="text-right">Weighted Yield</TableHead>
             <TableHead className="text-right">Median Yield</TableHead>
             <TableHead className="text-right">Average Yield</TableHead>
@@ -350,16 +350,14 @@ function ConditionYieldTable({
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.rowId}>
-              <TableCell className="font-mono text-xs">
-                {row.waferIds.join(" / ")}
-              </TableCell>
               <TableCell>
                 <span className="font-medium">{row.stage}</span>
                 <span className="block text-xs text-muted-foreground">
                   {row.step} · {row.seq}
                 </span>
               </TableCell>
-              <TableCell className="font-mono text-xs">{row.condition}</TableCell>
+              <TableCell className="font-mono">{row.condition}</TableCell>
+              <TableCell className="font-mono">{row.waferIds.map((waferId, index) => <React.Fragment key={waferId}>{index > 0 && " / "}{onWaferSelect ? <button type="button" className="text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(waferId)}>{waferId}</button> : waferId}</React.Fragment>)}</TableCell>
               <TableCell className="text-right">
                 <ReportBadge tone={row.tone}>
                   {formatOptionalPercent(row.weightedYield)}
@@ -388,6 +386,7 @@ export function ReportYieldAnalysis({
   onStageFilterChange,
   onStepFilterChange,
   onDetailModeChange,
+  onWaferSelect,
 }: ReportYieldAnalysisProps) {
   const parsedInput = reportYieldAnalysisInputSchema.parse(input)
   const wafers = parsedInput.wafers ?? EMPTY_WAFERS
@@ -442,7 +441,8 @@ export function ReportYieldAnalysis({
       stepOptions.length === 0 ? (
         <EmptyState>暂无 Yield Analysis 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-[24px] p-4">
+          <ReportBlock input={{ id: "yield-analysis", title: "Yield Analysis", helpText: "按 Stage 和 Step 筛选 Wafer，比较 Yield 与主要 CP Fail 占比；数值来自当前报告快照。" }}>
           <div className="flex flex-col gap-3 md:flex-row">
             <MultiFilterCombobox
               label="Stage"
@@ -464,46 +464,29 @@ export function ReportYieldAnalysis({
             <WaferYieldCpFailAnalysis input={yieldCpFailAnalysis} />
           )}
 
-          <section
-            className="grid min-w-0 max-w-full gap-3"
-            aria-labelledby="yield-detail-analysis-title"
-          >
-            <Tabs
+          </ReportBlock>
+          <ReportBlock input={{ id: "yield-detail-analysis-title", title: "Yield Detail Analysis", helpText: "通过 Wafer × CP Matrix、Loss Yield 与 Condition Yield Comparison 查看良率明细，比较 CP 失效与实验条件的报告结果。" }}>
+            <ReportViewNavigation
               value={selectedDetailMode}
               onValueChange={handleDetailModeChange}
-              className="min-w-0 max-w-full gap-3"
+              ariaLabel="Yield Detail Analysis 视图"
+              options={detailModeOptions.map((option) => ({
+                value: option.id,
+                label: option.label,
+                icon: option.id === "wafer-cp-matrix" ? Table2Icon : option.id === "loss-yield" ? TrendingDownIcon : GitCompareArrowsIcon,
+              }))}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2
-                  id="yield-detail-analysis-title"
-                  className="text-sm font-semibold"
-                >
-                  Yield Detail Analysis
-                </h2>
-                <TabsList className="h-auto flex-wrap">
-                  {detailModeOptions.map((option) => (
-                    <TabsTrigger key={option.id} value={option.id}>
-                      {option.id === "wafer-cp-matrix" && <Table2Icon />}
-                      {option.id === "loss-yield" && <TrendingDownIcon />}
-                      {option.id === "condition-yield-comparison" && (
-                        <GitCompareArrowsIcon />
-                      )}
-                      {option.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
               <TabsContent value="wafer-cp-matrix" className="min-w-0 max-w-full">
-                <MatrixTable rows={matrixRows} matrixColumns={matrixColumns} />
+                <MatrixTable rows={matrixRows} matrixColumns={matrixColumns} onWaferSelect={onWaferSelect} focusedWaferId={parsedInput.focusedWaferId} />
               </TabsContent>
               <TabsContent value="loss-yield" className="min-w-0 max-w-full">
                 <LossYieldTable rows={lossYieldRows} />
               </TabsContent>
               <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
-                <ConditionYieldTable rows={conditionYieldRows} />
+                <ConditionYieldTable rows={conditionYieldRows} onWaferSelect={onWaferSelect} />
               </TabsContent>
-            </Tabs>
-          </section>
+            </ReportViewNavigation>
+          </ReportBlock>
         </div>
       )}
     </div>

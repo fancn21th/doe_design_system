@@ -1,10 +1,11 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
 
-import { Measurement } from "@/components/domain/measurement"
 import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenarios"
-import { EmptyState } from "@/components/domain/report-parts"
+import { EmptyState, ReportMeasurement } from "@/components/domain/report-parts"
 import {
   Combobox,
   ComboboxContent,
@@ -39,15 +40,14 @@ export function ReportCpData({
   selection,
   onParameterChange,
 }: ReportCpDataProps) {
-  const scenarioInput = reportCpDataScenarios.normal.input
   const parsedInput = reportCpDataInputSchema.parse(input)
   const parameterOptions =
-    parsedInput.parameterOptions ?? scenarioInput.parameterOptions ?? []
-  const measurement = parsedInput.measurement ?? scenarioInput.measurement
+    parsedInput.parameterOptions ?? []
+  const measurement = parsedInput.measurement
   const [uncontrolledParameterCode, setUncontrolledParameterCode] = React.useState<string | null>(
     parsedInput.selectedParameterId ?? parameterOptions[0]?.value ?? null,
   )
-  const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const selectedParameterCode = selection ? selection.parameterCode : uncontrolledParameterCode
 
   const selectParameter = (parameterCode: string | null) => {
     if (!selection) setUncontrolledParameterCode(parameterCode)
@@ -56,16 +56,18 @@ export function ReportCpData({
 
   return (
     <div className={className}>
-      {parameterOptions.length === 0 || !measurement ? (
+      {parameterOptions.length === 0 ? (
         <EmptyState>暂无 CP Data 数据</EmptyState>
       ) : (
-        <div className="domain-ui-typography grid gap-4 p-4">
+        <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+          <ReportBlock input={{ id: "cp-data-parameter-analysis", title: "CP Parameter Analysis", helpText: "选择 CP 参数，查看各 Wafer 的 die 测量分布、均值、中位数与参考线；展示当前报告快照中的测量数据。" }}>
           <CpParameterCombobox
             options={parameterOptions}
             value={selectedParameterCode}
             onValueChange={selectParameter}
           />
-          <Measurement input={measurement} />
+          {!selectedParameterCode ? <EmptyState>请选择 CP Parameter</EmptyState> : measurement ? <ReportMeasurement appearance="report-chart" input={measurement} /> : <EmptyState>当前参数暂无 CP Data 数据</EmptyState>}
+          </ReportBlock>
         </div>
       )}
     </div>

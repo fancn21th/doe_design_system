@@ -25,6 +25,11 @@ export { ReportParameterMedian } from "@/components/domain/report-parameter-medi
 export { ReportCpData } from "@/components/domain/report-cp-data"
 export { ReportInlineData } from "@/components/domain/report-inline-data"
 export { ReportCpInline } from "@/components/domain/report-cp-inline"
+export { ReportCpInlineFit } from "@/components/domain/report-cp-inline-fit"
 export { ReportCpInlineCandidates } from "@/components/domain/report-cp-inline-candidates"
 export { SplitMatrix } from "@/components/domain/split-matrix"
 export { StepConfigDialog } from "@/components/domain/step-config-dialog"
+
+export { ReportState } from "@/components/domain/report-state"
+
+export { BlockTitle } from "@/components/domain/block-title"

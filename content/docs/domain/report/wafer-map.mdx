@@ -15,19 +15,22 @@ import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.sc
   </div>
 </div>
 
+import { ReportState } from "@/components/domain/report-state"
+
 ## Contract
 
 `ReportWaferMap` 是 report tab 的业务内容组件，组合 shared `WaferMapGallery` 的三种
-数据合同：CP Final Bin、CP Parameter 与 Defect。Overlay 始终保留为可见入口；在没有
-共同坐标合同前，它只渲染 consumer 注入的 unavailable / failed 原因，绝不制造坐标或叠图。
+数据合同：CP Final Bin、CP Parameter 与 Defect。Overlay 保留为灰显禁用的三级 tab；鼠标及键盘不能选择，不请求或制造叠图。
 
 它是 Report Center Wafer Map 的唯一视觉组合入口：DOE App 负责 URL、XState、BFF
 请求、缓存、失败重试与把 BFF payload 映射为输入；组件负责同一条控制栏、图例和地图
 卡片的层级。App 不得在 `WaferMapGallery` 外另建 CP/Defect、Final Bin/Parameter 或
 Overlay 的视觉控制器。
 
-页面有两层局部筛选：一级在 `CP Map` 与 `Defect Map` 间切换；CP Map 下的二级筛选为
-`Final Bin` 与 `Parameter Map` 标准 Tabs。选择 `Parameter Map` 后，使用单选、可搜索、
+页面有两层局部视图导航：三级在 `CP Map`、`Defect Map` 与 `Overlay` 间切换，
+复用 `ReportViewNavigation` 的图标 + 文字 line Tabs；CP Map 下的四级为
+`Final Bin` 与 `Parameter Map`，保留已有无图标的 foundation `TabsList variant="line"` 样式。
+三级和四级分行并左对齐，保持清晰层级。选择 `Parameter Map` 后，使用单选、可搜索、
 可清除的 `CP Parameter` Combobox；每个参数选项都有其独立的 25 片 wafer map 输入。
 Defect Map 的二级筛选由 shared gallery 提供 `Layer` 与 `Defect Type` 两个单选、可搜索
 Combobox；`All Defect Type` 代表该 Layer 的所有类型。数据不在视图间共享或推断。
@@ -41,7 +44,7 @@ type ReportWaferMapInput = {
   mapViews?: WaferMapGalleryInput[]
   viewStates?: Array<{
     view: "cp-final-bin" | "cp-parameter" | "defect" | "overlay"
-    status: "ready" | "loading" | "unavailable" | "failed"
+    status: "idle" | "ready" | "loading" | "unavailable" | "failed"
     reason?: string
   }>
   overlayState?: {
@@ -65,7 +68,7 @@ payload 时，`mapViews[].mapStates` 仍必须提供该 `mapId`、`waferId` 和 
 point 明细；Parameter Die 的 `finalBin` 与 `pass` 是可选 CP facts，缺失时不显示 CP
 Pass / Fail 状态、Final Bin 行或 fail outline。右侧统计区域明确显示“统计明细不可用”和可选的
 `inspectionUnavailableReason`。组件和 consumer 都不得由 rendered dies 推导 Final Bin
-汇总、CP × Defect classification 或 Defect Type 统计。
+汇总、Parameter 统计 / CPK 或 Defect Type 统计。
 
 `viewStates` 允许 App 在按需加载时仍保留完整的 Report 级控制层：`loading` 表示请求中，
 `unavailable` 表示权威字段尚未提供，`failed` 表示本次请求失败。`overlayState` 是 Overlay
@@ -87,16 +90,129 @@ Surface，保持单层边界、无装饰性阴影与无渐变填色。map canvas
 每片卡片的 `全屏查看` 由 shared `WaferMapGallery` 提供。放大层在大屏采用左侧 map、
 右侧 320px 明细栏的双栏布局，并按当前 CP Final Bin、CP Parameter 或 Defect 视图显示
 对应统计表。表格数据来自每片 wafer 的 `inspection` expected schema；Report 组件不在
-客户端重新聚合或补造统计。Overlay 永远没有 map payload；组件只显示 `overlayState` 的
-权威不可用原因。
+客户端重新聚合或补造统计。Overlay 永远没有 map payload，三级入口禁用。
+
+## Consumer handoff · POC states
+
+受控 `selection.parameterCode: null` 必须保持未选，不能退回旧参数或 scenario；未选参数优先显示选择提示，loading / failed / unavailable 不显示旧缓存地图。
+`selection.focusedWaferId` 将目标卡片滚入可见区域并高亮，完整 gallery 范围不变；全屏仍由用户主动打开。
+Defect 的 `summary.pass / fail` 是现有传输形状，业务语义为无缺陷 / 有缺陷 Die；卡片和全屏按 kind 使用这两个标签，不表示 CP Pass / Fail。
 
 ## Scenarios
 
 - `normal`
 - `empty`
 - `controlledPartial`
+- `parameterIdle`（未选参数，区别于请求 loading）
+
+<ReportWaferMap input={reportWaferMapScenarios.parameterIdle.input} selection={{ primaryView: "cp", cpView: "parameter", parameterCode: null }} />
 
 Shared `WaferMapGallery` additionally has `defect-selected-layer-coverage`（2 available +
 23 empty，无伪造坐标）和 `partial-map-payload`（partial / unavailable）scenarios，供
 consumer 对齐 coverage-state 行为；`map-without-inspection-statistics` 用于验证不完整
 detail facts 的全屏空态；`map-without-wafer-summary` 用于验证未提供 yield totals 时不回算。
+
+## 统一状态预览
+
+<div className="not-prose"><ReportState status="loading" /><ReportWaferMap input={reportWaferMapScenarios.empty.input} /></div>
+
+加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
+无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
+所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
+及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
+没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+### Navigation hierarchy
+
+导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
+三级复用共享导航，四级保持现有样式和选择 callback；地图可用性、参数与 Defect 查询归属不变。
+
+## Consumer handoff · single-wafer inspection (2026-10-11)
+
+This revision supersedes the prior Parameter CP × Defect classification table.
+Parameter inspection now consumes per-wafer nullable `sampleCount`, `mean`,
+`stddev`, `min`, `max`, `median`, `cpk`, `lsl`, `usl`, `unit` and explicit
+`cpkStatus`; no client statistical calculation is added. Exact parameter codes
+remain distinct; one-sided specifications must stay one-sided.
+
+The expanded wafer includes a searchable Parameter selector and the existing
+Layer / Defect Type selectors. They reuse the report-controlled callbacks; the
+component does not fetch. Report keeps physical-wafer expansion intent across
+query-driven map replacement. `selection.expandedWaferId` and
+`onExpandedWaferChange` let App retain that intent across a parent remount.
+
+Defect Die aggregates preserve real record counts and stable numeric category
+IDs without creating record objects. Full record totals, Defect Die counts and
+outside-grid counts remain separate. Missing category names are shown as
+supplied unresolved labels; the UI does not guess Particle / Scratch labels.
+
+Acceptance scenarios live in shared `oneSidedParameter` and `defectAggregates`;
+all new fixture values are Mock UI contract cases. Production facts are provided
+by the consumer, and raw-record / image drilldown remains deferred.
+
+## Consumer handoff · WM02 same-test CP totals (2026-10-11)
+
+Parameter wafer `cpSummary` supplies the current Map's same CP-test totals and
+rates independently of parameter-valid sample N. App maps the Backend
+`mapCpSummary` into this UI shape; identity validation belongs to Backend and
+raw provenance remains with App. No selected-slice overview Yield fallback is
+allowed. Unknown / unavailable data is not converted to zero; legacy summary
+counts keep a separate selected-slice label. Mock scenarios cover different
+N and Tested counts, unavailable test identity, and statistics independent
+from CP data availability.
+
+## Consumer handoff · WM03 / WM04 variation (2026-10-11)
+
+This approval supersedes the earlier deferral of Uniformity / Hi-Lo in this
+document. Backend supplies optional nullable `uniformityPercent` and
+`hiLoVariationPercent` in per-wafer inspection; App maps them literally and
+Domain UI formats them as percentages. Both use the current parameter's full
+valid population, independent of the P5/P95 color scale. No UI calculation,
+absolute-value transform or zero-fill is introduced. Missing fields and null
+results both display `—`; signed results are preserved.
+
+## Consumer handoff · WM06 / WM08 (2026-10-11)
+
+Same-snapshot Defect record details are injected with the map projection, not
+queried when clicked. Real IDs expose local numeric fields and classification;
+no image fetch/open action is present. Optional `defectRecordsStatus` distinguishes
+unavailable record delivery from aggregate counts, which remain authoritative.
+
+CP cards may consume a separately sourced default-layer `defectSummary`.
+Its Layer is explicitly displayed, while source identity remains in App raw
+provenance. It does not create a CP×Defect coordinate join or enable Overlay.
+Missing Layer maps stay EMPTY / `—`, independent of CP Pass/Fail availability.
+
+## Inspection parity follow-up · WM11–WM18 (2026-10-11)
+
+Approved after the read-only three-view audit. Parameter Die detail and hover
+show only this wafer's identity-aligned inspection SPEC, with each missing side
+`—`; global parameter context never fills a missing per-wafer SPEC. CP hover
+uses delivered Pass/Fail. Parameter Die `binCode`, `binDescription` and
+`cpUnavailableReason` are optional nullable source fields: no numeric code is
+inferred from a retained classification description. Missing CP state stays
+explicitly unavailable. Defect hover retains Layer, complete record count and
+all supplied numeric class counts.
+
+A Defect Die renders every positive matching class in equal-width segments;
+type filtering selects supplied segments, while full-Layer card/dialog totals
+retain their scope label. The gray legend explains no records / no matching
+filter; it is not a source Pass classification. Unknown controlled class IDs
+remain visibly unavailable until the consumer confirms options and reconciles
+selection; Domain UI emits no automatic filter reset.
+
+Expanded maps support bounded 60–300% button and wheel zoom. The map uses real
+layout dimensions inside a scroll viewport, so outer Dies remain reachable and
+pointer hit testing follows the supplied geometry at every zoom. Hover panels
+flip/clamp to viewport edges. Navigation roster and cyclic behavior are unchanged.
+
+Final Bin rate help explains the full-map Tested denominator and source-owned
+Fail classification, never a fixed Bin 1 rule. Optional nullable
+`uniformityStatus` / `hiLoVariationStatus` explain unavailable percentages
+without recalculating them. Existing shared P5–P95 scale policy, immutable source
+facts, no-image scope and disabled Overlay remain unchanged.
+
+Consumer adoption: component/model, relevant schema hunks, fixtures/scenarios
+and focused tests. App owns controlled Layer/class reconciliation and projection
+of the new optional facts. Browser critical-path acceptance belongs to the App
+consumer against its user-managed running service.

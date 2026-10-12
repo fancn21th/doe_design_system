@@ -1,9 +1,15 @@
 "use client"
 
+import { ReportBlock } from "@/components/domain/report-block"
+
 import * as React from "react"
+import { CircleDotIcon, LayersIcon, ScanSearchIcon } from "lucide-react"
+
+import { ReportViewNavigation } from "@/components/domain/report-view-navigation"
 
 import { reportWaferMapScenarios } from "@/components/domain/report-wafer-map.scenarios"
 import { WaferMapGallery } from "@/components/domain/wafer-map"
+import { ReportState } from "@/components/domain/report-state"
 import { EmptyState } from "@/components/domain/report-parts"
 import {
   Combobox,
@@ -13,7 +19,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   reportWaferMapInputSchema,
@@ -24,6 +29,8 @@ import {
 export type ReportWaferMapSelection = {
   primaryView: PrimaryView
   cpView: CpView
+  focusedWaferId?: string | null
+  expandedWaferId?: string | null
   parameterCode: string | null
   defectLayerId?: string | null
   defectTypeIds?: string[]
@@ -38,6 +45,7 @@ export type ReportWaferMapProps = {
    */
   selection?: ReportWaferMapSelection
   onPrimaryViewChange?: (view: PrimaryView) => void
+  onExpandedWaferChange?: (waferId: string | null) => void
   onCpViewChange?: (view: CpView) => void
   onParameterChange?: (parameterCode: string | null) => void
   onDefectLayerChange?: (layerId: string) => void
@@ -53,6 +61,7 @@ export function ReportWaferMap({
   className,
   selection,
   onPrimaryViewChange,
+  onExpandedWaferChange,
   onCpViewChange,
   onParameterChange,
   onDefectLayerChange,
@@ -75,9 +84,15 @@ export function ReportWaferMap({
   const [uncontrolledDefectTypeIds, setUncontrolledDefectTypeIds] = React.useState<string[]>(
     () => defectView?.selectedDefectTypeIds ?? []
   )
+  const [localExpandedWaferId, setLocalExpandedWaferId] = React.useState<string | null>(null)
+  const expandedWaferId = selection?.expandedWaferId !== undefined ? selection.expandedWaferId : localExpandedWaferId
+  const changeExpandedWafer = (waferId: string | null) => {
+    setLocalExpandedWaferId(waferId)
+    onExpandedWaferChange?.(waferId)
+  }
   const primaryView = selection?.primaryView ?? uncontrolledPrimaryView
   const cpView = selection?.cpView ?? uncontrolledCpView
-  const selectedParameterCode = selection?.parameterCode ?? uncontrolledParameterCode
+  const selectedParameterCode = selection ? selection.parameterCode : uncontrolledParameterCode
   const selectedDefectLayerId = selection?.defectLayerId ?? uncontrolledDefectLayerId ?? defectView?.selectedLayerId ?? null
   const selectedDefectTypeIds = selection?.defectTypeIds ?? uncontrolledDefectTypeIds
   const parameterOptions = parsedInput.parameterOptions ?? parameterViews.map((view) => ({
@@ -114,6 +129,7 @@ export function ReportWaferMap({
   }
 
   const selectPrimaryView = (nextView: PrimaryView) => {
+    if (nextView === "overlay") return
     setUncontrolledPrimaryView(nextView)
     onPrimaryViewChange?.(nextView)
   }
@@ -144,38 +160,34 @@ export function ReportWaferMap({
 
   return (
     <section className={className} aria-label="Report Wafer Map">
-      <div className="domain-ui-typography grid gap-4 p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Tabs
+      <div className="domain-ui-typography domain-ui-report-pane grid gap-4 p-4">
+          <ReportBlock input={{ id: "wafer-map", title: "Wafer Map", helpText: "通过 CP Map、Defect Map 或 Overlay 查看晶圆空间分布；CP Map 可切换 Final Bin 与 Parameter Map，具体视图取决于当前报告可用数据。" }}>
+        <div className="grid gap-3">
+          <ReportViewNavigation
             value={primaryView}
             onValueChange={(value) => selectPrimaryView(value as PrimaryView)}
-            className="gap-0"
-          >
-            <TabsList>
-              {hasCp && (
-                <TabsTrigger value="cp">CP Map</TabsTrigger>
-              )}
-              {hasDefect && (
-                <TabsTrigger value="defect">Defect Map</TabsTrigger>
-              )}
-              <TabsTrigger value="overlay">Overlay</TabsTrigger>
-            </TabsList>
-          </Tabs>
+            ariaLabel="Wafer Map 视图"
+            options={[
+              ...(hasCp ? [{ value: "cp", label: "CP Map", icon: CircleDotIcon }] : []),
+              ...(hasDefect ? [{ value: "defect", label: "Defect Map", icon: ScanSearchIcon }] : []),
+              { value: "overlay", label: "Overlay", icon: LayersIcon, disabled: true },
+            ]}
+          />
 
           {primaryView === "cp" && hasCp && (
             <>
-              <Separator orientation="vertical" className="h-5" />
               <Tabs
+                data-navigation-level="4"
                 value={cpView}
                 onValueChange={(value) => selectCpView(value as CpView)}
                 className="gap-0"
               >
-                <TabsList>
+                <TabsList variant="line" className="max-w-full gap-0 px-0" aria-label="CP Map 类型">
                 {(finalBinView || finalBinState) && (
-                  <TabsTrigger value="final-bin">Final Bin</TabsTrigger>
+                  <TabsTrigger value="final-bin" className="flex-none border-x-0 px-0 mr-[16px] last:mr-0">Final Bin</TabsTrigger>
                 )}
                 {(parameterViews.length > 0 || parameterState) && (
-                  <TabsTrigger value="parameter">Parameter Map</TabsTrigger>
+                  <TabsTrigger value="parameter" className="flex-none border-x-0 px-0 mr-[16px] last:mr-0">Parameter Map</TabsTrigger>
                 )}
                 </TabsList>
               </Tabs>
@@ -191,17 +203,34 @@ export function ReportWaferMap({
           />
         )}
 
-        {visibleMapView ? (
+        {primaryView === "cp" && cpView === "parameter" && !selectedParameterCode ? (
+          <EmptyState>请选择 CP Parameter</EmptyState>
+        ) : visibleState && visibleState.status !== "ready" ? (
+          <ReportState status={visibleState.status === "loading" ? "loading" : "empty"} title={viewStateMessage(visibleState.status, visibleState.reason)} />
+        ) : visibleMapView?.status === "pending" ? (
+          <ReportState status="loading" />
+        ) : visibleMapView?.status === "unavailable" ? (
+          <EmptyState>当前 Wafer Map 数据不可用</EmptyState>
+        ) : visibleMapView && visibleMapView.wafers.length === 0 && !visibleMapView.mapStates?.length ? (
+          <EmptyState>当前视图暂无可渲染数据</EmptyState>
+        ) : visibleMapView ? (
           <WaferMapGallery
             input={visibleMapView}
-            showParameterLegend={false}
+            renderMissingMap={(state) => <ReportState className="min-h-40" title={state.availability === "empty" ? "当前 Wafer 无此 Map 数据" : "当前 Wafer Map 不可用"} description={state.reason} />}
+            showParameterLegend
+            focusedWaferId={selection?.focusedWaferId}
+            expandedWaferId={expandedWaferId}
+            onExpandedWaferChange={changeExpandedWafer}
+            parameterOptions={parameterOptions}
+            onParameterChange={selectParameter}
             onDefectFiltersChange={selectDefectFilters}
           />
         ) : visibleState ? (
-          <EmptyState>{viewStateMessage(visibleState.status, visibleState.reason)}</EmptyState>
+          <ReportState status={visibleState.status === "loading" ? "loading" : "empty"} title={viewStateMessage(visibleState.status, visibleState.reason)} />
         ) : primaryView === "cp" && cpView === "parameter" ? (
           <EmptyState>请选择 CP Parameter</EmptyState>
         ) : null}
+          </ReportBlock>
       </div>
     </section>
   )
@@ -251,14 +280,15 @@ function sameIds(left: string[], right: string[]) {
   return left.length === right.length && left.every((item, index) => item === right[index])
 }
 function findViewState(
-  viewStates: Array<{ view: WaferMapGalleryInput["kind"] | "overlay"; status: "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
+  viewStates: Array<{ view: WaferMapGalleryInput["kind"] | "overlay"; status: "idle" | "ready" | "loading" | "unavailable" | "failed"; reason?: string }>,
   view: WaferMapGalleryInput["kind"] | "overlay",
 ) {
   return viewStates.find((viewState) => viewState.view === view)
 }
 
-function viewStateMessage(status: "ready" | "loading" | "unavailable" | "failed", reason?: string) {
+function viewStateMessage(status: "idle" | "ready" | "loading" | "unavailable" | "failed", reason?: string) {
   if (reason) return reason
+  if (status === "idle") return "请选择参数或视图"
   if (status === "loading") return "正在读取 Wafer Map 数据"
   if (status === "unavailable") return "当前视图暂不可用"
   if (status === "failed") return "读取 Wafer Map 数据失败"

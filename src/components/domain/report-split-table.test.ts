@@ -1,11 +1,19 @@
-import { describe, expect, it } from "vitest"
+import * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { describe, expect, it, vi } from "vitest"
 
 import {
+  ReportSplitTable,
+  ReportSplitTableWaferLink,
+  formatSplitTableYield,
   getReportSplitTableStepOptions,
   getReportSplitTableTopFails,
   groupReportSplitTableRows,
 } from "@/components/domain/report-split-table"
-import type { ReportSplitTableRow } from "@/schemas/domain-component-inputs"
+import {
+  reportSplitTableRowSchema,
+  type ReportSplitTableRow,
+} from "@/schemas/domain-component-inputs"
 
 function row(
   waferId: string,
@@ -30,6 +38,40 @@ function row(
 }
 
 describe("ReportSplitTable grouping", () => {
+  it("keeps the named business block and help anchor in populated and empty snapshots", () => {
+    for (const rows of [[], [row("W01", "BSL", "5um")]]) {
+      const html = renderToStaticMarkup(React.createElement(ReportSplitTable, { input: { rows } }))
+      expect(html).toContain('aria-labelledby="wafer-split-table"')
+      expect(html).toMatch(/<h2[^>]*id="wafer-split-table"[^>]*>Wafer Split Table<\/h2>/)
+      expect(html).toContain('aria-label="关于 Wafer Split Table"')
+      expect(html).toContain('data-slot="block-body"')
+      expect(html).not.toContain('data-slot="collapsible"')
+    }
+  })
+
+  it("renders a wafer action in the real table and invokes it with full assignment context", () => {
+    const inputRow = row("W01", "BSL", "5um")
+    const callback = vi.fn()
+    const action = ReportSplitTableWaferLink({ row: inputRow, onWaferSelect: callback })
+    expect(action.type).toBe("button")
+    action.props.onClick()
+    expect(callback).toHaveBeenCalledExactlyOnceWith(inputRow)
+    const html = renderToStaticMarkup(React.createElement(ReportSplitTable, { input: { rows: [inputRow] }, onWaferSelect: callback }))
+    expect(html).toContain('title="查看 W01 Yield Analysis"')
+    expect(ReportSplitTableWaferLink({ row: inputRow }).type).toBe("b")
+  })
+
+  it("keeps unavailable Yield distinct from real zero", () => {
+    const unavailable = reportSplitTableRowSchema.parse(row("W01", "BSL", "BSL", {
+      yield: null,
+      tone: "neutral",
+    }))
+
+    expect(unavailable.yield).toBeNull()
+    expect(formatSplitTableYield(unavailable.yield)).toBe("Unavailable")
+    expect(formatSplitTableYield(0)).toBe("0.00%")
+  })
+
   it("groups by stage, step, and seq with baseline first and labels by condition", () => {
     const groups = groupReportSplitTableRows([
       row("W04", "candidate", "4.5um"),
