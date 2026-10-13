@@ -160,3 +160,7 @@ component. See the Split Table MDX contract and its three status previews.
 BSL / split 分配角色和 Stage / Step 筛选，不新增推断事实。
 共享 `BlockTitle` 契约见 `content/docs/domain/shared/block-title.mdx`，
 锚点为 `wafer-split-table`，帮助按钮辅助标签为 `关于 Wafer Split Table`。
+
+## 2026-10-13 user-approved Yield Matrix alignment
+
+用户以运行中 Yield Matrix 截图为基准：短 Wafer 名称与角色灰字同行；Stage label 单独一行，Step label 与序号在下一行。名称只用于阅读，稳定身份用于分组、筛选和点击。具体可选字段与 fallback 见当前 Split Table MDX contract。

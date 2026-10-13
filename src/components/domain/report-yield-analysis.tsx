@@ -8,6 +8,7 @@ import {
   TrendingDownIcon,
 } from "lucide-react"
 import * as React from "react"
+import { ReportWaferIdentity, ReportWaferLink } from "@/components/domain/report-wafer-identity"
 
 import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-analysis.scenarios"
 import { WaferYieldCpFailAnalysis } from "@/components/domain/report-wafer-yield-cp-fail-analysis"
@@ -256,8 +257,9 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
                   <span className="block text-xs text-muted-foreground">{row.step} · {row.seq}</span>
                 </TableCell>}
                 <TableCell>
-                  {onWaferSelect ? <button type="button" className="font-mono text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(row.waferId)}>{row.waferId}</button> : <b className="font-mono text-sky-700">{row.waferId}</b>}
-                  {row.role && <span className="ml-2 text-xs text-muted-foreground">{row.role}</span>}
+                  <ReportWaferIdentity role={row.role}>
+                    <ReportWaferLink label={row.waferId} sourceWaferId={row.sourceWaferId ?? row.waferId} onSelect={onWaferSelect ? () => onWaferSelect(row.sourceWaferId ?? row.waferId) : undefined} />
+                  </ReportWaferIdentity>
                 </TableCell>
                 <TableCell className="font-mono">{row.condition}</TableCell>
                 <TableCell><ReportBadge tone={row.tone ?? "neutral"}>{formatOptionalPercent(row.yield)}</ReportBadge></TableCell>

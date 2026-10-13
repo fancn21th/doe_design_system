@@ -117,3 +117,36 @@ describe("ReportSplitTable grouping", () => {
     }])
   })
 })
+
+
+describe("stable Split Table identities", () => {
+  it("keeps equally named steps and conditions separate using supplied keys and roles", () => {
+    const groups = groupReportSplitTableRows([
+      row("LOT_01", "BSL", "BASELINE", { stepKey: "S|T1|1", roleLabel: "BSL" }),
+      row("LOT_02", "SPLIT", "same", { stepKey: "S|T1|1", roleLabel: "split-1", variantRowId: "V2" }),
+      row("LOT_03", "SPLIT", "same", { stepKey: "S|T1|1", roleLabel: "split-2", variantRowId: "V3" }),
+      row("LOT_04", "BSL", "BASELINE", { stepKey: "S|T2|1", roleLabel: "BSL" }),
+    ])
+    expect(groups).toHaveLength(2)
+    expect(groups[0].rows.map(({ roleLabel }) => roleLabel)).toEqual(["BSL", "split-1", "split-2"])
+  })
+  it("displays a short name but hands the original full identity to the consumer", () => {
+    const inputRow = row("LOT_01", "BSL", "BASELINE", { displayWaferId: "W01" })
+    const callback = vi.fn()
+    const action = ReportSplitTableWaferLink({ row: inputRow, onWaferSelect: callback })
+    expect(action.props.children).toBe("W01")
+    expect(action.props.title).toContain("LOT_01")
+    action.props.onClick()
+    expect(callback).toHaveBeenCalledWith(inputRow)
+    const html = renderToStaticMarkup(React.createElement(ReportSplitTable, { input: { rows: [inputRow] } }))
+    expect(html).toContain("inline-flex items-center gap-2 whitespace-nowrap")
+    expect(html).not.toContain('data-slot="badge"')
+  })
+  it("uses stable Step facet values even when their labels match", () => {
+    const options = getReportSplitTableStepOptions(["T1", "T2"].map((stepId) => ({
+      step: "Same label", stageId: "S", stepId, stepKey: `S|${stepId}|1`, sourceCount: 25, displayCount: 5,
+    })))
+    expect(options.map((option) => option.value)).toEqual(["S|T1|1", "S|T2|1"])
+    expect(options.map((option) => option.label)).toEqual(["Same label", "Same label"])
+  })
+})

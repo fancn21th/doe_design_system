@@ -25,9 +25,12 @@ import { reportSplitTableScenarios } from "@/components/domain/report-split-tabl
 已注入 `rows` 的 active display 数。组件只用 `rows` 执行本地筛选，不会从表格行重新推导
 或覆盖 facet count。
 
-表格按 `Stage + Step + Seq` 形成对照组并合并首列。每组先展示 Baseline，再按不同
-`condition` 的首次出现顺序生成 `split-1`、`split-2` 等标签；同一 condition 的多个
-Wafer 共享同一个 split 标签。表格投影固定为 `Stage / Step / Seq`、`Wafer ID`、
+表格优先按稳定 `stepKey`（Stage ID + Step ID + Sequence）合并首列，名称只负责显示。
+每组 Baseline 在前；`roleLabel` 由上游按 Variant 身份与顺序提供，同名 Condition 不合并编号。
+旧的无身份 scenario 保留按 Stage/Step/Seq 和 Condition 的展示回退。
+Stage 和 Step 筛选显示 label、使用 ID/stepKey 作为值；facet 的两类计数保持上游原值。
+Wafer 使用 `displayWaferId` 短名称与灰色 role 同行展示，完整 `waferId` 保留在 tooltip 和 callback。
+首列采用 Stage 名称一行、Step 名称与序号一行，与 Yield Matrix 共用 Wafer 链接/角色呈现。表格投影固定为 `Stage / Step / Seq`、`Wafer ID`、
 `Recipe`、`Condition`、`Yield` 与 `Top Fail` 六列。
 
 `Top Fail` 直接消费 report snapshot 注入的 CP 参数与数量。`topFails` 有值时可展示
@@ -140,3 +143,9 @@ BSL / split 标签标识基准与实验条件分配。可通过 Stage 和 Step �
 本地筛选、表格局部横向滚动与 callback，标题本身不请求数据或生成业务结论。
 本轮只接入 Split Table，其他业务标题不自动推广。共享组件契约见
 [Block Title](/docs/domain/shared/block-title)。
+
+## 2026-10-13 label / identity handoff
+
+`stepFacets` 可携带 `stepKey/stageId/stepId`；rows 可携带 `displayWaferId/stepKey/variantRowId/roleLabel`。消费者提供名称与身份，组件不查库、不按名称推断分组。`namedSnapshot` 为明确标记的合成场景，预览稳定身份和短名称。
+
+<div className="not-prose"><ReportSplitTable input={reportSplitTableScenarios.namedSnapshot.input} /></div>

@@ -9,7 +9,7 @@ import {
   formatPercent,
 } from "@/components/domain/report-parts"
 import { ReportState } from "@/components/domain/report-state"
-import { Badge } from "@/components/ui/badge"
+import { ReportWaferIdentity, ReportWaferLink } from "@/components/domain/report-wafer-identity"
 import {
   Combobox,
   ComboboxChip,
@@ -49,6 +49,7 @@ type ComboboxOption = {
   value: string
   sourceCount?: number
   displayCount?: number
+  stageId?: string
 }
 
 type ReportSplitTableDisplayRow = {
@@ -79,9 +80,10 @@ export function getReportSplitTableStepOptions(
 
   // The facet sequence and both counts are authoritative BFF facts. Preserve
   // them verbatim rather than deriving counts from the active display rows.
-  return stepFacets.map(({ step, sourceCount, displayCount }) => ({
+  return stepFacets.map(({ step, stepKey, stageId, sourceCount, displayCount }) => ({
     label: step,
-    value: step,
+    value: stepKey ?? step,
+    stageId,
     sourceCount,
     displayCount,
   }))
@@ -127,7 +129,7 @@ export function groupReportSplitTableRows(
   const groupedRows = new Map<string, ReportSplitTableRow[]>()
 
   for (const row of rows) {
-    const key = JSON.stringify([row.stage, row.step, row.seq])
+    const key = row.stepKey ?? JSON.stringify([row.stageId ?? row.stage, row.stepId ?? row.step, row.stepSequence ?? row.seq])
     const group = groupedRows.get(key)
 
     if (group) group.push(row)
@@ -155,9 +157,9 @@ export function groupReportSplitTableRows(
       key,
       rows: orderedRows.map((row) => ({
         row,
-        roleLabel: isBaselineRow(row)
+        roleLabel: row.roleLabel ?? (isBaselineRow(row)
           ? "BSL"
-          : `split-${splitConditions.indexOf(row.condition) + 1}`,
+          : `split-${splitConditions.indexOf(row.condition) + 1}`),
       })),
     }
   })
@@ -269,9 +271,12 @@ export function ReportSplitTableWaferLink({ row, onWaferSelect }: {
   row: ReportSplitTableRow
   onWaferSelect?: (row: ReportSplitTableRow) => void
 }) {
-  return onWaferSelect ? (
-    <button type="button" title={`查看 ${row.waferId} Yield Analysis`} className="font-mono font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => onWaferSelect(row)}>{row.waferId}</button>
-  ) : <b className="font-mono font-medium">{row.waferId}</b>
+  return ReportWaferLink({
+    label: row.displayWaferId ?? row.waferId,
+    sourceWaferId: row.waferId,
+    title: `查看 ${row.waferId} Yield Analysis`,
+    onSelect: onWaferSelect ? () => onWaferSelect(row) : undefined,
+  })
 }
 
 export function ReportSplitTable({
@@ -283,25 +288,18 @@ export function ReportSplitTable({
   const scenarioInput = reportSplitTableScenarios.normal.input
   const parsedInput = reportSplitTableInputSchema.parse(input)
   const rows = parsedInput.rows ?? scenarioInput.rows ?? EMPTY_SPLIT_TABLE_ROWS
-  const stageOptions = React.useMemo(
-    () =>
-      toOptions(
-        parsedInput.stageOptions ??
-          scenarioInput.stageOptions ??
-          rows.map((row) => row.stage)
-      ),
-    [parsedInput.stageOptions, rows, scenarioInput.stageOptions]
-  )
-  const stepOptions = React.useMemo(
-    () =>
-      getReportSplitTableStepOptions(
-        parsedInput.stepFacets,
-        parsedInput.stepOptions ??
-          scenarioInput.stepOptions ??
-          rows.map((row) => row.step)
-      ),
-    [parsedInput.stepFacets, parsedInput.stepOptions, rows, scenarioInput.stepOptions]
-  )
+  const stageOptions = React.useMemo(() => {
+    if (rows.some((row) => row.stageId)) {
+      return Array.from(new Map(rows.map((row) => [row.stageId ?? row.stage, { value: row.stageId ?? row.stage, label: row.stage }])).values())
+    }
+    return toOptions(parsedInput.stageOptions ?? scenarioInput.stageOptions ?? rows.map((row) => row.stage))
+  }, [parsedInput.stageOptions, rows, scenarioInput.stageOptions])
+  const allStepOptions = React.useMemo(() => {
+    if (!parsedInput.stepFacets?.length && rows.some((row) => row.stepKey)) {
+      return Array.from(new Map(rows.map((row) => [row.stepKey ?? row.step, { value: row.stepKey ?? row.step, label: row.step, stageId: row.stageId }])).values())
+    }
+    return getReportSplitTableStepOptions(parsedInput.stepFacets, parsedInput.stepOptions ?? scenarioInput.stepOptions ?? rows.map((row) => row.step))
+  }, [parsedInput.stepFacets, parsedInput.stepOptions, rows, scenarioInput.stepOptions])
   const [selectedStageOptions, setSelectedStageOptions] = React.useState(
     () =>
       findSelectedOptions(
@@ -312,29 +310,18 @@ export function ReportSplitTable({
   const [selectedStepOptions, setSelectedStepOptions] = React.useState(
     () =>
       findSelectedOptions(
-        stepOptions,
+        allStepOptions,
         parsedInput.selectedSteps ?? scenarioInput.selectedSteps
       )
   )
-  const selectedStages = React.useMemo(
-    () => new Set(valuesFromOptions(selectedStageOptions)),
-    [selectedStageOptions]
-  )
-  const selectedSteps = React.useMemo(
-    () => new Set(valuesFromOptions(selectedStepOptions)),
-    [selectedStepOptions]
-  )
-  const filteredRows = React.useMemo(
-    () =>
-      rows.filter((row) => {
-        const matchesStage =
-          selectedStages.size === 0 || selectedStages.has(row.stage)
-        const matchesStep =
-          selectedSteps.size === 0 || selectedSteps.has(row.step)
-
-        return matchesStage && matchesStep
-      }),
-    [rows, selectedStages, selectedSteps]
+  const activeStages = findSelectedOptions(stageOptions, valuesFromOptions(selectedStageOptions))
+  const selectedStages = new Set(valuesFromOptions(activeStages))
+  const stepOptions = allStepOptions.filter((option) => !option.stageId || selectedStages.size === 0 || selectedStages.has(option.stageId))
+  const activeSteps = findSelectedOptions(stepOptions, valuesFromOptions(selectedStepOptions))
+  const selectedSteps = new Set(valuesFromOptions(activeSteps))
+  const filteredRows = rows.filter((row) =>
+    (selectedStages.size === 0 || selectedStages.has(row.stageId ?? row.stage)) &&
+    (selectedSteps.size === 0 || selectedSteps.has(row.stepKey ?? row.step))
   )
   const groupedRows = React.useMemo(
     () => groupReportSplitTableRows(filteredRows),
@@ -359,14 +346,18 @@ export function ReportSplitTable({
                 label="Stage"
                 placeholder="全部"
                 options={stageOptions}
-                value={selectedStageOptions}
-                onValueChange={setSelectedStageOptions}
+                value={activeStages}
+                onValueChange={(options) => {
+                  setSelectedStageOptions(options)
+                  const ids = new Set(valuesFromOptions(options))
+                  setSelectedStepOptions((previous) => previous.filter((option) => !option.stageId || ids.size === 0 || ids.has(option.stageId)))
+                }}
               />
               <MultiFilterCombobox
                 label="Step"
                 placeholder="全部"
                 options={stepOptions}
-                value={selectedStepOptions}
+                value={activeSteps}
                 onValueChange={setSelectedStepOptions}
               />
             </div>
@@ -412,23 +403,17 @@ export function ReportSplitTable({
                                 className="whitespace-normal align-middle"
                               >
                                 <span className="font-medium">
-                                  {row.stage} / {row.step}
-                                </span>{" "}
-                                <span className="text-muted-foreground">
-                                  / {row.seq}
+                                  {row.stage}
+                                </span>
+                                <span className="block text-xs text-muted-foreground">
+                                  {row.step} · {row.stepSequence ?? row.seq}
                                 </span>
                               </TableCell>
                             )}
                             <TableCell>
-                              <div className="flex flex-col items-start gap-1">
+                              <ReportWaferIdentity role={roleLabel}>
                                 <ReportSplitTableWaferLink row={row} onWaferSelect={onWaferSelect} />
-                                <Badge
-                                  variant="outline"
-                                  className="h-6 rounded-full px-2 font-normal text-muted-foreground"
-                                >
-                                  {roleLabel}
-                                </Badge>
-                              </div>
+                              </ReportWaferIdentity>
                             </TableCell>
                             <TableCell className="whitespace-normal">
                               {row.recipe}

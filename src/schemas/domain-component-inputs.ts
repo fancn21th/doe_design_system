@@ -567,12 +567,19 @@ export const reportSplitTableTopFailSchema = z.object({
 })
 export const reportSplitTableStepFacetSchema = z.object({
   step: z.string(),
+  stepKey: z.string().optional(),
+  stageId: z.string().optional(),
+  stepId: z.string().optional(),
   stepSequence: z.number().int().nonnegative().optional(),
   sourceCount: z.number().int().nonnegative(),
   displayCount: z.number().int().nonnegative(),
 })
 export const reportSplitTableRowSchema = z.object({
   waferId: z.string(),
+  displayWaferId: z.string().optional(),
+  stepKey: z.string().optional(),
+  variantRowId: z.string().optional(),
+  roleLabel: z.string().optional(),
   waferOrder: z.number().int().nonnegative().optional(),
   role: z.string(),
   stage: z.string(),
@@ -628,6 +635,7 @@ export const reportYieldDetailModeOptionSchema = z.object({
   label: z.string(),
 })
 export const reportYieldMatrixRowSchema = z.object({
+  sourceWaferId: z.string().optional(),
   rowId: z.string(),
   groupId: z.string(),
   memberId: z.string(),
