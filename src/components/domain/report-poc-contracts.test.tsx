@@ -39,11 +39,11 @@ describe("POC display fact boundaries", () => {
     expect(html).not.toContain("正在读取")
   })
 
-  it("displays supplied formal capability separately from the Mock OOS fields", () => {
+  it("displays supplied CPK without legacy mock spec columns", () => {
     const html = renderToStaticMarkup(<ReportParameterMedian input={reportParameterMedianScenarios.sourceCapability.input} />)
-    expect(html).toContain("SOURCE CPK")
-    expect(html).toContain("ZERO_SIGMA")
-    expect(html).toContain("Mock LSL")
+    expect(html).toContain("CPK=—")
+    expect(html).not.toContain("Mock Spec")
+    expect(html).not.toContain("Mock LSL")
     expect(html).toContain("1.42")
   })
 

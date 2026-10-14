@@ -1,0 +1,15 @@
+---
+title: MES JSON Preview
+description: Runcard 报文只读可视化。
+---
+
+import { MesJsonPreview } from "@/components/domain/mes-json-preview"
+import { mesJsonPreviewScenarios } from "@/components/domain/mes-json-preview.scenarios"
+
+## Preview
+
+<div className="not-prose"><MesJsonPreview {...mesJsonPreviewScenarios.normal} /></div>
+
+## Contract
+
+`json` 输入为原始报文字符串。支持树形展开/折叠、文本模式和复制原始字符串；解析失败仍保留原文。仅显示预览，不提供下发警告、确认或网络调用。真实 MES 提交、权限、请求哈希由消费方负责。示例为 synthetic fixture，不是已发送报文。窄屏工具栏自动换行，内容区域独立滚动。

@@ -9,6 +9,7 @@
     "parameter-median",
     "cp-data",
     "inline-data",
-    "cp-inline"
+    "cp-inline",
+    "mes-json-preview"
   ]
 }

@@ -23,3 +23,8 @@ DOE App 负责加载真实 Flow / Wafer、保存模板或草稿、模板导入�
 - `empty`：尚无 Step
 - `templateReadonly`：模板槽位只读查看
 - `released`：已下发 Step 锁定
+
+
+## 2026-10-14 Product 模板 UI
+
+移除 Factor 列。`templateMode` 与 `hideWaferSlots` 支持 Product 工艺模板不显示晶圆列；实际 DOE 保留 #1–#25。`flowCandidates/onFlowSearch/flowLoading/flowError/onFlowRetry` 为消费者控制的候选与查询意图，组件不调用接口。同 Product 模板筛选属于 App workflow，未迁入本库。删除菜单作用于点击的行；旧 templateSlots 输入兼容保留。

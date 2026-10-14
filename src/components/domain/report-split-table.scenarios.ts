@@ -7,10 +7,20 @@ const rows = reportSplitTableFixture.rows ?? []
 const stepOptions = reportSplitTableFixture.stepOptions ?? []
 
 export const reportSplitTableScenarios = {
-  normal: {
-    name: "normal",
-    input: reportSplitTableFixture,
+  // Synthetic presentation scenario, not a production snapshot.
+  namedSnapshot: {
+    name: "named-snapshot",
+    input: {
+      rows: rows.slice(0, 3).map((row, index) => ({ ...row,
+        waferId: `SYNTHETIC_${String(index + 1).padStart(2, "0")}`,
+        displayWaferId: `W${String(index + 1).padStart(2, "0")}`,
+        stageId: "SYNTHETIC_STAGE", stepId: "SYNTHETIC_STEP", stepSequence: 1,
+        stepKey: "SYNTHETIC_STAGE|SYNTHETIC_STEP|1", stage: "Example Stage", step: "Example Step",
+        roleLabel: index === 0 ? "BSL" : `split-${index}`, isBaseline: index === 0,
+      })),
+    },
   },
+  normal: { name: "normal", input: reportSplitTableFixture },
   baselineAfterSplits: {
     name: "baseline-after-splits",
     input: {

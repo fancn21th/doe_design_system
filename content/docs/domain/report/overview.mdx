@@ -19,25 +19,15 @@ import { ReportState } from "@/components/domain/report-state"
 
 ## Contract
 
-`ReportOverview` 展示 report round 的摘要、KPI、异常晶圆明细、低良率、主要失效和参数异常入口。
+来源：`doe-overview-ui` 提交 `7d066b6` 的已确认 UI。组件无数据时显示空状态，不隐式使用 fixture。
 
-## Layout roles
-
-- 实验概览 KPI 使用中性 Metric Snapshot：label、可比较 value、明确 assessment 和 evidence 依序呈现；Card 只是承载实现，不使用无业务语义的渐变或阴影强调。
-- 实验基础信息使用默认密度的 Analytical Surface；Metric Snapshot 与四组摘要卡使用紧凑密度。所有 Card 保持单层中性边界，不叠加 ring、阴影或装饰性填色。
-- 明细表保持为直接的圆角表格面，不再嵌入第二层卡片，以保留多列内容的有效宽度。
+- 可折叠模块：实验基础信息、实验概览、当前轮次重点、主要失效组、低良率晶圆、参数异常提醒。
+- 指标顺序：Round Weighted Yield、Median Wafer Yield、Average Wafer Yield、Wafer Count。
+- 当前轮次重点输入 `focusItems`，展示 Wafer、Yield、Condition 和 Top Fail；消费者提供已筛选的有效记录，组件不判断阈值或关联工序。
+- 参数提醒输入 `parameterAlerts`，展示参数与 OOS 晶圆数，悬停查看晶圆标识。OOS 是消费者提供的 Source median/spec 事实；不从 CPK 推导。
+- 不再显示三个 Top 卡片及异常 Split Table 区块；旧输入字段兼容保留，不渲染。
+- 窄屏模块纵向排列；重点文本换行，参数标签自动换行。数据请求、报告计算、跨页跳转不属于本组件。
 
 ## Scenarios
 
-- `normal`
-- `empty`
-
-## 统一状态预览
-
-<div className="not-prose"><ReportState status="loading" /><ReportOverview input={reportOverviewScenarios.empty.input} /></div>
-
-加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
-无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
-所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
-及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
-没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+`normal` 为 prototype-backed 展示样例，`empty` 和 `partial` 表达缺失输入；不代表生产数据。

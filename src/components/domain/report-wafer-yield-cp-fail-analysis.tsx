@@ -4,7 +4,6 @@ import * as React from "react"
 import { createPortal } from "react-dom"
 
 import {
-  groupConsecutiveWaferSteps,
   visibleCpFailParameters,
   visibleCpFails,
   waferYieldPlotGeometry,
@@ -71,8 +70,6 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
       narrow.removeEventListener("change", measure)
     }
   }, [input.wafers.length])
-  const groups = groupConsecutiveWaferSteps(input.wafers)
-
   React.useEffect(() => {
     if (!tooltip) return
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -243,8 +240,6 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
                     </div>
                     <ChartXAxis
                       wafers={input.wafers}
-                      groups={groups}
-                      columnWidth={columnWidth}
                       plotWidth={plotWidth}
                     />
                   </div>
@@ -321,17 +316,13 @@ function YieldAxis() {
 
 function ChartXAxis({
   wafers,
-  groups,
-  columnWidth,
   plotWidth,
 }: {
   wafers: ReportWaferYieldCpFail["wafers"]
-  groups: Array<{ step: string; startIndex: number; count: number }>
-  columnWidth: number
   plotWidth: number
 }) {
   return (
-    <div className="relative h-[9.125rem]" style={{ width: plotWidth }}>
+    <div className="relative h-[6.75rem]" style={{ width: plotWidth }}>
       <div
         className="grid h-[6.75rem]"
         style={{
@@ -342,9 +333,13 @@ function ChartXAxis({
           <div key={wafer.waferId} className="grid grid-rows-[5.125rem_1.625rem] border-l last:border-r">
             <span
               className="flex items-start justify-center overflow-hidden pt-2 text-[10px] leading-3 text-muted-foreground [writing-mode:vertical-rl] [transform:rotate(180deg)]"
-              title={wafer.condition}
+              title={(wafer.memberships?.length ?? 0) > 0 ? `${wafer.memberships?.length} memberships` : wafer.condition}
             >
-              {wafer.condition}
+              {wafer.memberships?.length === 1
+                ? wafer.memberships[0].roleLabel
+                : (wafer.memberships?.length ?? 0) > 1
+                  ? `${wafer.memberships?.length} memberships`
+                  : wafer.condition}
             </span>
             <span className="flex items-center justify-center border-t font-mono text-[10px] text-foreground">
               {wafer.waferId}
@@ -352,19 +347,6 @@ function ChartXAxis({
           </div>
         ))}
       </div>
-      {groups.map((group) => (
-        <span
-          key={`${group.step}-${group.startIndex}`}
-          className="absolute top-[6.75rem] flex h-[2.375rem] items-start justify-center overflow-hidden border-t border-l bg-background px-1 pt-1.5 text-center text-[10px] leading-3 text-foreground [overflow-wrap:anywhere] last:border-r"
-          style={{
-            left: group.startIndex * columnWidth,
-            width: group.count * columnWidth,
-          }}
-          title={group.step}
-        >
-          {group.step}
-        </span>
-      ))}
     </div>
   )
 }
@@ -410,10 +392,20 @@ function ChartTooltipCard({
       <strong className="mb-1.5 block text-sm">
         Wafer {tooltip.wafer.waferId.replace(/^W/i, "")}
       </strong>
+      {tooltip.wafer.sourceWaferId && tooltip.wafer.sourceWaferId !== tooltip.wafer.waferId
+        ? <TooltipRow label="Wafer ID" value={tooltip.wafer.sourceWaferId} />
+        : null}
       <TooltipRow
         label="Yield"
         value={tooltip.wafer.yield === null ? "Unavailable" : `${tooltip.wafer.yield.toFixed(2)}%`}
       />
+      {(tooltip.wafer.memberships ?? []).map((membership) => (
+        <TooltipRow
+          key={`${membership.stepKey}:${membership.variantRowId}`}
+          label={`${membership.stage} / ${membership.step}`}
+          value={`${membership.roleLabel}${membership.condition ? ` · ${membership.condition}` : ""}`}
+        />
+      ))}
       {fails.map((fail) => (
         <TooltipRow
           key={fail.parameter}
@@ -441,7 +433,10 @@ function chartWaferLabel(
   const fails = visibleCpFails(wafer, threshold)
     .map((fail) => `${fail.parameter} ${fail.percent.toFixed(2)}%`)
     .join(", ")
-  return `${wafer.waferId} Yield ${wafer.yield === null ? "Unavailable" : `${wafer.yield.toFixed(2)}%`}${
+  const memberships = (wafer.memberships ?? [])
+    .map((membership) => `${membership.stage} / ${membership.step} ${membership.roleLabel}`)
+    .join(", ")
+  return `${wafer.sourceWaferId ?? wafer.waferId} Yield ${wafer.yield === null ? "Unavailable" : `${wafer.yield.toFixed(2)}%`}${
     fails ? `, ${fails}` : ""
-  }`
+  }${memberships ? `, memberships: ${memberships}` : ""}`
 }

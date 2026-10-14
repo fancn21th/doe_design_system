@@ -33,3 +33,5 @@ export { StepConfigDialog } from "@/components/domain/step-config-dialog"
 export { ReportState } from "@/components/domain/report-state"
 
 export { BlockTitle } from "@/components/domain/block-title"
+
+export { MesJsonPreview } from "@/components/domain/mes-json-preview"

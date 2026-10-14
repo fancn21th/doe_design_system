@@ -47,10 +47,37 @@ function unique(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)))
 }
 
+// Presentation thresholds approved for this matrix; OOS remains an independent upstream fact.
+const CPK_BANDS = {
+  bad: { label: "CPK < 1.33", background: "#fdecee", color: "#d70015", border: "#d70015" },
+  watch: { label: "1.33 ≤ CPK < 1.67", background: "#fff4e5", color: "#b25000", border: "#b25000" },
+  neutral: { label: "CPK ≥ 1.67", background: undefined, color: "#6e6e73", border: "#c7c7cc" },
+}
+
+function getCpk(cell: ReportParameterMedianCell) {
+  // An explicit unavailable capability must never fall back to a legacy CPK.
+  return cell.capability ? cell.capability.cpk : cell.cpk
+}
+
 function getCellTone(cell: ReportParameterMedianCell) {
-  if (cell.oos) return "bad"
-  if (cell.failLinked) return "watch"
+  const cpk = getCpk(cell)
+  if (cpk == null || !Number.isFinite(cpk)) return "neutral"
+  if (cpk < 1.33) return "bad"
+  if (cpk < 1.67) return "watch"
   return "neutral"
+}
+
+function CpkLegend() {
+  return (
+    <div aria-label="CPK 图例" className="flex min-w-0 flex-wrap items-center min-h-[42px] gap-x-3 gap-y-2 text-xs md:justify-end" style={{ color: "#6e6e73" }}>
+      {Object.entries(CPK_BANDS).map(([key, band]) => (
+        <span key={key} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+          <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 3, border: `2px solid ${band.border}`, background: "transparent", flexShrink: 0 }} />
+          {band.label}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 function getOosCount(row: ReportParameterMedianRow) {
@@ -121,7 +148,7 @@ function ParameterMedianFilterBar({
 
   return (
     <FieldGroup className="gap-3">
-      <div className="grid gap-3 md:grid-cols-[minmax(16rem,24rem)_auto] md:items-end">
+      <div className="grid gap-3 md:grid-cols-[minmax(16rem,24rem)_auto_minmax(0,1fr)] md:items-end">
         <Field>
           <FieldLabel htmlFor={inputId}>CP Parameter</FieldLabel>
           <Input
@@ -140,7 +167,7 @@ function ParameterMedianFilterBar({
           </datalist>
         </Field>
 
-        <Field orientation="horizontal" className="h-8 w-fit items-center">
+        <Field orientation="horizontal" className="h-8 items-center">
           <Checkbox
             id={checkboxId}
             checked={displayOosOnly}
@@ -155,6 +182,8 @@ function ParameterMedianFilterBar({
             {oosResultCount}
           </ReportBadge>
         </Field>
+        <CpkLegend />
+
       </div>
     </FieldGroup>
   )
@@ -173,24 +202,23 @@ function ParameterCell({
     return <span className="text-muted-foreground">-</span>
   }
 
+  const cpk = getCpk(cell)
+  const band = getCellTone(cell)
   const content = (
-    <div className="flex min-h-10 min-w-0 flex-col justify-center gap-1 whitespace-normal break-words">
-      <span className="font-mono text-sm font-semibold text-sky-700">
+    <div className="flex min-h-[38px] min-w-0 flex-col items-start justify-center gap-0.5 px-1.5 py-[3px]">
+      <span style={{ color: "#0071e3", textDecoration: "underline", textUnderlineOffset: 2, fontWeight: cell.oos ? 700 : 400 }}>
         {formatParameterValue(cell.value)}
       </span>
-      {(cell.capability || cell.cpk !== undefined) && (
-        <span className="font-mono text-xs leading-4 text-muted-foreground" title={cell.capability ? `正式规格 · ${cell.capability.status} · LSL ${formatParameterValue(cell.capability.lsl)} / USL ${formatParameterValue(cell.capability.usl)}` : "场景提供的 CPK"}>
-          {cell.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "CPK"}: {formatParameterValue(cell.capability ? cell.capability.cpk : cell.cpk)}
-          {cell.capability?.cpk === null && <span className="ml-1 font-sans">({cell.capability.status})</span>}
-        </span>
-      )}
-      <span className="flex items-center gap-1.5 text-[10px] leading-none text-muted-foreground">
+      <span className="inline-flex min-h-[14px] items-center gap-[5px] whitespace-nowrap" style={{ fontSize: 10, lineHeight: "14px" }}>
         {cell.oos && (
-          <span className="rounded bg-amber-600 px-1 py-0.5 text-[9px] font-bold text-white">
-            OOS
-          </span>
+          <span style={{ background: "#b25000", color: "#fff", borderRadius: 4, padding: "1px 5px", fontSize: 10, fontWeight: 700, lineHeight: "14px" }}>OOS</span>
         )}
-        {cell.failLinked && <span>YIELD context</span>}
+        <span
+          style={{ color: CPK_BANDS[band].color, fontWeight: band === "neutral" ? 400 : 700 }}
+          title={cell.capability ? `${cell.capability.specSource} CPK · ${cell.capability.status} · LSL ${formatParameterValue(cell.capability.lsl)} / USL ${formatParameterValue(cell.capability.usl)}` : "输入 CPK"}
+        >
+          CPK={cpk == null || !Number.isFinite(cpk) ? "—" : cpk.toFixed(2)}
+        </span>
       </span>
     </div>
   )
@@ -245,10 +273,9 @@ function ParameterMedianMatrix({
       aria-label="Parameter Median matrix"
       tabIndex={0}
     >
-      <Table className="domain-ui-report-table min-w-(--doe-parameter-median-matrix-min-width) table-fixed border-separate border-spacing-0" style={{ width: 568 + waferIds.length * 144 }}>
+      <Table className="domain-ui-report-table min-w-(--doe-parameter-median-matrix-min-width) table-fixed border-separate border-spacing-0" style={{ width: 216 + waferIds.length * 144 }}>
         <colgroup>
           <col style={{ width: 160 }} /><col style={{ width: 56 }} />
-          <col style={{ width: 112 }} /><col style={{ width: 112 }} /><col style={{ width: 128 }} />
           {waferIds.map((waferId) => <col key={waferId} style={{ width: 144 }} />)}
         </colgroup>
         <TableHeader>
@@ -258,15 +285,6 @@ function ParameterMedianMatrix({
             </TableHead>
             <TableHead className={cn("whitespace-normal", headerClass)}>
               Unit
-            </TableHead>
-            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
-              Mock LSL
-            </TableHead>
-            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
-              Mock USL
-            </TableHead>
-            <TableHead className={cn("whitespace-normal break-words", headerClass)}>
-              Mock Spec
             </TableHead>
             {waferIds.map((waferId) => (
               <TableHead
@@ -283,8 +301,6 @@ function ParameterMedianMatrix({
             const cellsByWafer = new Map(
               row.wafers.map((cell) => [cell.waferId, cell])
             )
-            const oosCount = getOosCount(row)
-
             return (
               <TableRow key={row.parameter}>
                 <TableCell className={cn("whitespace-normal break-all", firstColumnClass)}>
@@ -301,24 +317,8 @@ function ParameterMedianMatrix({
                       {row.parameter}
                     </span>
                   )}
-                  {oosCount > 0 && (
-                    <span className="ml-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-                      OOS · {oosCount}
-                    </span>
-                  )}
                 </TableCell>
                 <TableCell className="whitespace-normal">{row.unit}</TableCell>
-                <TableCell className="whitespace-nowrap font-mono">
-                  {formatParameterValue(row.lsl)}
-                </TableCell>
-                <TableCell className="whitespace-nowrap font-mono">
-                  {formatParameterValue(row.usl)}
-                </TableCell>
-                <TableCell className="whitespace-normal break-words [&_[data-slot=badge]]:h-auto [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:whitespace-normal [&_[data-slot=badge]]:break-all [&_[data-slot=badge]]:py-1 [&_[data-slot=badge]]:text-left">
-                  <ReportBadge tone={row.specKind === "UNAVAILABLE" ? "neutral" : "good"}>
-                    {row.specKind ?? "UNAVAILABLE"}
-                  </ReportBadge>
-                </TableCell>
                 {waferIds.map((waferId) => {
                   const cell = cellsByWafer.get(waferId)
                   const tone = cell ? getCellTone(cell) : "neutral"
@@ -326,11 +326,10 @@ function ParameterMedianMatrix({
                   return (
                     <TableCell
                       key={waferId}
-                      className={cn(
-                        "whitespace-normal",
-                        tone === "bad" && "bg-red-50",
-                        tone === "watch" && "bg-amber-50"
-                      )}
+                      aria-label={cell?.oos ? `${row.parameter} · ${waferId} · OOS` : undefined}
+                      title={cell ? `${row.parameter} · ${waferId} · Source LSL ${formatParameterValue(cell.lsl)} / USL ${formatParameterValue(cell.usl)}` : undefined}
+                      className="whitespace-normal"
+                      style={{ backgroundColor: CPK_BANDS[tone].background }}
                     >
                       <ParameterCell
                         cell={cell}
@@ -388,7 +387,7 @@ export function ReportParameterMedian({
         <EmptyState>暂无 Parameter Median 数据</EmptyState>
       ) : (
         <div className="domain-ui-typography domain-ui-report-pane grid min-w-0 gap-4 p-4">
-          <ReportBlock input={{ id: "cp-parameter-analysis", title: "CP Parameter Analysis", helpText: "按 CP 参数对比各 Wafer 的中位数和规格状态，可搜索参数或仅显示 OOS；规格及状态以当前报告快照为准。" }}>
+          <ReportBlock input={{ id: "cp-parameter-analysis", title: "CP Parameter Analysis", helpText: "按 CP 参数对比各 Wafer 的中位数和规格状态，可搜索参数或仅显示 OOS；中位数超限按每片 Wafer 的 Source Spec 判断，背景颜色表示 Source CPK 等级；无规格时不可评估。" }}>
           <ParameterMedianFilterBar
             parameterQuery={parameterQuery}
             parameterOptions={parameterOptions}
@@ -397,6 +396,17 @@ export function ReportParameterMedian({
             onParameterQueryChange={onParameterQueryChange}
             onOosOnlyChange={onOosOnlyChange}
           />
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <ReportBadge tone="neutral">
+              Parameter: {parameterQuery || "All"}
+            </ReportBadge>
+            <ReportBadge tone={showOosOnly ? "watch" : "neutral"}>
+              OOS only: {showOosOnly ? "On" : "Off"}
+            </ReportBadge>
+            <span>
+              {rows.length} 个参数 · {waferIds.length} 片 Wafer
+            </span>
+          </div>
           <ParameterMedianMatrix
             rows={rows}
             waferIds={waferIds}

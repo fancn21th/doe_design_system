@@ -19,46 +19,14 @@ import { ReportState } from "@/components/domain/report-state"
 
 ## Contract
 
-`ReportParameterMedian` 展示 CP parameter median 与 CPK matrix。
+采纳 `doe-overview-ui@7d066b6` 的 Source Spec UI，保留 CPK 区间配色。
 
-- 过滤区域使用 shadcn/base Input form pattern 和 Checkbox。`CP Parameter` 输入值通过 `onParameterQueryChange` 抛给外部业务状态；`仅显示 OOS` 通过 `onOosOnlyChange` 抛给外部业务状态。
-- 组件不在内部过滤 `rows`，只渲染注入后的业务数据。docs 预览里的输入状态只用于保持控件可操作。
-- Matrix 使用 shadcn/base Table，支持 sticky header 和 sticky first column，以保留宽表横向与纵向检查能力。
-- `Mock LSL` / `Mock USL` 按原型字段展示，不视为生产规格。
-- `OOS`、`CPK`、median value 均来自 fixture/schema，不在组件内部重算。
-
-查询区使用无外框的紧凑控制行，只保留 CP Parameter、OOS 开关、结果数与控件自身边界；不重复展示标题、描述、状态图例或查询摘要。矩阵以自身边界和局部双向滚动作为唯一内容壳，其固定首列与表头只服务于宽表检视。
-
-## Consumer handoff · SOURCE CPK
-
-每个 cell 可携带 `capability: {cpk, status, specSource, lsl, usl, mean, sampleSigma, n}`。
-正式规格 `specSource: "SOURCE"` 的 CPK 与现有 Mock OOS 分开显示；CPK 不参与现有 OOS / Yield context 判色。NULL CPK 显示缺值及输入状态，0、负数保留数值。
-公式、样本范围、正式规格读取和状态判断均属于 Backend；组件只格式化输入，不能由 Median 推导 CPK。
-`onParameterSelect(parameter)` 和 `onWaferCellSelect({parameter, waferId, cell})` 由 App 接到 CP Data / Parameter Map，组件不拥有跨 Tab 路由。
-
-<div className="domain-ui-preview-wide">
-  <ReportParameterMedian input={reportParameterMedianScenarios.sourceCapability.input} />
-</div>
+- 矩阵固定 Parameter / Unit 两列，后接 Wafer 列；不展示旧 Mock LSL、Mock USL、Mock Spec 列。
+- 中位数、每片 Wafer 的规格、OOS 三态和 CPK 都由输入提供。缺规格或缺中位数表示不可评估，不冒充合格。
+- `capability.cpk` 优先于旧 `cpk`；空值不回退。CPK < 1.33 红色，1.33 ≤ CPK < 1.67 橙色，其余中性；CPK 不改变 OOS 判定。
+- 参数搜索与仅显示 OOS 沿用受控输入/callback，组件不发起数据请求。完整状态通过原组件提示保留。
+- Parameter 160px、Unit 56px，每个 Wafer 144px；横向滚动，表头与参数列固定。
 
 ## Scenarios
 
-- `normal`
-- `sourceCapability`（明确 SOURCE CPK、Mock OOS 与不可计算状态分离）
-- `empty`
-
-## 统一状态预览
-
-<div className="not-prose"><ReportState status="loading" /><ReportParameterMedian input={reportParameterMedianScenarios.empty.input} /></div>
-
-加载及无数据展示采用已通过 Split Table 验收的公共 `ReportState`：
-无外框居中排版、18px 标题、浅色说明；最小高度 320px，紧凑子面板可缩到 160px。
-所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
-及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
-没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
-
-
-## 表格视觉一致性 · 2026-10-10
-
-矩阵遵循 Split Table 的 14px 正文、40px 浅色表头、8px 单元格内边距和圆角边框。元数据列总宽度568px，明确限制各列宽度（Parameter 160px、Unit 56px、Mock LSL/USL 各112px、Mock Spec 128px），长参数与完整 Mock provenance 换行展示而不裁掉内容；Wafer 列以144px为可读基线，SOURCE CPK/不可计算状态允许换行，所有统计事实仍来自输入。
-
-Mock LSL/USL 数值保持14px正文与整串显示，不拆分小数；宽度调整不改变规格值或精度。
+normal、empty、unavailable、cpkThresholds、sourceCapability；fixture 是展示样例，不作真实业务结论。

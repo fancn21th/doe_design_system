@@ -103,3 +103,13 @@ Out of scope during intake:
   inspection.
 - OOS flags, CPK values, and median values are supplied by schema-shaped data;
   the component does not recompute median, CPK, or final engineering judgment.
+
+## 2026-10-13 · Parameter Median CPK legend
+
+User approved CPK bands (<1.33, [1.33,1.67), ≥1.67) for cell background and CPK text, with a wrapping top-right legend. Missing CPK stays neutral with an em dash. OOS and fail-linked facts remain separate badges/text. See the Parameter Median MDX contract and cpkThresholds mock scenario.
+
+2026-10-13 prototype correction: exact colors and hollow 12px rounded-square legend adopted from user-provided single-file Workbench / embedded DOE report.html (CSS lines 2533–2544, renderer 5773). Removed missing-value legend text; CPK uses two decimals with inline OOS badge, preserving source metadata in title.
+
+## 2026-10-14 authoritative UI update
+
+The current contract supersedes the earlier prototype Mock LSL/USL notes above. Source: doe-overview-ui commit 7d066b6. Current matrix contains Parameter, Unit and wafer columns, with supplied Source OOS and independent CPK bands. The sourceCapability scenario remains available; no legacy Mock Spec columns are rendered. See content/docs/domain/report/parameter-median.mdx.

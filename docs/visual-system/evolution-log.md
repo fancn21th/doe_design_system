@@ -96,3 +96,14 @@ Verification: all four level-3 consumers share identical computed styles and one
 2026-10-10：用户将CP × Inline Step / All Steps认可为报告筛选器样式打样，记录于`docs/patterns/report-filters.md`。仅新增规范与实际量测，不修改运行组件；其他Tab尚未按新基准验收。
 
 2026-10-10：用户要求将七类已确认UI标准整理为DS独立文档，新增`docs/patterns/ui-acceptance-standards.md`及Patterns入口。保留专题规范与tokens的权威，明确量测、复用范围和参考边界；仅文档整理。
+
+## 2026-10-13 · Parameter Median CPK legend
+
+User approved CPK bands (<1.33, [1.33,1.67), ≥1.67) for cell background and CPK text, with a wrapping top-right legend. Missing CPK stays neutral with an em dash. OOS and fail-linked facts remain separate badges/text. See the Parameter Median MDX contract and cpkThresholds mock scenario.
+
+2026-10-13 prototype correction: exact colors and hollow 12px rounded-square legend adopted from user-provided single-file Workbench / embedded DOE report.html (CSS lines 2533–2544, renderer 5773). Removed missing-value legend text; CPK uses two decimals with inline OOS badge, preserving source metadata in title.
+
+
+## 2026-10-14 App UI 回收
+
+仅同步本库：从 doe-overview-ui@7d066b6 采纳 Overview 模块精简、重点/OOS展示、Split/Yield分组标签、Parameter Median Source Spec、无Factor的SplitMatrix和MES JSON预览。数据计算、同Product模板筛选、Oracle/MES请求继续由App负责。

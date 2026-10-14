@@ -8,6 +8,7 @@ import {
   TrendingDownIcon,
 } from "lucide-react"
 import * as React from "react"
+import { ReportWaferIdentity, ReportWaferLink } from "@/components/domain/report-wafer-identity"
 
 import { reportYieldAnalysisScenarios } from "@/components/domain/report-yield-analysis.scenarios"
 import { WaferYieldCpFailAnalysis } from "@/components/domain/report-wafer-yield-cp-fail-analysis"
@@ -78,6 +79,14 @@ function unique(values: string[]) {
 
 function toOptions(values: string[] = []): ComboboxOption[] {
   return unique(values).map((value) => ({ label: value, value }))
+}
+
+function facetOptions(
+  facets: ReportYieldAnalysisInput["stageFacets"] | ReportYieldAnalysisInput["stepFacets"],
+  fallback: string[] = [],
+): ComboboxOption[] {
+  if (!facets?.length) return toOptions(fallback)
+  return facets.map((facet) => ({ label: facet.label, value: facet.value }))
 }
 
 function findSelectedOptions(options: ComboboxOption[], values: string[] = []) {
@@ -256,13 +265,18 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
                   <span className="block text-xs text-muted-foreground">{row.step} · {row.seq}</span>
                 </TableCell>}
                 <TableCell>
-                  {onWaferSelect ? <button type="button" className="font-mono text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(row.waferId)}>{row.waferId}</button> : <b className="font-mono text-sky-700">{row.waferId}</b>}
-                  {row.role && <span className="ml-2 text-xs text-muted-foreground">{row.role}</span>}
+                  <ReportWaferIdentity role={row.role}>
+                    <ReportWaferLink label={row.waferId} sourceWaferId={row.sourceWaferId ?? row.waferId} onSelect={onWaferSelect ? () => onWaferSelect(row.sourceWaferId ?? row.waferId) : undefined} />
+                  </ReportWaferIdentity>
                 </TableCell>
                 <TableCell className="font-mono">{row.condition}</TableCell>
                 <TableCell><ReportBadge tone={row.tone ?? "neutral"}>{formatOptionalPercent(row.yield)}</ReportBadge></TableCell>
-                <TableCell className="font-mono" title={row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
-                  {row.deltaPp === null ? (row.role?.toUpperCase() === "BASELINE" || row.baselineWaferId === row.waferId ? "—" : row.baselineWaferId ? "缺少有效 Yield" : "缺少比较对象") : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
+                <TableCell className="font-mono" title={row.baselineWaferIds?.length ? `Baseline pool: ${row.baselineWaferIds.join(", ")}` : row.baselineWaferId ? `Baseline: ${row.baselineWaferId}` : undefined}>
+                  {row.deltaPp === null
+                    ? (row.isBaselineVariant || ["BASELINE", "BSL"].includes((row.roleLabel ?? row.role ?? "").toUpperCase()) || row.baselineWaferId === row.waferId
+                        ? "—"
+                        : row.deltaReasonCode ?? (row.baselineWaferIds?.length || row.baselineWaferId ? "缺少有效 Yield" : "缺少比较对象"))
+                    : `${row.deltaPp > 0 ? "+" : ""}${row.deltaPp.toFixed(2)} pp`}
                 </TableCell>
                 <TableCell className="font-mono">{row.goodDies === null || row.goodDies === undefined ? "—" : formatCount(row.goodDies)} / {formatOptionalCount(row.testedDies)}</TableCell>
                 {matrixColumns.map((column) => {
@@ -282,8 +296,16 @@ function MatrixTable({ rows, matrixColumns, onWaferSelect, focusedWaferId }: {
   )
 }
 
-function LossYieldTable({ rows }: { rows: ReportYieldLossRow[] }) {
-  if (rows.length === 0) return <EmptyState>暂无 Loss Yield 数据</EmptyState>
+function LossYieldTable({ rows, status, reasonCode }: {
+  rows: ReportYieldLossRow[]
+  status?: string
+  reasonCode?: string
+}) {
+  if (status === "INCOMPLETE" || status === "UNAVAILABLE" || reasonCode === "LOSS_FACTS_INCOMPLETE") {
+    return <EmptyState>Loss Yield 数据不完整（{reasonCode ?? "LOSS_FACTS_INCOMPLETE"}）</EmptyState>
+  }
+  if (status === "ZERO") return <EmptyState>当前筛选范围的 Yield Loss 为 0</EmptyState>
+  if (rows.length === 0) return <EmptyState>当前筛选范围没有 Loss Yield 数据</EmptyState>
 
   return (
     <div className="domain-ui-split-table-shell">
@@ -357,7 +379,7 @@ function ConditionYieldTable({ rows, onWaferSelect }: {
                 </span>
               </TableCell>
               <TableCell className="font-mono">{row.condition}</TableCell>
-              <TableCell className="font-mono">{row.waferIds.map((waferId, index) => <React.Fragment key={waferId}>{index > 0 && " / "}{onWaferSelect ? <button type="button" className="text-sky-700 underline-offset-2 hover:underline" onClick={() => onWaferSelect(waferId)}>{waferId}</button> : waferId}</React.Fragment>)}</TableCell>
+              <TableCell className="font-mono">{row.waferIds.map((waferId, index) => <React.Fragment key={row.sourceWaferIds?.[index] ?? waferId}>{index > 0 && " / "}{onWaferSelect ? <button type="button" className="text-sky-700 underline-offset-2 hover:underline" title={row.sourceWaferIds?.[index]} onClick={() => onWaferSelect(row.sourceWaferIds?.[index] ?? waferId)}>{waferId}</button> : waferId}</React.Fragment>)}</TableCell>
               <TableCell className="text-right">
                 <ReportBadge tone={row.tone}>
                   {formatOptionalPercent(row.weightedYield)}
@@ -406,11 +428,13 @@ export function ReportYieldAnalysis({
     onDetailModeChange && parsedInput.selectedDetailMode
       ? parsedInput.selectedDetailMode
       : localDetailMode
-  const stageOptions = toOptions(
+  const stageOptions = facetOptions(
+    parsedInput.stageFacets,
     parsedInput.stageOptions ??
       wafers.map((wafer) => wafer.stage ?? "")
   )
-  const stepOptions = toOptions(
+  const stepOptions = facetOptions(
+    parsedInput.stepFacets,
     parsedInput.stepOptions ??
       wafers.map((wafer) => wafer.step ?? "")
   )
@@ -480,7 +504,7 @@ export function ReportYieldAnalysis({
                 <MatrixTable rows={matrixRows} matrixColumns={matrixColumns} onWaferSelect={onWaferSelect} focusedWaferId={parsedInput.focusedWaferId} />
               </TabsContent>
               <TabsContent value="loss-yield" className="min-w-0 max-w-full">
-                <LossYieldTable rows={lossYieldRows} />
+                <LossYieldTable rows={lossYieldRows} status={parsedInput.lossStatus} reasonCode={parsedInput.lossReasonCode} />
               </TabsContent>
               <TabsContent value="condition-yield-comparison" className="min-w-0 max-w-full">
                 <ConditionYieldTable rows={conditionYieldRows} onWaferSelect={onWaferSelect} />
