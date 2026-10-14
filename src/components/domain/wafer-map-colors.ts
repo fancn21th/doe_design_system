@@ -5,43 +5,29 @@ import defectJson from "@/config/wafer-map/defect-map.json"
 
 // Static JSON is the colour authority. Validation also provides the future
 // settings seam; colour choices never classify a Die or change a supplied scale.
-const percentage = z.number().finite().min(0).max(100)
-const hue = z.number().finite().min(0).max(360)
+const hexColor = z.string().regex(/^#[\da-f]{6}$/i, "Use #RRGGBB")
 const color = z.string().refine((value) => {
   if (/^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(value)) return true
   const match = /^hsl\((\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (\d+(?:\.\d+)?)%\)$/.exec(value)
   return !!match && Number(match[1]) <= 360 && Number(match[2]) <= 100 && Number(match[3]) <= 100
 }, "Use #RGB, #RRGGBB or hsl(H S% L%) with valid channel ranges")
-const colorMap = z.record(z.string(), color)
 const canvas = z.strictObject({
   waferBackground: color, waferBorder: color, dieBackground: color,
   selectedOutline: color, hoverOutline: color,
 })
 const metadata = { schemaVersion: z.literal(1), id: z.string().min(1), name: z.string().min(1), canvas }
-const hueRange = z.strictObject({ start: hue, count: z.number().int().positive().max(360) })
-  .refine((value) => value.start + value.count - 1 <= 360, "Hue range exceeds 360")
-const lightnessRange = z.strictObject({ start: percentage, count: z.number().int().positive().max(101) })
-  .refine((value) => value.start + value.count - 1 <= 100, "Lightness range exceeds 100")
-const binStyle = z.strictObject({
-  byBin: colorMap,
-  fallback: z.strictObject({
-    hues: z.union([z.array(hue).min(1), hueRange]),
-    saturation: percentage,
-    lightness: lightnessRange,
-  }),
-})
 export const finalBinColorSchemeSchema = z.strictObject({
-  ...metadata, states: z.strictObject({ pass: binStyle, fail: binStyle, unknown: binStyle }),
+  ...metadata, palette: z.array(color).min(1), fallback: color,
 })
 export const parameterColorSchemeSchema = z.strictObject({
-  ...metadata, invalidValue: color, cpFailOutline: color,
-  stops: z.array(z.strictObject({ at: z.number().finite().min(0).max(1), hsl: z.tuple([hue, percentage, percentage]) })).min(2)
+  ...metadata, invalidValue: color, cpFailOutline: color.nullable(), interpolation: z.literal("rgb"),
+  stops: z.array(z.strictObject({ at: z.number().finite().min(0).max(1), color: hexColor })).min(2)
     .refine((stops) => stops[0].at === 0 && stops[stops.length - 1].at === 1
       && stops.every((stop, index) => index === 0 || stop.at > stops[index - 1].at),
     "Stops must run strictly from 0 to 1 without duplicate positions"),
 })
 export const defectColorSchemeSchema = z.strictObject({
-  ...metadata, byType: colorMap, fallbackPalette: z.array(color).min(1),
+  ...metadata, palette: z.array(color).min(1), fallback: color,
 })
 export type FinalBinColorScheme = z.infer<typeof finalBinColorSchemeSchema>
 export type ParameterColorScheme = z.infer<typeof parameterColorSchemeSchema>
@@ -59,50 +45,45 @@ export const waferMapColorSchemes = {
   defect: readScheme(defectColorSchemeSchema, defectJson, "defect-map.json"),
 }
 // Retain the legacy public export; there is no second palette in the model.
-export const DEFAULT_FINAL_BIN_PALETTE = waferMapColorSchemes["cp-final-bin"].states.unknown.byBin
+export const DEFAULT_FINAL_BIN_PALETTE = waferMapColorSchemes["cp-final-bin"].palette
 
-function ownColor(palette: Readonly<Record<string, string>>, key: string) {
-  return Object.hasOwn(palette, key) ? palette[key] : undefined
+function rgbChannels(value: string): [number, number, number] {
+  return [Number.parseInt(value.slice(1, 3), 16), Number.parseInt(value.slice(3, 5), 16), Number.parseInt(value.slice(5, 7), 16)]
 }
 
-function colorHash(value: string) {
-  let hash = 0
-  for (const character of value) hash = (hash * 31 + character.charCodeAt(0)) >>> 0
-  return hash
-}
-
-function hslColor(channels: readonly number[]) {
-  return `hsl(${channels[0]} ${channels[1]}% ${channels[2]}%)`
+function interpolateRgb(left: string, right: string, amount: number) {
+  const from = rgbChannels(left)
+  const to = rgbChannels(right)
+  return `#${from.map((channel, index) => Math.round(channel + (to[index] - channel) * amount).toString(16).padStart(2, "0")).join("")}`
 }
 
 export function finalBinColor(
   finalBin: string,
-  palette?: Readonly<Record<string, string>>,
-  pass?: boolean,
+  orderedBins: readonly string[],
   scheme: FinalBinColorScheme = waferMapColorSchemes["cp-final-bin"],
 ): string {
   const normalized = finalBin.replace(/^BIN\s*/i, "").trim()
-  const state = pass === true ? "pass" : pass === false ? "fail" : "unknown"
-  const style = scheme.states[state]
-  // Legacy caller palettes never override an explicit CP state. The JSON has
-  // separate Pass/Fail rows so both states can be configured deliberately.
-  const explicit = (state === "unknown" && palette ? ownColor(palette, normalized) : undefined) ?? ownColor(style.byBin, normalized)
-  if (explicit) return explicit
-  const hash = colorHash(normalized || "unknown")
-  const { hues, saturation, lightness } = style.fallback
-  const selectedHue = Array.isArray(hues) ? hues[hash % hues.length] : hues.start + hash % hues.count
-  return hslColor([selectedHue, saturation, lightness.start + hash % lightness.count])
+  const index = orderedBins.findIndex((bin) => bin.replace(/^BIN\s*/i, "").trim() === normalized)
+  return index < 0 ? scheme.fallback : scheme.palette[index % scheme.palette.length]
+}
+
+export function finalBinDieColor(
+  die: { finalBin: string; binCode?: string | null },
+  orderedBins: readonly string[],
+  scheme: FinalBinColorScheme = waferMapColorSchemes["cp-final-bin"],
+) {
+  return finalBinColor(die.binCode ?? die.finalBin, orderedBins, scheme)
 }
 
 export function parameterColor(value: number, low: number, high: number, scheme: ParameterColorScheme = waferMapColorSchemes["cp-parameter"]): string {
   const amount = Math.max(0, Math.min(1, (value - low) / (high - low || 1)))
   const { stops } = scheme
   const end = stops.findIndex((stop) => stop.at >= amount)
-  if (end === 0) return hslColor(stops[0].hsl)
+  if (end === 0) return interpolateRgb(stops[0].color, stops[0].color, 0)
   const left = stops[end - 1]
   const right = stops[end]
   const fraction = (amount - left.at) / (right.at - left.at)
-  return hslColor(left.hsl.map((channel, index) => channel + (right.hsl[index] - channel) * fraction))
+  return interpolateRgb(left.color, right.color, fraction)
 }
 
 /** Canvas and both legends use the same supplied numeric domain and colour table. */
@@ -111,6 +92,7 @@ export function parameterColorGradient(low: number, high: number, scheme: Parame
   return `linear-gradient(to right, ${positions.map((at) => `${parameterColor(low + (high - low) * at, low, high, scheme)} ${at * 100}%`).join(", ")})`
 }
 
-export function defectColor(typeId: string, scheme: DefectColorScheme = waferMapColorSchemes.defect): string {
-  return ownColor(scheme.byType, typeId) ?? scheme.fallbackPalette[colorHash(typeId) % scheme.fallbackPalette.length]
+export function defectColor(typeId: string, orderedTypeIds: readonly string[], scheme: DefectColorScheme = waferMapColorSchemes.defect): string {
+  const index = orderedTypeIds.indexOf(typeId)
+  return index < 0 ? scheme.fallback : scheme.palette[index % scheme.palette.length]
 }

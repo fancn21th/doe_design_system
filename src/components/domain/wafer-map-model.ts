@@ -1,4 +1,4 @@
-export { DEFAULT_FINAL_BIN_PALETTE, finalBinColor, parameterColor, parameterColorGradient, defectColor } from "./wafer-map-colors"
+export { DEFAULT_FINAL_BIN_PALETTE, finalBinColor, finalBinDieColor, parameterColor, parameterColorGradient, defectColor } from "./wafer-map-colors"
 
 export type DieId = string
 

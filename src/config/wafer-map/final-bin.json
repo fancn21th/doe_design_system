@@ -3,77 +3,25 @@
   "id": "final-bin-default",
   "name": "Final Bin 默认配色",
   "canvas": {
-    "waferBackground": "#f3f6f5",
+    "waferBackground": "#F8FAFB",
     "waferBorder": "#c7d2d9",
     "dieBackground": "#e2e8f0",
-    "selectedOutline": "#172b2b",
-    "hoverOutline": "#172b2b"
+    "selectedOutline": "#111827",
+    "hoverOutline": "#111827"
   },
-  "states": {
-    "pass": {
-      "byBin": {
-        "1": "hsl(158 65% 41%)"
-      },
-      "fallback": {
-        "hues": {
-          "start": 134,
-          "count": 25
-        },
-        "saturation": 65,
-        "lightness": {
-          "start": 32,
-          "count": 10
-        }
-      }
-    },
-    "fail": {
-      "byBin": {
-        "9": "hsl(24 78% 47%)",
-        "31": "hsl(0 78% 40%)"
-      },
-      "fallback": {
-        "hues": [
-          0,
-          12,
-          24,
-          340,
-          352
-        ],
-        "saturation": 78,
-        "lightness": {
-          "start": 40,
-          "count": 10
-        }
-      }
-    },
-    "unknown": {
-      "byBin": {
-        "PASS": "#16a34a",
-        "FAIL": "#ef4444",
-        "1": "#16a34a",
-        "9": "#0891b2",
-        "10": "#ef4444",
-        "11": "#84cc16",
-        "12": "#f97316",
-        "13": "#facc15",
-        "17": "#14b8a6",
-        "18": "#ec4899",
-        "19": "#8b5cf6",
-        "20": "#a16207",
-        "22": "#4f46e5",
-        "31": "#111827"
-      },
-      "fallback": {
-        "hues": {
-          "start": 0,
-          "count": 360
-        },
-        "saturation": 65,
-        "lightness": {
-          "start": 43,
-          "count": 1
-        }
-      }
-    }
-  }
+  "palette": [
+    "#34C759",
+    "#FF9F0A",
+    "#AF52DE",
+    "#64D2FF",
+    "#007AFF",
+    "#FF3B30",
+    "#FFD60A",
+    "#00C7BE",
+    "#BF5AF2",
+    "#5E5CE6",
+    "#AC8E68",
+    "#FF6482"
+  ],
+  "fallback": "#8E8E93"
 }

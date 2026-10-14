@@ -3,30 +3,35 @@
   "id": "parameter-map-default",
   "name": "Parameter Map 默认配色",
   "canvas": {
-    "waferBackground": "#f3f6f5",
+    "waferBackground": "#F8FAFB",
     "waferBorder": "#c7d2d9",
     "dieBackground": "#e2e8f0",
-    "selectedOutline": "#172b2b",
-    "hoverOutline": "#172b2b"
+    "selectedOutline": "#111827",
+    "hoverOutline": "#111827"
   },
-  "invalidValue": "#94a3b8",
-  "cpFailOutline": "#d92d20",
+  "invalidValue": "#D9E2E8",
+  "cpFailOutline": null,
+  "interpolation": "rgb",
   "stops": [
     {
       "at": 0,
-      "hsl": [
-        265,
-        65,
-        34
-      ]
+      "color": "#F4E275"
+    },
+    {
+      "at": 0.25,
+      "color": "#71B48E"
+    },
+    {
+      "at": 0.5,
+      "color": "#1A8B95"
+    },
+    {
+      "at": 0.75,
+      "color": "#005B87"
     },
     {
       "at": 1,
-      "hsl": [
-        60,
-        65,
-        52
-      ]
+      "color": "#00224D"
     }
   ]
 }

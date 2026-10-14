@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { defectColor, finalBinColor, parameterColor, parameterColorGradient, waferMapColorSchemes } from "./wafer-map-colors"
+import { defectColor, finalBinColor, finalBinDieColor, parameterColor, parameterColorGradient, waferMapColorSchemes } from "./wafer-map-colors"
 import { ChevronLeft, ChevronRight, CircleHelp, Expand, ZoomIn, ZoomOut } from "lucide-react"
 
 import {
@@ -89,6 +89,21 @@ type GalleryMap = WaferMapMapState & { wafer?: AnyWafer }
 
 type ActiveDie = { die: DieData; x: number; y: number }
 
+export function orderedFinalBinCategories(wafers: readonly { dies: readonly { finalBin: string; binCode?: string | null }[] }[]) {
+  const categories = new Set<string>()
+  for (const wafer of wafers) for (const die of wafer.dies) categories.add(die.binCode ?? die.finalBin)
+  return [...categories].sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+}
+
+export function orderedDefectCategories(input: Extract<WaferMapGalleryInput, { kind: "defect" }>) {
+  const categories = new Set(input.defectTypes.map((type) => type.id))
+  for (const wafer of input.wafers) for (const die of wafer.dies) {
+    for (const classification of die.classBreakdown ?? []) categories.add(classification.typeId)
+    for (const record of die.defects) categories.add(record.typeId)
+  }
+  return [...categories]
+}
+
 export type WaferMapCoreProps = {
   input: WaferMapGalleryInput
   wafer: AnyWafer
@@ -99,6 +114,8 @@ export type WaferMapCoreProps = {
 
 export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSelect }: WaferMapCoreProps) {
   const colors = waferMapColorSchemes[input.kind].canvas
+  const orderedBins = useMemo(() => input.kind === "cp-final-bin" ? orderedFinalBinCategories(input.wafers) : [], [input])
+  const orderedDefectTypes = useMemo(() => input.kind === "defect" ? orderedDefectCategories(input) : [], [input])
   const coreRef = useRef<HTMLDivElement>(null)
   const baseCanvasRef = useRef<HTMLCanvasElement>(null)
   const dataCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -143,14 +160,14 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
       context.save()
       clipWafer(context, layout)
       if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
-        for (const die of wafer.dies) drawDie(context, layout, die, finalBinColor(die.finalBin, input.palette, die.pass))
+        for (const die of wafer.dies) drawDie(context, layout, die, finalBinDieColor(die, orderedBins))
       }
       if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
         for (const die of wafer.dies) {
           const color = die.value === null || die.status !== "VALID"
             ? waferMapColorSchemes["cp-parameter"].invalidValue
             : parameterColor(die.value, input.parameter.scale.domainMin, input.parameter.scale.domainMax)
-          drawDie(context, layout, die, color, die.pass === false ? waferMapColorSchemes["cp-parameter"].cpFailOutline : undefined)
+          drawDie(context, layout, die, color, die.pass === false ? waferMapColorSchemes["cp-parameter"].cpFailOutline ?? undefined : undefined)
         }
       }
       if (input.kind === "defect" && isDefectWafer(wafer)) {
@@ -158,7 +175,7 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
           const matching = matchingDefectClasses(die, input.selectedLayerId, input.selectedDefectTypeIds)
           const geometry = layout.dieById.get(die.id)
           if (!geometry) continue
-          for (const segment of dieColorSegments(geometry, matching.map((classification) => defectColor(classification.typeId)))) {
+          for (const segment of dieColorSegments(geometry, matching.map((classification) => defectColor(classification.typeId, orderedDefectTypes)))) {
             context.fillStyle = segment.fill
             context.fillRect(segment.x, segment.y, segment.width, segment.height)
           }
@@ -631,6 +648,8 @@ function InspectionContext({ input, parameterOptions, onParameterChange, onDefec
 }
 
 function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer: AnyWafer }) {
+  const orderedBins = input.kind === "cp-final-bin" ? orderedFinalBinCategories(input.wafers) : []
+  const orderedDefectTypes = input.kind === "defect" ? orderedDefectCategories(input) : []
   return (
     <div className="flex min-h-11 flex-wrap items-center gap-3 border-b px-5 py-2 text-xs">
       {input.kind === "cp-final-bin" && isFinalBinWafer(wafer) && (
@@ -639,7 +658,7 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
           <span className="text-muted-foreground">按 CP 状态区分 Pass / Fail</span>
           {wafer.inspection?.rows.map((row) => (
             <span key={row.binCode} className="flex items-center gap-1.5">
-              <FinalBinSwatches bin={row.binCode} wafers={[wafer]} palette={input.palette} />
+              <FinalBinSwatches bin={row.binCode} wafers={[wafer]} orderedBins={orderedBins} />
               Bin {row.binCode} · {row.count.toLocaleString()}
             </span>
           ))}
@@ -656,7 +675,7 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
           <strong>Defect Type</strong>
           {input.defectTypes.map((type) => (
             <span key={type.id} className="flex items-center gap-1.5">
-              <i className="size-2.5 rounded-sm" style={{ background: defectColor(type.id) }} />
+              <i className="size-2.5 rounded-sm" style={{ background: defectColor(type.id, orderedDefectTypes) }} />
               {type.label}
             </span>
           ))}
@@ -1046,20 +1065,20 @@ function formatPercent(value: number) {
   return `${value.toFixed(2)}%`
 }
 
-function FinalBinSwatches({ bin, wafers, palette }: {
+function FinalBinSwatches({ bin, wafers, orderedBins }: {
   bin: string
   wafers: WaferMapFinalBinWaferInput[]
-  palette?: Record<string, string>
+  orderedBins: readonly string[]
 }) {
   // A bin can contain both supplied CP states. Show both instead of inferring
   // one state from its name or converting inspection counts into new facts.
   const suppliedColors = new Map<string, string>()
   for (const wafer of wafers) for (const die of wafer.dies) {
     if (die.binCode === bin || die.finalBin === bin) {
-      suppliedColors.set(finalBinColor(die.finalBin, palette, die.pass), die.pass ? "Pass" : "Fail")
+      suppliedColors.set(finalBinDieColor(die, orderedBins), die.pass ? "Pass" : "Fail")
     }
   }
-  const colors = suppliedColors.size ? [...suppliedColors.entries()].map(([color, label]) => ({ color, label })) : [{ label: "状态未提供", color: finalBinColor(bin, palette) }]
+  const colors = suppliedColors.size ? [...suppliedColors.entries()].map(([color, label]) => ({ color, label })) : [{ label: "状态未提供", color: finalBinColor(bin, orderedBins) }]
   return <span className="inline-flex gap-0.5">{colors.map(({ label, color }) => (
     <i key={color} title={label} aria-label={label} className="size-2.5 rounded-sm" style={{ background: color }} />
   ))}</span>
@@ -1076,7 +1095,7 @@ function ParameterLegend({ input }: { input: Extract<WaferMapGalleryInput, { kin
       <span title={String(scale.domainMax)}>{format(scale.domainMax)}</span>
     </span>
     <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm" style={{ background: waferMapColorSchemes["cp-parameter"].invalidValue }} />无有效值</span>
-    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm border-2" style={{ borderColor: waferMapColorSchemes["cp-parameter"].cpFailOutline }} />CP Fail（已提供时）</span>
+    {waferMapColorSchemes["cp-parameter"].cpFailOutline ? <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm border-2" style={{ borderColor: waferMapColorSchemes["cp-parameter"].cpFailOutline }} />CP Fail（已提供时）</span> : null}
   </div>
 }
 
@@ -1088,10 +1107,11 @@ function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGaller
     const bin = die.binCode ?? die.finalBin
     binCounts.set(bin, (binCounts.get(bin) ?? 0) + 1)
   }
+  const orderedBins = [...binCounts.keys()].sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
   return <GalleryLegendRow><div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
     <span className="text-muted-foreground">按 CP 状态区分 Pass / Fail</span>
-    {[...binCounts.entries()].sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true })).map(([bin, count]) => (
-      <span key={bin} className="flex items-center gap-1"><FinalBinSwatches bin={bin} wafers={input.wafers} palette={input.palette} />Bin {bin} · {count.toLocaleString()}</span>
+    {orderedBins.map((bin) => (
+      <span key={bin} className="flex items-center gap-1"><FinalBinSwatches bin={bin} wafers={input.wafers} orderedBins={orderedBins} />Bin {bin} · {binCounts.get(bin)?.toLocaleString()}</span>
     ))}
   </div></GalleryLegendRow>
 }

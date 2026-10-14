@@ -3,22 +3,20 @@
   "id": "defect-map-default",
   "name": "Defect Map 默认配色",
   "canvas": {
-    "waferBackground": "#f3f6f5",
+    "waferBackground": "#F8FAFB",
     "waferBorder": "#c7d2d9",
-    "dieBackground": "#e2e8f0",
-    "selectedOutline": "#172b2b",
-    "hoverOutline": "#172b2b"
+    "dieBackground": "#E8EDF2",
+    "selectedOutline": "#111827",
+    "hoverOutline": "#111827"
   },
-  "byType": {
-    "class:206": "#0e7490",
-    "class:212": "#be185d"
-  },
-  "fallbackPalette": [
-    "#dc2626",
-    "#c2410c",
-    "#0e7490",
-    "#4338ca",
-    "#7e22ce",
-    "#be185d"
-  ]
+  "palette": [
+    "#FF3B30",
+    "#AF52DE",
+    "#34C759",
+    "#8B5CF6",
+    "#0071E3",
+    "#64748B",
+    "#FF9500"
+  ],
+  "fallback": "#64748B"
 }
