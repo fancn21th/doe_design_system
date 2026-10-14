@@ -11,10 +11,15 @@ import {
   groupBounds,
   groupIndexAt,
   measurementY,
+  measurementOutsideReferences,
   measurementChartWidth,
   measurementGroupLabel,
+  measurementWaferIdentity,
+  measurementPopoverBounds,
   nearestMeasurementPoint,
-  stableJitter,
+  type MeasurementHitIndex,
+  type MeasurementPointPresentation,
+  resolveMeasurementComparison,
   type MeasurementDomain,
   type MeasurementLayout,
   type PositionedMeasurementPoint,
@@ -46,6 +51,8 @@ type CanvasLayerProps = {
 export type MeasurementProps = {
   /** Opt into the approved Report chart card without changing other Measurement consumers. */
   appearance?: "report-chart"
+  /** Individual samples use clear, spread-out circles; density remains the CP default. */
+  pointPresentation?: MeasurementPointPresentation
   /** A consumer may supply fallback presentation without changing evidence state. */
   renderState?: (status: "pending" | "unavailable" | "empty") => React.ReactNode
   /** The UI-facing rendering contract. Apps adapt their upstream DTO before passing it here. */
@@ -54,20 +61,28 @@ export type MeasurementProps = {
   onGroupSelect?: (groupId: string) => void
   /** Optional report-level context rendered with the chart metadata. */
   headerAction?: React.ReactNode
+  /** Explicit Step comparison context; ambiguous membership is never auto-selected. */
+  activeComparisonId?: string | null
+  /** Canvas dimension zoom; it does not change the supplied numeric domain. */
+  canvasZoom?: number
   className?: string
 }
 
 export function Measurement({
   appearance,
+  pointPresentation = "density",
   renderState,
   input,
   onGroupSelect,
   headerAction,
+  activeComparisonId,
+  canvasZoom = 1,
   className,
 }: MeasurementProps) {
   const reportChart = appearance === "report-chart"
   const parsedInput = useMemo(() => measurementInputSchema.parse(input), [input])
   const [viewportWidth, setViewportWidth] = useState(0)
+  const [viewportLeft, setViewportLeft] = useState(0)
   const [activePoint, setActivePoint] = useState<ActivePoint | null>(null)
   const [hoveredGroupIndex, setHoveredGroupIndex] = useState<number | null>(null)
   const hostRef = useRef<HTMLDivElement>(null)
@@ -82,36 +97,52 @@ export function Measurement({
     const observer = new ResizeObserver(([entry]) => setViewportWidth(entry.contentRect.width))
     observer.observe(host)
     return () => observer.disconnect()
-  }, [])
+  }, [parsedInput.status, parsedInput.groups.length])
 
-  const width = measurementChartWidth(viewportWidth, parsedInput.groups.length)
+  const width = measurementChartWidth(viewportWidth, parsedInput.groups.length) * canvasZoom
+  const chartHeight = CHART_HEIGHT * canvasZoom
+  const hoveredWafer = hoveredGroupIndex === null ? null : parsedInput.groups[hoveredGroupIndex]
+  const hoveredComparison = hoveredWafer ? resolveMeasurementComparison(parsedInput, hoveredWafer.id, activeComparisonId) : null
+  const comparison = hoveredComparison ?? parsedInput.comparisonGroups?.find((group) => group.id === activeComparisonId)
+  const displayGroups = useMemo(() => parsedInput.groups.map((group) => {
+    const member = comparison?.members.find((member) => member.waferId === group.id)
+    if (!member || !comparison) return group
+    return { ...group, role: member.isBaselineVariant ? "baseline" as const : "experiment" as const,
+      context: { stage: comparison.stageLabel, step: comparison.stepLabel, sequence: String(comparison.stepSequence), condition: member.condition, roleLabel: member.roleLabel },
+      comparison: { cohortId: comparison.id, role: member.isBaselineVariant ? "baseline" as const : "variant" as const },
+    }
+  }), [parsedInput.groups, comparison])
   const domain = useMemo(() => createMeasurementDomain(parsedInput), [parsedInput])
   const layout = useMemo(
-    () => createMeasurementLayout(width, CHART_HEIGHT, parsedInput.groups.length),
-    [width, parsedInput.groups.length],
+    () => createMeasurementLayout(width, chartHeight, parsedInput.groups.length),
+    [width, chartHeight, parsedInput.groups.length],
   )
   const hitIndex = useMemo(
-    () => (domain ? createMeasurementHitIndex(parsedInput, domain, layout) : new Map()),
-    [parsedInput, domain, layout],
+    () => (domain ? createMeasurementHitIndex(parsedInput, domain, layout, pointPresentation) : new Map()),
+    [parsedInput, domain, layout, pointPresentation],
   )
 
   useEffect(() => {
     if (!domain) return
-    drawBaseLayer(baseCanvasRef.current, parsedInput, domain, layout)
-    drawPointLayer(pointCanvasRef.current, parsedInput, domain, layout)
-    drawSummaryLayer(summaryCanvasRef.current, parsedInput.groups, domain, layout)
-  }, [parsedInput, domain, layout])
+    drawPointLayer(pointCanvasRef.current, hitIndex, layout, pointPresentation)
+    drawSummaryLayer(summaryCanvasRef.current, parsedInput.groups, domain, layout, pointPresentation)
+  }, [parsedInput, domain, layout, hitIndex, pointPresentation])
+
+  useEffect(() => {
+    if (!domain) return
+    drawBaseLayer(baseCanvasRef.current, { ...parsedInput, groups: displayGroups }, domain, layout)
+  }, [parsedInput, displayGroups, domain, layout])
 
   useEffect(() => {
     if (!domain) return
     drawInteractionLayer(
       interactionCanvasRef.current,
-      parsedInput.groups,
+      displayGroups,
       layout,
       hoveredGroupIndex,
       activePoint,
     )
-  }, [parsedInput.groups, domain, layout, hoveredGroupIndex, activePoint])
+  }, [displayGroups, domain, layout, hoveredGroupIndex, activePoint])
 
   const metricLabel = `${parsedInput.metric.label}${parsedInput.metric.unit ? ` (${parsedInput.metric.unit})` : ""}`
 
@@ -163,25 +194,38 @@ export function Measurement({
           <span className="rounded-md border px-2 py-1">{parsedInput.groups.length} wafers</span>
           <span className="rounded-md border px-2 py-1">{parsedInput.metric.label}</span>
 
-          {reportChart && <MeasurementLegend />}
+          {reportChart && <MeasurementLegend individual={pointPresentation === "individual"} />}
         </CardAction>
       </CardHeader>
       <CardContent className={cn("min-w-0", reportChart ? "px-[8px] pt-[16px] sm:px-[24px] sm:pt-[24px]" : "px-0")}>
-        {!reportChart && <MeasurementLegend className="px-3" />}
+        {!reportChart && <MeasurementLegend className="px-3" individual={pointPresentation === "individual"} />}
+        {pointPresentation === "individual" && <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 pt-2 text-xs text-muted-foreground" aria-label="视野外参考值">
+          {measurementOutsideReferences(parsedInput, domain).map((line, index) => <span key={`${line.groupLabel ?? "shared"}:${line.id}:${index}`}>
+            {line.groupLabel ? `${line.groupLabel} · ` : ""}{line.label} {line.value} · {line.direction === "below" ? "低于当前显示范围" : "高于当前显示范围"}
+          </span>)}
+        </div>}
         <dl className="sr-only" aria-label="晶圆专属参考线">
           {parsedInput.groups.flatMap((group) => (group.referenceLines ?? []).map((line) => (
             <div key={`${group.id}:${line.id}`}><dt>{group.label} · {line.label}</dt><dd>{line.value}</dd></div>
           )))}
         </dl>
-        <div className={cn("min-w-0 max-w-full overflow-x-auto", !reportChart && "p-3")} ref={hostRef} tabIndex={0} aria-label="Measurement 图表横向滚动区">
-          <div className="relative" style={{ width, minWidth: width, height: CHART_HEIGHT }}>
-            <CanvasLayer canvasRef={baseCanvasRef} width={width} height={CHART_HEIGHT} />
-            <CanvasLayer canvasRef={pointCanvasRef} width={width} height={CHART_HEIGHT} />
-            <CanvasLayer canvasRef={summaryCanvasRef} width={width} height={CHART_HEIGHT} />
+        <div className={cn("min-w-0 max-w-full overflow-x-auto", !reportChart && "p-3")} ref={hostRef} onScroll={(event) => setViewportLeft(event.currentTarget.scrollLeft)} tabIndex={0} aria-label="Measurement 图表横向滚动区">
+          <div className="relative" style={{ width, minWidth: width, height: chartHeight }}>
+            <CanvasLayer canvasRef={baseCanvasRef} width={width} height={chartHeight} />
+            {pointPresentation === "individual" ? <>
+              <CanvasLayer canvasRef={summaryCanvasRef} width={width} height={chartHeight} />
+              <CanvasLayer canvasRef={pointCanvasRef} width={width} height={chartHeight} />
+            </> : <>
+              <CanvasLayer canvasRef={pointCanvasRef} width={width} height={chartHeight} />
+              <CanvasLayer canvasRef={summaryCanvasRef} width={width} height={chartHeight} />
+            </>}
             <canvas
+              data-hover-comparison={hoveredComparison?.id ?? ""}
+              data-hover-wafer={hoveredWafer?.id ?? ""}
+              data-canvas-zoom={canvasZoom}
               aria-label={`${metricLabel} grouped distribution. Click a wafer column to select it.`}
               className="absolute inset-0 cursor-crosshair"
-              height={CHART_HEIGHT}
+              height={chartHeight}
               onClick={onClick}
               onPointerLeave={() => { setActivePoint(null); setHoveredGroupIndex(null) }}
               onPointerMove={onPointerMove}
@@ -190,14 +234,25 @@ export function Measurement({
               title={hoveredGroupIndex === null ? undefined : groupIdentity(parsedInput.groups[hoveredGroupIndex])}
               width={width}
             />
-            {activePoint && parsedInput.groups[activePoint.groupIndex] && (
+            {hoveredGroupIndex !== null && displayGroups[hoveredGroupIndex] && (
               <PointPopover
-                group={parsedInput.groups[activePoint.groupIndex]}
+                group={displayGroups[hoveredGroupIndex]}
                 metric={parsedInput.metric}
                 point={activePoint}
-                width={width}
+                viewportLeft={viewportLeft}
+                viewportWidth={viewportWidth}
+                leftAnchor={groupBounds(hoveredGroupIndex, layout).center}
+                membershipCount={(parsedInput.comparisonGroups ?? []).filter((group) => group.members.some((member) => member.waferId === displayGroups[hoveredGroupIndex].id)).length}
+                comparisonResolved={Boolean(hoveredComparison)}
               />
             )}
+            {parsedInput.groups.map((group, index) => <button
+              key={group.id} type="button" aria-label={`查看 ${measurementWaferIdentity(group)} 晶圆比较组明细`}
+              className="absolute bottom-0 h-10 rounded focus-visible:outline-2 focus-visible:outline-primary"
+              style={{ left: groupBounds(index, layout).left, width: layout.groupWidth }}
+              onClick={() => onGroupSelect?.(group.id)}
+              onFocus={() => setHoveredGroupIndex(index)} onBlur={() => setHoveredGroupIndex(null)}
+            ><span className="sr-only">{group.label}</span></button>)}
           </div>
         </div>
       </CardContent>
@@ -217,30 +272,40 @@ function LegendMark({ color, dashed, label }: { color: string; dashed?: boolean;
   return <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full" style={dashed ? { borderTop: `2px dashed ${color}`, borderRadius: 0, width: 18 } : { backgroundColor: color }} />{label}</span>
 }
 
-function PointPopover({ group, metric, point, width }: { group: MeasurementGroup; metric: MeasurementInput["metric"]; point: ActivePoint; width: number }) {
-  const left = Math.min(Math.max(point.x + 14, 10), width - 308)
+function PointPopover({ group, metric, point, viewportLeft, viewportWidth, leftAnchor, membershipCount, comparisonResolved }: {
+  group: MeasurementGroup; metric: MeasurementInput["metric"]; point: ActivePoint | null; viewportLeft: number; viewportWidth: number;
+  leftAnchor: number; membershipCount: number; comparisonResolved: boolean;
+}) {
+  const { left, width } = measurementPopoverBounds(leftAnchor, viewportLeft, viewportWidth)
   const rows = [
-    ["Stage / Step / Seq", [group.context?.stage, group.context?.step, group.context?.sequence].filter(Boolean).join(" / ") || "—"],
-    ["Condition", group.context?.condition ?? "—"],
     ["CP Parameter", metric.label],
-    ["Measured Value", `${formatValue(point.point.value)}${metric.unit ? ` ${metric.unit}` : ""}`],
-    ["Source Status", point.point.sourceStatus],
-    ["Final Bin", point.point.finalBin ?? "—"],
-    ["Die Result", point.point.result ?? "UNKNOWN"],
-    [group.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "Cpk", formatValue(group.capability?.cpk)],
-    ...(group.capability?.status ? [["CPK 状态", group.capability.status]] : []),
+    ["Rendered points", String(group.summary.count)],
+    ["统计样本 N", group.capability?.n == null ? "—" : String(group.capability.n)],
+    ["Mean", formatValue(group.summary.mean)],
+    ["Median", formatValue(group.summary.median)],
+    ["Sample σ", formatValue(group.summary.sampleSigma)],
+    [group.capability?.specSource === "SOURCE" ? "SOURCE CPK" : "CPK", formatValue(group.capability?.cpk)],
     ["CPU", formatValue(group.capability?.cpu)],
     ["CPL", formatValue(group.capability?.cpl)],
+    ["Capability 状态", group.capability?.status ?? "未提供"],
+    ...(membershipCount > 1 && !comparisonResolved ? [["比较组", `多归属 · ${membershipCount} 个比较组，请选择比较组`]] : [
+      ["Stage / Step / Seq", [group.context?.stage, group.context?.step, group.context?.sequence].filter(Boolean).join(" / ") || "未提供"],
+      ["Role / Condition", [group.context?.roleLabel ?? (group.role === "baseline" ? "BSL" : group.role === "experiment" ? "Split" : null), group.context?.condition].filter(Boolean).join(" · ") || "未提供"],
+    ]),
+    ...(point ? [
+      ["Measured Value", `${formatValue(point.point.value)}${metric.unit ? ` ${metric.unit}` : ""}`],
+      ["Source Status", point.point.sourceStatus],
+      ...(point.point.finalBin != null ? [["Final Bin", point.point.finalBin]] : []),
+      ...(point.point.result !== undefined ? [["Die Result", point.point.result]] : []),
+    ] : []),
     ...(group.referenceLines ?? []).map((line) => [line.label, formatValue(line.value)]),
   ]
-  return (
-    <aside className="pointer-events-none absolute z-10 w-[298px] rounded-xl border border-teal-800/25 bg-background/95 p-4 shadow-xl backdrop-blur" style={{ left, top: Math.max(10, point.y - 26) }}>
-      <p className="border-b pb-2 text-sm font-semibold">{group.label} · DIE_X {point.point.x} / DIE_Y {point.point.y}</p>
-      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 text-sm">
-        {rows.map(([label, value]) => <div className="contents" key={label}><dt className="text-muted-foreground">{label}</dt><dd className={label === "Die Result" && value === "PASS" ? "font-semibold text-green-700" : "font-semibold"}>{value}</dd></div>)}
-      </dl>
-    </aside>
-  )
+  return <aside data-measurement-wafer-tooltip={group.id} className="pointer-events-none absolute top-12 z-10 max-h-[470px] w-[308px] overflow-y-auto rounded-xl border bg-background/95 p-4 shadow-xl backdrop-blur" style={{ left, width }}>
+    <p className="border-b pb-2 text-sm font-semibold">{measurementWaferIdentity(group)}{point ? ` · DIE_X ${point.point.x} / DIE_Y ${point.point.y}` : " · Wafer Statistics"}</p>
+    <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+      {rows.map(([label, value]) => <div className="contents" key={label}><dt className="text-muted-foreground">{label}</dt><dd className="break-words font-semibold">{value}</dd></div>)}
+    </dl>
+  </aside>
 }
 
 function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput, domain: MeasurementDomain, layout: MeasurementLayout) {
@@ -268,6 +333,7 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
   context.fillText(fitCanvasText(context, `${input.metric.label}${input.metric.unit ? ` (${input.metric.unit})` : ""}`, layout.plotHeight - 16), 0, 0)
   context.restore()
   input.referenceLines.forEach((line) => {
+    if (line.value < domain.minimum || line.value > domain.maximum) return
     const y = measurementY(line.value, domain, layout)
     context.strokeStyle = line.kind === "mock-spec" ? "#b45309" : "#a94b3b"
     context.setLineDash([7, 5])
@@ -313,14 +379,16 @@ function drawBaseLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput
     context.fillStyle = group.role === "baseline" ? "#1d4ed8" : "#475569"
     context.font = "600 12px ui-sans-serif, system-ui, sans-serif"
     context.fillText(fitCanvasText(context, measurementGroupLabel(group.label), layout.groupWidth - 12), bounds.center, layout.height - 26)
-    const detail = group.context?.stage ?? (group.role === "baseline" ? "BSL" : "")
+    const detail = group.context?.roleLabel
+      ? [group.context.roleLabel, group.context.condition].filter(Boolean).join(" · ")
+      : group.context?.stage ?? (group.role === "baseline" ? "BSL" : "")
     if (detail) { context.font = "11px ui-sans-serif, system-ui, sans-serif"; context.fillStyle = "#64748b"; context.fillText(fitCanvasText(context, detail, layout.groupWidth - 12), bounds.center, layout.height - 10) }
   })
 }
 
 function groupIdentity(group: MeasurementGroup | undefined) {
   if (!group) return undefined
-  return [group.label, group.context?.stage, group.context?.step, group.context?.sequence, group.context?.condition, ...(group.referenceLines ?? []).map((line) => `${line.label} ${formatValue(line.value)}`)].filter(Boolean).join(" · ")
+  return [measurementWaferIdentity(group), group.context?.stage, group.context?.step, group.context?.sequence, group.context?.condition, ...(group.referenceLines ?? []).map((line) => `${line.label} ${formatValue(line.value)}`)].filter(Boolean).join(" · ")
 }
 
 function fitCanvasText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
@@ -330,26 +398,27 @@ function fitCanvasText(context: CanvasRenderingContext2D, text: string, maxWidth
   return `${text.slice(0, length)}…`
 }
 
-function drawPointLayer(canvas: HTMLCanvasElement | null, input: MeasurementInput, domain: MeasurementDomain, layout: MeasurementLayout) {
+function drawPointLayer(canvas: HTMLCanvasElement | null, hitIndex: MeasurementHitIndex, layout: MeasurementLayout, presentation: MeasurementPointPresentation) {
   const context = prepareContext(canvas, layout)
   if (!context) return
   context.clearRect(0, 0, layout.width, layout.height)
-  context.fillStyle = "rgba(37, 99, 166, 0.20)"
-  input.groups.forEach((group, groupIndex) => {
-    const bounds = groupBounds(groupIndex, layout)
-    const jitterWidth = Math.min(40, layout.groupWidth * 0.64)
-    group.points.forEach((point, pointIndex) => {
-      const x = bounds.center + stableJitter(point, pointIndex) * jitterWidth
-      const y = measurementY(point.value, domain, layout)
-      context.fillRect(x - 1.25, y - 1.25, 2.5, 2.5)
-    })
-  })
+  const individual = presentation === "individual"
+  context.fillStyle = individual ? "rgba(37, 99, 166, 0.85)" : "rgba(37, 99, 166, 0.20)"
+  context.strokeStyle = "rgba(255, 255, 255, 0.90)"
+  context.lineWidth = 0.8
+  // Paint the exact coordinates used by hover lookup; retain every supplied visible point.
+  for (const points of hitIndex.values()) for (const { x, y } of points) {
+    if (individual) {
+      context.beginPath(); context.arc(x, y, 4, 0, Math.PI * 2); context.fill(); context.stroke()
+    } else context.fillRect(x - 1.25, y - 1.25, 2.5, 2.5)
+  }
 }
 
-function drawSummaryLayer(canvas: HTMLCanvasElement | null, groups: MeasurementGroup[], domain: MeasurementDomain, layout: MeasurementLayout) {
+function drawSummaryLayer(canvas: HTMLCanvasElement | null, groups: MeasurementGroup[], domain: MeasurementDomain, layout: MeasurementLayout, presentation: MeasurementPointPresentation) {
   const context = prepareContext(canvas, layout)
   if (!context) return
   context.clearRect(0, 0, layout.width, layout.height)
+  context.save(); context.beginPath(); context.rect(layout.left, layout.top, layout.plotWidth, layout.plotHeight); context.clip()
   groups.forEach((group, index) => {
     const { summary } = group
     if ([summary.q1, summary.q3, summary.mean, summary.median, summary.whiskerLow, summary.whiskerHigh, summary.sampleSigma].some((value) => value === null)) return
@@ -368,8 +437,12 @@ function drawSummaryLayer(canvas: HTMLCanvasElement | null, groups: MeasurementG
     context.strokeStyle = "#71717a"; context.lineWidth = 1.4
     context.beginPath(); context.moveTo(bounds.center, highY); context.lineTo(bounds.center, lowY); context.stroke()
     context.beginPath(); context.moveTo(bounds.center - 6, highY); context.lineTo(bounds.center + 6, highY); context.moveTo(bounds.center - 6, lowY); context.lineTo(bounds.center + 6, lowY); context.stroke()
-    context.fillStyle = "rgba(37, 99, 166, 0.82)"
+    context.fillStyle = presentation === "individual" ? "rgba(37, 99, 166, 0.08)" : "rgba(37, 99, 166, 0.82)"
     context.fillRect(bounds.center - boxHalfWidth, q3Y, boxHalfWidth * 2, Math.max(1, q1Y - q3Y))
+    if (presentation === "individual") {
+      context.strokeStyle = "#94a3b8"; context.lineWidth = 1
+      context.strokeRect(bounds.center - boxHalfWidth, q3Y, boxHalfWidth * 2, Math.max(1, q1Y - q3Y))
+    }
     context.strokeStyle = "#c53a3a"; context.lineWidth = 2
     context.beginPath(); context.moveTo(bounds.center - boxHalfWidth, medianY); context.lineTo(bounds.center + boxHalfWidth, medianY); context.stroke()
     context.fillStyle = "#0f766e"
@@ -377,6 +450,7 @@ function drawSummaryLayer(canvas: HTMLCanvasElement | null, groups: MeasurementG
     context.fillStyle = "#ffffff"
     context.beginPath(); context.arc(bounds.center, meanY, 2, 0, Math.PI * 2); context.fill()
   })
+  context.restore()
 }
 
 function drawInteractionLayer(canvas: HTMLCanvasElement | null, groups: MeasurementGroup[], layout: MeasurementLayout, hoveredGroupIndex: number | null, activePoint: ActivePoint | null) {
@@ -423,9 +497,9 @@ function formatValue(value: number | null | undefined) {
   return value.toFixed(Math.abs(value) < 1 ? 4 : 3).replace(/\.?(0+)$/, "")
 }
 
-function MeasurementLegend({ className }: { className?: string }) {
+function MeasurementLegend({ className, individual }: { className?: string; individual?: boolean }) {
   return <div className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground", className)}>
-    <LegendMark color="#2563a6" label="die point" />
+    <LegendMark color="#2563a6" label={individual ? "measurement point" : "die point"} />
     <LegendMark color="#0f766e" label="mean" />
     <LegendMark color="#c53a3a" label="median" />
     <LegendMark color="#7c3aed" label="mean ±3σ" />

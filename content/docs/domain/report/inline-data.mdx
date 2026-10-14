@@ -55,3 +55,10 @@ import { ReportState } from "@/components/domain/report-state"
 
 导航层级按 [Navigation and business blocks](../../../../docs/patterns/navigation-and-blocks.md) 执行。
 三级视图导航在自身区域横向滚动，不将长标签撑出主视图；切换视图保留已有参数与 wafer 选择。
+
+
+## 2026-10-14 Inline individual measurement points
+
+Inline Data opts into `Measurement.pointPresentation="individual"`. The shared default remains `density` for CP Data. Individual points use deterministic evenly spaced horizontal positions within at most 96px / 64% of the wafer column, 4px radius circles, white outlines, and a lightly filled box. A center gap keeps single raw points distinct from mean markers. Only screen X changes; raw values, identities, count, numeric domain and supplied statistics remain untouched. Canvas painting consumes the same positioned points as hover lookup, including fixed-domain clipping.
+
+Reference evidence: exact localhost:8888 DOE Workbench 单文件版(2).html, embedded stage dashboard `factorCapabilityChart`: 4px circles, up to 96px point band, light box. Compared GOF and THK (13 points per wafer) and FOX-DEP-BOW-03 (one point per wafer). The prototype and runtime have different sample coverage; prototype samples are not added to the runtime.

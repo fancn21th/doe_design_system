@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "parameter-map-default",
+  "name": "Parameter Map 默认配色",
+  "canvas": {
+    "waferBackground": "#f3f6f5",
+    "waferBorder": "#c7d2d9",
+    "dieBackground": "#e2e8f0",
+    "selectedOutline": "#172b2b",
+    "hoverOutline": "#172b2b"
+  },
+  "invalidValue": "#94a3b8",
+  "cpFailOutline": "#d92d20",
+  "stops": [
+    {
+      "at": 0,
+      "hsl": [
+        265,
+        65,
+        34
+      ]
+    },
+    {
+      "at": 1,
+      "hsl": [
+        60,
+        65,
+        52
+      ]
+    }
+  ]
+}

@@ -92,3 +92,10 @@ existing default fallback. No statistics or evidence availability are redefined.
 ## Report chart appearance
 
 `appearance="report-chart"` 应用已认可的报告图表卡片留白、标题、右上图例及无分割线布局。CP Data 消费此样式；其余 Measurement 消费默认样式。仅改变展示，不改变 Canvas 布局计算、测量值、规格线或交互。
+
+
+## 2026-10-14 Inline individual measurement points
+
+Inline Data opts into `Measurement.pointPresentation="individual"`. The shared default remains `density` for CP Data. Individual points use deterministic evenly spaced horizontal positions within at most 96px / 64% of the wafer column, 4px radius circles, white outlines, and a lightly filled box. A center gap keeps single raw points distinct from mean markers. Only screen X changes; raw values, identities, count, numeric domain and supplied statistics remain untouched. Canvas painting consumes the same positioned points as hover lookup, including fixed-domain clipping.
+
+Reference evidence: exact localhost:8888 DOE Workbench 单文件版(2).html, embedded stage dashboard `factorCapabilityChart`: 4px circles, up to 96px point band, light box. Compared GOF and THK (13 points per wafer) and FOX-DEP-BOW-03 (one point per wafer). The prototype and runtime have different sample coverage; prototype samples are not added to the runtime.

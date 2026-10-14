@@ -236,6 +236,8 @@ export const waferMapDefectInspectionSchema = z.object({
   byLayer: z.array(z.object({
     layerId: z.string(),
     classBreakdownStatus: z.enum(["AVAILABLE", "UNAVAILABLE"]).optional(),
+    /** Denominator from the same Defect inspection, independent of CP. */
+    testedDieCount: z.number().int().nonnegative().nullable().optional(),
     defectDieCount: z.number().int().nonnegative(),
     defectRecordCount: z.number().int().nonnegative(),
     inGridRecordCount: z.number().int().nonnegative().optional(),
@@ -245,7 +247,7 @@ export const waferMapDefectInspectionSchema = z.object({
       label: z.string(),
       nameResolved: z.boolean().optional(),
       count: z.number().int().nonnegative(),
-      ratePercent: z.number().finite().nonnegative(),
+      ratePercent: z.number().finite().nonnegative().nullable(),
     })),
   })),
 })
@@ -492,8 +494,11 @@ export const measurementGroupSchema = z.object({
     step: z.string().nullable().optional(),
     sequence: z.string().nullable().optional(),
     condition: z.string().nullable().optional(),
+    roleLabel: z.string().optional(),
   }).optional(),
   capability: z.object({
+    /** Supplied population used by SOURCE statistics; distinct from renderable point count. */
+    n: z.number().int().nonnegative().nullable().optional(),
     cpk: z.number().finite().nullable(),
     cpu: z.number().finite().nullable().optional(),
     cpl: z.number().finite().nullable().optional(),
@@ -515,6 +520,34 @@ export const measurementGroupSchema = z.object({
     })
   }
 })
+/** Stable membership references; point clouds remain unique physical wafers. */
+export const measurementComparisonGroupSchema = z.object({
+  id: z.string(),
+  stepKey: z.string(),
+  stageId: z.string(),
+  stepId: z.string(),
+  stepSequence: z.number().int(),
+  stageLabel: z.string(),
+  stepLabel: z.string(),
+  label: z.string(),
+  members: z.array(z.object({
+    waferId: z.string(),
+    variantRowId: z.string(),
+    variantSequence: z.number().int(),
+    roleLabel: z.string(),
+    isBaselineVariant: z.boolean(),
+    condition: z.string().nullable().optional(),
+  })),
+  /** Backend-owned focused range and counts; never recomputed from viewport points. */
+  detail: z.object({
+    status: z.enum(["ready", "unavailable"]),
+    min: z.number().finite().nullable(),
+    max: z.number().finite().nullable(),
+    offscreenPointCount: z.number().int().nonnegative(),
+    totalPointCount: z.number().int().nonnegative(),
+    reason: z.string().nullable().optional(),
+  }),
+})
 export const measurementInputSchema = z.object({
   status: z.enum(["ready", "pending", "unavailable"]),
   title: z.string().optional(),
@@ -526,9 +559,10 @@ export const measurementInputSchema = z.object({
     unit: z.string().nullable().optional(),
   }),
   groups: z.array(measurementGroupSchema),
+  comparisonGroups: z.array(measurementComparisonGroupSchema).optional(),
   referenceLines: z.array(measurementReferenceLineSchema).default([]),
   scale: z.object({
-    mode: z.enum(["data-and-references", "fixed"]).default("data-and-references"),
+    mode: z.enum(["data-and-references", "data-only", "fixed"]).default("data-and-references"),
     min: z.number().finite().optional(),
     max: z.number().finite().optional(),
   }).optional(),
@@ -700,6 +734,21 @@ export const reportYieldAnalysisInputSchema = z.object({
   lossYieldRows: z.array(reportYieldLossRowSchema).optional(),
   conditionYieldRows: z.array(reportYieldConditionRowSchema).optional(),
 })
+export const reportYieldMembershipSchema = z.object({
+  groupId: z.string().optional(),
+  stepKey: z.string(),
+  stageId: z.string(),
+  stepId: z.string(),
+  stepSequence: z.number().int(),
+  stage: z.string(),
+  step: z.string(),
+  seq: z.string(),
+  variantRowId: z.string(),
+  variantSequence: z.number().int(),
+  roleLabel: z.string(),
+  isBaselineVariant: z.boolean().optional(),
+  condition: z.string().optional(),
+})
 export const reportWaferYieldCpFailSchema = z.object({
   title: z.string().default("Wafer Yield & CP Fail Analysis"),
   failThresholdPercent: z.number().min(0).max(100).default(2),
@@ -708,8 +757,10 @@ export const reportWaferYieldCpFailSchema = z.object({
   })),
   wafers: z.array(z.object({
     waferId: z.string(),
+    sourceWaferId: z.string().optional(),
     step: z.string(),
     condition: z.string(),
+    memberships: z.array(reportYieldMembershipSchema).optional(),
     yield: z.number().min(0).max(100).nullable(),
     cpFails: z.array(z.object({
       parameter: z.string(),
@@ -1049,6 +1100,7 @@ export type MeasurementReferenceLine = z.infer<
 >
 export type MeasurementPoint = z.infer<typeof measurementPointSchema>
 export type MeasurementSummary = z.infer<typeof measurementSummarySchema>
+export type MeasurementComparisonGroup = z.infer<typeof measurementComparisonGroupSchema>
 export type MeasurementGroup = z.infer<typeof measurementGroupSchema>
 export type MeasurementInput = z.infer<typeof measurementInputSchema>
 export type ReportOverviewInput = z.infer<typeof reportOverviewInputSchema>

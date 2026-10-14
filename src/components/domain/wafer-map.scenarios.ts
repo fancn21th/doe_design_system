@@ -95,7 +95,7 @@ export const waferMapGalleryScenarios = {
         geometry: { coordinateSystem: "DEFECT_INDEX_V1", dies: [{ id: "-19:5", x: -19, y: 5 }], bounds: { minX: -19, maxX: -19, minY: 5, maxY: 5 } },
         dies: [{ id: "-19:5", x: -19, y: 5, defects: [{ id: "0", layerId: "EOL", typeId: "class:206", typeLabel: "206（名称未解析）", classNumber: 206, sizeX: 1.25, sizeY: null, waferX: -12.5, waferY: 0, imageCount: 0 }, { id: "DEMO-RECORD-2", layerId: "EOL", typeId: "class:212", typeLabel: "212（名称未解析）", classNumber: 212 }, { id: "DEMO-RECORD-3", layerId: "EOL", typeId: "class:212", typeLabel: "212（名称未解析）", classNumber: 212 }], defectRecordsStatus: "AVAILABLE", defectCount: 3, classBreakdownStatus: "AVAILABLE", classBreakdown: [{ typeId: "class:206", label: "206（名称未解析）", nameResolved: false, count: 1 }, { typeId: "class:212", label: "212（名称未解析）", nameResolved: false, count: 2 }] }],
         summary: { pass: 0, fail: 1 },
-        inspection: { byLayer: [{ layerId: "EOL", defectDieCount: 1, defectRecordCount: 4, inGridRecordCount: 3, outsideGridCount: 1, rows: [{ typeId: "class:206", label: "206（名称未解析）", nameResolved: false, count: 1, ratePercent: 25 }, { typeId: "class:212", label: "212（名称未解析）", nameResolved: false, count: 3, ratePercent: 75 }] }] },
+        inspection: { byLayer: [{ layerId: "EOL", testedDieCount: 1, defectDieCount: 1, defectRecordCount: 4, inGridRecordCount: 3, outsideGridCount: 1, rows: [{ typeId: "class:206", label: "206（名称未解析）", nameResolved: false, count: 1, ratePercent: 100 }, { typeId: "class:212", label: "212（名称未解析）", nameResolved: false, count: 3, ratePercent: 300 }] }] },
       }],
     },
   },

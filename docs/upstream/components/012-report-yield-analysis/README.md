@@ -99,3 +99,14 @@ Out of scope during intake:
 - The 2026-09-22 annotation review removed the previous Wafer Yield Ranking
   chart and relocated `Wafer Yield & CP Fail Analysis` from Split Table into
   this component.
+
+
+## 动态 Step 横轴修复 · 2026-10-14
+
+组合图保留 Condition → Wafer ID → Step 三级横轴。Condition 直接显示输入值，不能用 roleLabel 或 memberships 数量代替。相邻 Wafer 按 membership.stepKey 合并 Step 区段，文字使用 membership.step；同名不同 key 不合并。没有 memberships 的旧输入按 wafer.step 展示。
+
+所有 membership 明确为 isBaselineVariant=true 的 Wafer 放入独立 BSL 区段；跨多个 Step 的非 Baseline 显示「多 Step」，具体成员关系仍可在 tooltip 中查看。不得选取第一个成员冒充唯一归属。输入顺序、物理 Wafer 点数和 Yield/CP Fail 数值不变，不把共享 BSL 复制成多个图点。
+
+Canonical schema 新增可选 sourceWaferId / memberships，保留身份、标签、Baseline 标记和条件。App 使用同一组件与分组 helper；不改变请求、缓存或后端计算。新增回归覆盖实际横轴渲染、共享 BSL、同名不同 key、多 Step 和 schema 保真。
+
+验证：App 72 个测试文件 / 529 项通过，DS 19 个文件 / 122 项通过；两端 TypeScript、修复文件 ESLint、隔离生产构建通过。真实页面 RND_AF01112_CP_DEMO 显示 25 个物理 Wafer 点、BSL + 11 个 Step 区段；选择 TR CD 后为 3 BSL + 2 split 共 5 点，清除后恢复全部。截图：`/private/tmp/yield-step-axis-fixed-20261014.jpg`。

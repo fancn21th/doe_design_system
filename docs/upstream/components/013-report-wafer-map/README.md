@@ -154,7 +154,7 @@ This supersedes these two fields' earlier first-slice deferral.
 
 Actual record IDs and numeric details can be delivered from the existing frozen
 Defect map payload. UI opens these fields locally; images remain outside scope.
-Separately, CP cards may show default-layer Defect Die counts with explicit
+Separately, Parameter Map cards may show default-layer Defect Die counts with explicit
 Layer and unavailable/empty states. These facts do not imply matching CP and
 Defect coordinates or authorize Overlay rendering.
 
@@ -191,3 +191,31 @@ Consumer adoption: component/model, relevant schema hunks, fixtures/scenarios
 and focused tests. App owns controlled Layer/class reconciliation and projection
 of the new optional facts. Browser critical-path acceptance belongs to the App
 consumer against its user-managed running service.
+
+
+## JSON colour configuration · 2026-10-14
+
+User confirmed one JSON configuration table per view: `src/config/wafer-map/final-bin.json`, `parameter-map.json`, and `defect-map.json`. Their field guide is `src/config/wafer-map/README.md`. These files now own all three views' Die colours, missing-value/base colours, CP Fail outline and selection/hover outlines. The canvas and gallery/dialog legends share `wafer-map-colors.ts`; configuration validation rejects malformed tables. The existing defaults remain green/warm CP families, the supplied-domain HSL gradient and stable defect colours. Configuring a different family does not alter supplied CP status, scale facts or classification identity; legend wording no longer assumes a hue. This supersedes earlier statements that green/warm/red/gray are fixed rendering rules. The CP Fail legend now matches the configured canvas outline exactly.
+
+Consumer adoption includes these JSON files, resolver, component, geometry-model colour re-exports and tests; UI schemas, fixtures/scenarios and facts are unchanged. App-specific geometry helpers must be preserved. Static imports require a normal production rebuild for changed configuration. No scheme-selection UI, preference persistence, database table, image capability or business calculation is introduced.
+
+## Final Bin footer correction (2026-10-14)
+
+User confirmed that every Final Bin card must show only Pass and Fail. Hide the
+entire independent Defect metric, its Layer and its missing-data reason in this
+view, even when `defectSummary` is supplied. Parameter Map and Defect Map retain
+their current summaries. No input schema or upstream data rule changes. The
+existing `cpDefectSummary` scenario now demonstrates that mixed Defect coverage
+cannot change Final Bin's two-column footer.
+
+## Defect Rate denominator correction (2026-10-14)
+
+User confirmed that each Defect Type row's Rate is its Count divided by the
+current Defect inspection's Tested Dies, multiplied by 100. Count remains the
+full class defect-record count, including outside-grid records; it is not a
+deduplicated Die count. The summary displays the supplied `testedDieCount`.
+Rates are backend facts, not calculated by the component or App. Missing or
+zero Tested Dies yields an unavailable Rate (`—`) while counts remain visible.
+Multiple records per Die may produce a Rate over 100%; do not clamp or normalize
+class rates to sum to 100%. Type filters do not change this denominator.
+Parameter/Final Bin rate formulas and footer behaviour are unchanged.

@@ -27,23 +27,39 @@ export function visibleCpFailParameters(input: ReportWaferYieldCpFail) {
     .filter((parameter) => visibleParameters.has(parameter))
 }
 
-export function groupConsecutiveWaferSteps(
-  wafers: WaferYieldCpFailRow[]
-) {
-  return wafers.reduce<
-    Array<{ step: string; startIndex: number; count: number }>
-  >((groups, wafer, index) => {
-    const previous = groups.at(-1)
-    if (previous?.step === wafer.step) {
-      previous.count += 1
-      return groups
-    }
-
-    groups.push({ step: wafer.step, startIndex: index, count: 1 })
-    return groups
-  }, [])
+/** Membership identity owns grouping; labels are display-only. */
+function waferStepGroup(wafer: WaferYieldCpFailRow) {
+  const memberships = wafer.memberships ?? []
+  if (memberships.length === 0) {
+    return { key: JSON.stringify(["legacy", wafer.step]), step: wafer.step }
+  }
+  if (memberships.every((member) => member.isBaselineVariant === true)) {
+    return { key: JSON.stringify(["baseline"]), step: "BSL" }
+  }
+  const stepKeys = [...new Set(memberships.map((member) => member.stepKey))].sort()
+  return {
+    key: JSON.stringify(["steps", stepKeys]),
+    step: stepKeys.length === 1 ? memberships[0].step : "多 Step",
+  }
 }
 
+export function groupConsecutiveWaferSteps(wafers: WaferYieldCpFailRow[]) {
+  let previousKey: string | undefined
+  return wafers.reduce<Array<{ step: string; startIndex: number; count: number }>>(
+    (groups, wafer, index) => {
+      const { key, step } = waferStepGroup(wafer)
+      const previous = groups.at(-1)
+      if (previous && previousKey === key) {
+        previous.count += 1
+      } else {
+        groups.push({ step, startIndex: index, count: 1 })
+      }
+      previousKey = key
+      return groups
+    },
+    []
+  )
+}
 
 /** One shared layout for SVG, column labels and hit targets. */
 export function waferYieldPlotGeometry(availableWidth: number, waferCount: number, compactViewport: boolean) {

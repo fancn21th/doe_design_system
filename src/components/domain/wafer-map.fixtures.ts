@@ -207,13 +207,14 @@ export const waferMapDefectOverviewFixture: WaferMapDefectWaferInput[] = waferId
     }
     return {
       layerId,
+      testedDieCount: dies.length,
       defectDieCount: layerDefectDies.length,
       defectRecordCount: layerDefects.length,
       rows: [...typeCounts.entries()].map(([typeId, row]) => ({
         typeId,
         label: row.label,
         count: row.count,
-        ratePercent: ratePercent(row.count, layerDefects.length),
+        ratePercent: ratePercent(row.count, dies.length),
       })),
     }
   })

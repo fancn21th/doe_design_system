@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "defect-map-default",
+  "name": "Defect Map 默认配色",
+  "canvas": {
+    "waferBackground": "#f3f6f5",
+    "waferBorder": "#c7d2d9",
+    "dieBackground": "#e2e8f0",
+    "selectedOutline": "#172b2b",
+    "hoverOutline": "#172b2b"
+  },
+  "byType": {
+    "class:206": "#0e7490",
+    "class:212": "#be185d"
+  },
+  "fallbackPalette": [
+    "#dc2626",
+    "#c2410c",
+    "#0e7490",
+    "#4338ca",
+    "#7e22ce",
+    "#be185d"
+  ]
+}

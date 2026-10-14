@@ -47,6 +47,7 @@ type ChartTooltip = {
 
 export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpFail }) {
   const [tooltip, setTooltip] = React.useState<ChartTooltip | null>(null)
+  const groups = groupConsecutiveWaferSteps(input.wafers)
   const parameters = visibleCpFailParameters(input)
   const parameterColors = new Map(
     parameters.map((parameter, index) => [
@@ -71,8 +72,6 @@ export function WaferYieldCpFailAnalysis({ input }: { input: ReportWaferYieldCpF
       narrow.removeEventListener("change", measure)
     }
   }, [input.wafers.length])
-  const groups = groupConsecutiveWaferSteps(input.wafers)
-
   React.useEffect(() => {
     if (!tooltip) return
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -331,7 +330,7 @@ function ChartXAxis({
   plotWidth: number
 }) {
   return (
-    <div className="relative h-[9.125rem]" style={{ width: plotWidth }}>
+    <div data-yield-x-axis className="relative h-[9.125rem]" style={{ width: plotWidth }}>
       <div
         className="grid h-[6.75rem]"
         style={{
@@ -355,6 +354,7 @@ function ChartXAxis({
       {groups.map((group) => (
         <span
           key={`${group.step}-${group.startIndex}`}
+          data-yield-step-group
           className="absolute top-[6.75rem] flex h-[2.375rem] items-start justify-center overflow-hidden border-t border-l bg-background px-1 pt-1.5 text-center text-[10px] leading-3 text-foreground [overflow-wrap:anywhere] last:border-r"
           style={{
             left: group.startIndex * columnWidth,
@@ -410,10 +410,20 @@ function ChartTooltipCard({
       <strong className="mb-1.5 block text-sm">
         Wafer {tooltip.wafer.waferId.replace(/^W/i, "")}
       </strong>
+      {tooltip.wafer.sourceWaferId && tooltip.wafer.sourceWaferId !== tooltip.wafer.waferId
+        ? <TooltipRow label="Wafer ID" value={tooltip.wafer.sourceWaferId} />
+        : null}
       <TooltipRow
         label="Yield"
         value={tooltip.wafer.yield === null ? "Unavailable" : `${tooltip.wafer.yield.toFixed(2)}%`}
       />
+      {(tooltip.wafer.memberships ?? []).map((membership) => (
+        <TooltipRow
+          key={`${membership.stepKey}:${membership.variantRowId}`}
+          label={`${membership.stage} / ${membership.step}`}
+          value={`${membership.roleLabel}${membership.condition ? ` · ${membership.condition}` : ""}`}
+        />
+      ))}
       {fails.map((fail) => (
         <TooltipRow
           key={fail.parameter}
@@ -441,7 +451,10 @@ function chartWaferLabel(
   const fails = visibleCpFails(wafer, threshold)
     .map((fail) => `${fail.parameter} ${fail.percent.toFixed(2)}%`)
     .join(", ")
-  return `${wafer.waferId} Yield ${wafer.yield === null ? "Unavailable" : `${wafer.yield.toFixed(2)}%`}${
+  const memberships = (wafer.memberships ?? [])
+    .map((membership) => `${membership.stage} / ${membership.step} ${membership.roleLabel}`)
+    .join(", ")
+  return `${wafer.sourceWaferId ?? wafer.waferId} Yield ${wafer.yield === null ? "Unavailable" : `${wafer.yield.toFixed(2)}%`}${
     fails ? `, ${fails}` : ""
-  }`
+  }${memberships ? `, memberships: ${memberships}` : ""}`
 }

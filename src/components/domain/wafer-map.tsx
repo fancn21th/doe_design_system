@@ -2,19 +2,15 @@
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { defectColor, finalBinColor, parameterColor, parameterColorGradient, waferMapColorSchemes } from "./wafer-map-colors"
 import { ChevronLeft, ChevronRight, CircleHelp, Expand, ZoomIn, ZoomOut } from "lucide-react"
 
 import {
-  DEFAULT_FINAL_BIN_PALETTE,
   createWaferCanvasLayout,
   boundedWaferZoom,
   canvasPointFromClient,
   dieColorSegments,
   waferTooltipPosition,
-  defectColor,
-  finalBinColor,
-  parameterColor,
-  parameterColorGradient,
   type DieData,
   type WaferMapData,
 } from "@/components/domain/wafer-map-model"
@@ -102,6 +98,7 @@ export type WaferMapCoreProps = {
 }
 
 export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSelect }: WaferMapCoreProps) {
+  const colors = waferMapColorSchemes[input.kind].canvas
   const coreRef = useRef<HTMLDivElement>(null)
   const baseCanvasRef = useRef<HTMLCanvasElement>(null)
   const dataCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -127,18 +124,18 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
 
   useEffect(() => {
     drawCanvas(baseCanvasRef.current, size, (context) => {
-      drawWaferBoundary(context, layout)
+      drawWaferBoundary(context, layout, colors.waferBackground)
       context.save()
       clipWafer(context, layout)
-      context.fillStyle = "#e2e8f0"
+      context.fillStyle = colors.dieBackground
       for (const die of wafer.geometry.dies) {
         const geometry = layout.dieById.get(die.id)
         if (geometry) context.fillRect(geometry.x, geometry.y, geometry.width, geometry.height)
       }
       context.restore()
-      strokeWaferBoundary(context, layout)
+      strokeWaferBoundary(context, layout, colors.waferBorder)
     })
-  }, [layout, size, wafer.geometry.dies])
+  }, [colors, layout, size, wafer.geometry.dies])
 
   useEffect(() => {
     drawCanvas(dataCanvasRef.current, size, (context) => {
@@ -146,15 +143,14 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
       context.save()
       clipWafer(context, layout)
       if (input.kind === "cp-final-bin" && isFinalBinWafer(wafer)) {
-        const palette = { ...DEFAULT_FINAL_BIN_PALETTE, ...input.palette }
-        for (const die of wafer.dies) drawDie(context, layout, die, finalBinColor(die.finalBin, palette, die.pass))
+        for (const die of wafer.dies) drawDie(context, layout, die, finalBinColor(die.finalBin, input.palette, die.pass))
       }
       if (input.kind === "cp-parameter" && isParameterWafer(wafer)) {
         for (const die of wafer.dies) {
           const color = die.value === null || die.status !== "VALID"
-            ? "#94a3b8"
+            ? waferMapColorSchemes["cp-parameter"].invalidValue
             : parameterColor(die.value, input.parameter.scale.domainMin, input.parameter.scale.domainMax)
-          drawDie(context, layout, die, color, die.pass === false)
+          drawDie(context, layout, die, color, die.pass === false ? waferMapColorSchemes["cp-parameter"].cpFailOutline : undefined)
         }
       }
       if (input.kind === "defect" && isDefectWafer(wafer)) {
@@ -175,13 +171,13 @@ export function WaferMapCore({ input, wafer, className, selectedDieId, onDieSele
   useEffect(() => {
     drawCanvas(interactionCanvasRef.current, size, (context) => {
       if (selectedDieId) {
-        strokeSelectedDie(context, layout, selectedDieId, 2)
+        strokeSelectedDie(context, layout, selectedDieId, 2, colors.selectedOutline)
       }
       if (activeDie && activeDie.die.id !== selectedDieId) {
-        strokeSelectedDie(context, layout, activeDie.die.id, 1.5)
+        strokeSelectedDie(context, layout, activeDie.die.id, 1.5, colors.hoverOutline)
       }
     })
-  }, [activeDie, layout, selectedDieId, size])
+  }, [activeDie, colors, layout, selectedDieId, size])
 
   function resolveDie(event: React.PointerEvent<HTMLDivElement>): ActiveDie | null {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -288,7 +284,7 @@ export type WaferMapCardProps = {
 }
 
 export function WaferMapCard({ input, wafer, mapState, className, onDieSelect, onExpand }: WaferMapCardProps) {
-  const defectSummary = input.kind !== "defect" && "defectSummary" in wafer ? wafer.defectSummary : undefined
+  const defectSummary = input.kind === "cp-parameter" && "defectSummary" in wafer ? wafer.defectSummary : undefined
   return (
     <Card size="sm" className={cn("gap-2 border ring-0 shadow-none", className)}>
       <CardHeader className="flex items-center justify-between px-3">
@@ -640,7 +636,7 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
       {input.kind === "cp-final-bin" && isFinalBinWafer(wafer) && (
         <>
           <strong>Final Bin</strong>
-          <span className="text-muted-foreground">绿色 Pass · 暖色 Fail</span>
+          <span className="text-muted-foreground">按 CP 状态区分 Pass / Fail</span>
           {wafer.inspection?.rows.map((row) => (
             <span key={row.binCode} className="flex items-center gap-1.5">
               <FinalBinSwatches bin={row.binCode} wafers={[wafer]} palette={input.palette} />
@@ -664,11 +660,11 @@ function InspectionLegend({ input, wafer }: { input: WaferMapGalleryInput; wafer
               {type.label}
             </span>
           ))}
-          <span className="flex items-center gap-1.5 text-muted-foreground"><i className="size-2.5 rounded-sm bg-slate-200" />无缺陷记录 / 未匹配筛选</span>
+          <span className="flex items-center gap-1.5 text-muted-foreground"><i className="size-2.5 rounded-sm" style={{ background: waferMapColorSchemes.defect.canvas.dieBackground }} />无缺陷记录 / 未匹配筛选</span>
         </>
       )}
       <span className="ml-auto flex items-center gap-1.5 text-muted-foreground">
-        <i className="size-3 rounded-sm border-2 border-foreground bg-transparent" />
+        <i className="size-3 rounded-sm border-2 bg-transparent" style={{ borderColor: waferMapColorSchemes[input.kind].canvas.selectedOutline }} />
         Selected Die
       </span>
     </div>
@@ -793,14 +789,17 @@ export function InspectionStatistics({ input, wafer }: { input: WaferMapGalleryI
     return (
       <InspectionTableShell waferId={wafer.waferId} meta="当前 Layer 全部类型汇总；不随类型筛选变化">
         <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-2"><InspectionMetric label="Tested Dies" value={inspection.testedDieCount == null ? "—" : inspection.testedDieCount.toLocaleString()} /></div>
           <InspectionMetric label="Defect Die" value={inspection.defectDieCount.toLocaleString()} />
           <InspectionMetric label="Defect Record" value={inspection.defectRecordCount.toLocaleString()} />
         </div>
         {inspection.classBreakdownStatus === "UNAVAILABLE" && <p className="text-xs text-muted-foreground">分类明细未提供</p>}
-        {inspection.outsideGridCount !== undefined && <p className="text-xs text-muted-foreground">网格外记录：{inspection.outsideGridCount.toLocaleString()}；类型占比分母为完整缺陷记录。</p>}
-        <Table className="domain-ui-report-table mt-3" aria-label="各类型缺陷记录总数与占比">
+        {inspection.outsideGridCount !== undefined && <p className="text-xs text-muted-foreground">网格外记录：{inspection.outsideGridCount.toLocaleString()}。</p>}
+        <p className="text-xs text-muted-foreground">Rate = Count / Tested Dies × 100%；Count 为当前 Layer 的缺陷记录数。</p>
+        {!(inspection.testedDieCount != null && inspection.testedDieCount > 0) && <p className="text-xs text-muted-foreground">Rate 不可用：当前 Defect 检测的 Tested Dies 未提供或为 0。</p>}
+        <Table className="domain-ui-report-table mt-3" aria-label="各类型缺陷记录总数与缺陷率">
           <TableHeader><TableRow><TableHead>Defect Type</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Rate</TableHead></TableRow></TableHeader>
-          <TableBody>{inspection.rows.map((row) => <TableRow key={row.typeId}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{formatPercent(row.ratePercent)}</TableCell></TableRow>)}</TableBody>
+          <TableBody>{inspection.rows.map((row) => <TableRow key={row.typeId}><TableCell>{row.label}</TableCell><TableCell className="text-right font-mono">{row.count.toLocaleString()}</TableCell><TableCell className="text-right font-mono">{inspection.testedDieCount != null && inspection.testedDieCount > 0 && row.ratePercent !== null ? formatPercent(row.ratePercent) : "—"}</TableCell></TableRow>)}</TableBody>
         </Table>
       </InspectionTableShell>
     )
@@ -1076,8 +1075,8 @@ function ParameterLegend({ input }: { input: Extract<WaferMapGalleryInput, { kin
       <i className="h-2 w-32 rounded-full" style={{ background: parameterColorGradient(scale.domainMin, scale.domainMax) }} />
       <span title={String(scale.domainMax)}>{format(scale.domainMax)}</span>
     </span>
-    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm bg-slate-400" />无有效值</span>
-    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm border-2 border-red-600" />CP Fail（已提供时）</span>
+    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm" style={{ background: waferMapColorSchemes["cp-parameter"].invalidValue }} />无有效值</span>
+    <span className="inline-flex items-center gap-1 text-muted-foreground"><i className="size-2.5 rounded-sm border-2" style={{ borderColor: waferMapColorSchemes["cp-parameter"].cpFailOutline }} />CP Fail（已提供时）</span>
   </div>
 }
 
@@ -1090,7 +1089,7 @@ function GalleryLegend({ input, onDefectFiltersChange }: { input: WaferMapGaller
     binCounts.set(bin, (binCounts.get(bin) ?? 0) + 1)
   }
   return <GalleryLegendRow><div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
-    <span className="text-muted-foreground">绿色 Pass · 暖色 Fail</span>
+    <span className="text-muted-foreground">按 CP 状态区分 Pass / Fail</span>
     {[...binCounts.entries()].sort(([left], [right]) => left.localeCompare(right, undefined, { numeric: true })).map(([bin, count]) => (
       <span key={bin} className="flex items-center gap-1"><FinalBinSwatches bin={bin} wafers={input.wafers} palette={input.palette} />Bin {bin} · {count.toLocaleString()}</span>
     ))}
@@ -1227,22 +1226,22 @@ function isFinalBinWafer(wafer: AnyWafer): wafer is WaferMapFinalBinWaferInput {
 function isParameterWafer(wafer: AnyWafer): wafer is WaferMapParameterWaferInput { return wafer.dies.length === 0 || "value" in wafer.dies[0] }
 function isDefectWafer(wafer: AnyWafer): wafer is WaferMapDefectWaferInput { return wafer.dies.length === 0 || "defects" in wafer.dies[0] }
 
-function drawDie(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, die: DieData, fill: string, nonPass = false) {
+function drawDie(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, die: DieData, fill: string, outline?: string) {
   const geometry = layout.dieById.get(die.id)
   if (!geometry) return
   context.fillStyle = fill
   context.fillRect(geometry.x, geometry.y, geometry.width, geometry.height)
-  if (nonPass) {
-    context.strokeStyle = "#d92d20"
+  if (outline) {
+    context.strokeStyle = outline
     context.lineWidth = Math.max(0.7, geometry.width * 0.12)
     context.strokeRect(geometry.x, geometry.y, geometry.width, geometry.height)
   }
 }
 
-function strokeSelectedDie(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, dieId: string, lineWidth: number) {
+function strokeSelectedDie(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, dieId: string, lineWidth: number, color: string) {
   const geometry = layout.dieById.get(dieId)
   if (!geometry) return
-  context.strokeStyle = "#172b2b"
+  context.strokeStyle = color
   context.lineWidth = lineWidth
   context.strokeRect(geometry.x - 0.5, geometry.y - 0.5, geometry.width + 1, geometry.height + 1)
 }
@@ -1260,5 +1259,5 @@ function drawCanvas(canvas: HTMLCanvasElement | null, size: number, draw: (conte
 }
 
 function clipWafer(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>) { context.beginPath(); context.arc(layout.centerX, layout.centerY, layout.radius, 0, Math.PI * 2); context.clip() }
-function drawWaferBoundary(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>) { context.fillStyle = "#f3f6f5"; context.beginPath(); context.arc(layout.centerX, layout.centerY, layout.radius, 0, Math.PI * 2); context.fill() }
-function strokeWaferBoundary(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>) { context.strokeStyle = "#c7d2d9"; context.lineWidth = 1.25; context.beginPath(); context.arc(layout.centerX, layout.centerY, layout.radius, 0, Math.PI * 2); context.stroke() }
+function drawWaferBoundary(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, color: string) { context.fillStyle = color; context.beginPath(); context.arc(layout.centerX, layout.centerY, layout.radius, 0, Math.PI * 2); context.fill() }
+function strokeWaferBoundary(context: CanvasRenderingContext2D, layout: ReturnType<typeof createWaferCanvasLayout>, color: string) { context.strokeStyle = color; context.lineWidth = 1.25; context.beginPath(); context.arc(layout.centerX, layout.centerY, layout.radius, 0, Math.PI * 2); context.stroke() }

@@ -283,11 +283,26 @@ describe("wafer map gallery contract", () => {
     const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
     expect(html).toContain("当前 Layer 全部类型汇总")
     expect(html).toContain("网格外记录：1")
-    expect(html).toContain("25.00%")
-    expect(html).toContain("75.00%")
+    expect(html).toContain("100.00%")
+    expect(html).toContain("300.00%")
+    expect(html).toContain("Tested Dies")
+    expect(html).not.toContain("类型占比分母为完整缺陷记录")
     expect(html).not.toContain("Particle")
     wafer.dies[0].classBreakdownStatus = "UNAVAILABLE"
     expect(selectedDieRows(input, wafer, "-19:5").items).toContainEqual({ label: "Defect Type", value: "分类明细未提供" })
+  })
+
+  it.each([null, 0])("keeps Defect counts but hides Rate when Tested Dies is %s", (testedDieCount) => {
+    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.defectAggregates.input)
+    if (input.kind !== "defect") throw new Error("Expected defect input")
+    const wafer = input.wafers[0]
+    wafer.inspection!.byLayer[0].testedDieCount = testedDieCount
+    wafer.inspection!.byLayer[0].rows[0].ratePercent = null
+    const html = renderToStaticMarkup(React.createElement(InspectionStatistics, { input, wafer }))
+    expect(html).toContain("Rate 不可用")
+    expect(html).toContain("Defect Record")
+    expect(html).not.toContain("300.00%")
+    expect(html).not.toContain("0.00%")
   })
 
   it("renders delivered record identity, signed coordinates, nullable dimensions and zero image count", () => {
@@ -305,9 +320,14 @@ describe("wafer map gallery contract", () => {
     expect(html).not.toContain("http")
   })
 
-  it("keeps independent CP defect summary Layer scope and unavailable Map separate from zero", () => {
-    const input = waferMapGalleryInputSchema.parse(waferMapGalleryScenarios.cpDefectSummary.input)
-    if (input.kind !== "cp-final-bin") throw new Error("Expected CP input")
+  it("keeps Parameter Map defect summary Layer scope and unavailable Map separate from zero", () => {
+    const source = waferMapGalleryScenarios.parameterOverview.input
+    const input = waferMapGalleryInputSchema.parse({ ...source, mapStates: source.mapStates.slice(0, 3),
+      wafers: source.wafers.slice(0, 3).map((wafer, index) => ({ ...wafer,
+        defectSummary: waferMapGalleryScenarios.cpDefectSummary.input.wafers[index].defectSummary,
+      })),
+    })
+    if (input.kind !== "cp-parameter") throw new Error("Expected parameter input")
     const available = renderToStaticMarkup(React.createElement(WaferMapCard, { input, wafer: input.wafers[0] }))
     expect(available).toContain("Defect Die · Layer EOL")
     expect(available).toContain("142")

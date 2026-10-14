@@ -11,7 +11,7 @@ import { reportCpDataScenarios } from "@/components/domain/report-cp-data.scenar
 <div className="domain-ui-preview-wide">
   <div className="not-prose overflow-hidden rounded-xl border">
     <div className="border-b px-4 py-3 text-sm font-medium">CP Data</div>
-    <ReportCpData input={reportCpDataScenarios.normal.input} />
+    <ReportCpData input={reportCpDataScenarios.sharedBaseline.input} />
   </div>
 </div>
 
@@ -50,3 +50,19 @@ import { ReportState } from "@/components/domain/report-state"
 所有加载状态只使用「正在加载报告数据」「请稍候，数据加载完成后将自动显示。」
 及浅灰圆角底座中的 Spinner；空数据、未选择或筛选无结果只显示对应说明文字，
 没有图标、Spinner 或 Cancel。状态事实与请求仍归 consumer 所有，缺失值不补为零。
+
+## Stable comparison inspection · 2026-10-14
+
+`measurement.groups` 每个完整 Wafer 身份只保存一份物理点云。可选 `measurement.comparisonGroups` 独立描述 Stage + Step + Sequence 的稳定 `id/stepKey`、显示 label、Variant 成员引用、BSL/Split 角色及 Condition。名称不能替代身份；完整组 roster 可以包含没有 CP 点数据的 Wafer，明细明确显示其缺失。
+
+整列（含箱体与横轴）hover 展示该片参数的 可绘制点数、上游统计样本 N、Mean、Median、Sample σ、SOURCE CPK、CPU、CPL 和上游状态；只有靠近真实 die 才追加 die 值及已提供的 Final Bin / Die Result。缺失指标显示 `—`，缺失状态显示“未提供”，不派生 PASS/FAIL。
+
+唯一归属的 hover 自动预览其组：BSL 列用蓝色、全部 Split 用绿色。共享 BSL 只沿用已明确选择且实际包含该片的比较组；无匹配上下文时只提示多归属数量，点击打开真实组选择。悬浮卡的位置受当前横向滚动窗口限制，不会被宽画布推出可见区域。图表上方只有一个“比较组”选择器，组件不隐式选第一组，也不合并不同 Step。选择、hover、明细与 zoom 都是局部状态，不请求数据。
+
+点击 Wafer 打开对应 `BSL & Split Detail`。`detail.min/max`、`offscreenPointCount`、`totalPointCount`、status/reason 由 consumer 提供；范围未提供时保留不可用态。原始有限数值点的视野外计数和完整原始采集记录计数可能涵盖未绘制或无值记录，不应与过滤后的可绘制点数混同。组件不以局部视野重算能力、统计或计数。75%–300% 按钮/滚轮只缩放画布尺寸，复位为 100%，Esc 关闭。总览坐标包含已有 Mean±3σ 端点；固定明细坐标按上游范围裁剪图层。
+
+新增 synthetic scenarios：`sharedBaseline`（同名 Step、不同 Seq、共享 BSL）、`missingCapability`（SOURCE NO_SPEC、缺 CPU/CPL 与 die 分类）、`unavailableDetail`。它们是交互测试数据，不是生产验收证据。
+
+<div className="not-prose"><ReportCpData input={reportCpDataScenarios.missingCapability.input} /></div>
+
+Consumer 映射：Backend Step group roster → `comparisonGroups.members`；完整 Wafer ID → `groups[].id` 与 `members[].waferId`；短 ID 只用于 label；SOURCE capability/状态照传；Backend focused range → `detail`。正式/MOCK 规格政策与任何统计公式仍由上游持有。本次不引入临时 App 图表或公共 foundation 修改。

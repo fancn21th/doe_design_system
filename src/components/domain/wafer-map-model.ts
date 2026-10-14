@@ -1,3 +1,5 @@
+export { DEFAULT_FINAL_BIN_PALETTE, finalBinColor, parameterColor, parameterColorGradient, defectColor } from "./wafer-map-colors"
+
 export type DieId = string
 
 export type DieData = {
@@ -196,24 +198,6 @@ export function createDieVisualStates(
   })
 }
 
-export const DEFAULT_FINAL_BIN_PALETTE: Readonly<Record<string, string>> = {
-  // BFF may preserve semantic PASS/FAIL labels instead of numeric SBIN codes.
-  PASS: "#16a34a",
-  FAIL: "#ef4444",
-  "1": "#16a34a",
-  "9": "#0891b2",
-  "10": "#ef4444",
-  "11": "#84cc16",
-  "12": "#f97316",
-  "13": "#facc15",
-  "17": "#14b8a6",
-  "18": "#ec4899",
-  "19": "#8b5cf6",
-  "20": "#a16207",
-  "22": "#4f46e5",
-  "31": "#111827",
-}
-
 export type WaferCanvasLayout = {
   width: number
   height: number
@@ -264,51 +248,6 @@ export function createWaferCanvasLayout(
     cellHeight,
     dieById: new Map(dies.map((die) => [die.id, die])),
   }
-}
-
-export function finalBinColor(
-  finalBin: string,
-  palette: Readonly<Record<string, string>> = DEFAULT_FINAL_BIN_PALETTE,
-  pass?: boolean
-): string {
-  const normalized = finalBin.replace(/^BIN\s*/i, "").trim()
-  let hash = 0
-  for (const character of normalized || "unknown") {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0
-  }
-  // CP status is supplied truth. Bin names/numbers and their arbitrary hashes
-  // must never make an explicitly failing die look passing.
-  if (pass === true) return `hsl(${134 + hash % 25} 65% ${32 + hash % 10}%)`
-  if (pass === false) {
-    const failHues = [0, 12, 24, 340, 352]
-    return `hsl(${failHues[hash % failHues.length]} 78% ${40 + hash % 10}%)`
-  }
-  return palette[normalized] ?? `hsl(${hash % 360} 65% 43%)`
-}
-
-export function parameterColor(value: number, low: number, high: number): string {
-  const range = high - low || 1
-  const amount = Math.max(0, Math.min(1, (value - low) / range))
-  const hue = 265 - amount * 205
-  const lightness = 34 + amount * 18
-  return `hsl(${hue} 65% ${lightness}%)`
-}
-
-/** Sample the same value-to-colour function used by the canvas. */
-export function parameterColorGradient(low: number, high: number): string {
-  const stops = [0, 0.25, 0.5, 0.75, 1].map((amount) =>
-    `${parameterColor(low + (high - low) * amount, low, high)} ${amount * 100}%`
-  )
-  return `linear-gradient(to right, ${stops.join(", ")})`
-}
-
-export function defectColor(typeId: string): string {
-  const colors = ["#dc2626", "#c2410c", "#0e7490", "#4338ca", "#7e22ce", "#be185d"]
-  let hash = 0
-  for (const character of typeId) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0
-  }
-  return colors[hash % colors.length]
 }
 
 /** Display geometry only: preserve exact supplied Die facts at every zoom. */

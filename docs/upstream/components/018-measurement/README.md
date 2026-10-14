@@ -122,3 +122,16 @@ See `../report-code-first-pass.md` for the full code-evidence summary.
 ## 2026-10-10 per-group references
 
 The Report Center round-3 audit found that the consuming Inline plot promoted the first wafer's limits to every column, including a mixed-spec wafer. The approved correction extends Measurement with optional per-group effective references. Domain UI draws supplied values inside their owning wafer column, exposes them in inspection, and includes them in the default plotting domain. Backend owns effective-limit semantics; no zero-limit or Cpk policy is implemented here. The synthetic mixed-spec scenario captures the rendering boundary without storing customer measurements.
+
+## 2026-10-14 CP inspection adoption
+
+The user authorized Snapshot-derived Step/Variant memberships, whole-wafer capability hover, and click-to-open BSL/Split detail. Prototype evidence was read from `/private/tmp/db-probe-8888-report-20261014.html` lines 5789–5890 and Probe `reference/acceptance/2026-10-14-cp-data/README.md`. Stable Stage + Step + Sequence identity replaces prototype fixed wafer lists. Shared baseline requires explicit comparison context or a local group picker. Prototype canvas zoom (75%–300%, wheel/buttons/reset/Esc) is retained; focused bounds and outside/raw record counts are supplied by the backend. Formal SOURCE specification stays the active capability policy; prototype Mock limits are not copied into real input. Synthetic scenarios preserve the interaction contract without customer data.
+
+This scope was explicitly authorized across canonical DS and its App adoption; the earlier read-only upstream statement remains the ordinary boundary for unrelated work.
+
+
+## 2026-10-14 Inline individual measurement points
+
+Inline Data opts into `Measurement.pointPresentation="individual"`. The shared default remains `density` for CP Data. Individual points use deterministic evenly spaced horizontal positions within at most 96px / 64% of the wafer column, 4px radius circles, white outlines, and a lightly filled box. A center gap keeps single raw points distinct from mean markers. Only screen X changes; raw values, identities, count, numeric domain and supplied statistics remain untouched. Canvas painting consumes the same positioned points as hover lookup, including fixed-domain clipping.
+
+Reference evidence: exact localhost:8888 DOE Workbench 单文件版(2).html, embedded stage dashboard `factorCapabilityChart`: 4px circles, up to 96px point band, light box. Compared GOF and THK (13 points per wafer) and FOX-DEP-BOW-03 (one point per wafer). The prototype and runtime have different sample coverage; prototype samples are not added to the runtime.

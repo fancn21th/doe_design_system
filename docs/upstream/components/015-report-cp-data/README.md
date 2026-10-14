@@ -100,3 +100,9 @@ Code-observed interaction evidence:
 - Should this component share parameter selection state with Parameter Median
   and CP x Inline?
 - What tooltip or drilldown is expected for individual die measurement points?
+
+## 2026-10-14 CP inspection adoption
+
+The user authorized Snapshot-derived Step/Variant memberships, whole-wafer capability hover, and click-to-open BSL/Split detail. Prototype evidence was read from `/private/tmp/db-probe-8888-report-20261014.html` lines 5789–5890 and Probe `reference/acceptance/2026-10-14-cp-data/README.md`. Stable Stage + Step + Sequence identity replaces prototype fixed wafer lists. Shared baseline requires explicit comparison context or a local group picker. Prototype canvas zoom (75%–300%, wheel/buttons/reset/Esc) is retained; focused bounds and outside/raw record counts are supplied by the backend. Formal SOURCE specification stays the active capability policy; prototype Mock limits are not copied into real input. Synthetic scenarios preserve the interaction contract without customer data.
+
+This scope was explicitly authorized across canonical DS and its App adoption; the earlier read-only upstream statement remains the ordinary boundary for unrelated work.

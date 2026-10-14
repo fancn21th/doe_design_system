@@ -155,7 +155,7 @@ export function ReportInlineData({
                 {({ ready: "数据可用", partial: "部分数据", "no-data": "暂无数据", unavailable: "数据不可用" })[parsedInput.status]}
               </ReportBadge>
             </div>
-            <ReportMeasurement input={measurement} onGroupSelect={selectWafer} />
+            <ReportMeasurement input={{ ...measurement, scale: measurement.scale ?? { mode: "data-only" } }} pointPresentation="individual" onGroupSelect={selectWafer} />
             {parsedInput.coverage.length ? <Card size="sm" className="mt-4 border ring-0 shadow-none"><CardHeader><CardTitle>晶圆测量覆盖</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2 pb-(--card-spacing)">{parsedInput.coverage.map((item) => <Button type="button" key={item.waferId} variant="outline" size="xs" disabled={!item.measured} onClick={() => selectWafer(item.waferId)} className={cn(item.waferId === selectedWaferId && "bg-muted text-foreground")}>{item.waferId}{item.measured ? " · 有测量数据" : " · 无测量数据"}</Button>)}</CardContent></Card> : null}
             {parsedInput.rawDetail ? <p className="mt-3 text-xs text-muted-foreground">{parsedInput.rawDetail.parameterId}: {parsedInput.rawDetail.rawPointCount} 个测量点 · {({ ready: "数据可用", partial: "部分数据", unavailable: "数据不可用" })[parsedInput.rawDetail.status]}{parsedInput.rawDetail.reason ? ` · ${parsedInput.rawDetail.reason}` : ""}</p> : null}
             {parsedInput.summary?.limitation ? <p className="mt-2 text-xs text-muted-foreground">{parsedInput.summary.limitation}</p> : null}

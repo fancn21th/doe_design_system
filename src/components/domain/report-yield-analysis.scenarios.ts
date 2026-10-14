@@ -1,3 +1,4 @@
+import { reportWaferYieldDynamicFixture } from "@/components/domain/report-wafer-yield-cp-fail.fixtures"
 import {
   reportWaferYieldCpFailFixture,
   reportYieldAnalysisComparisonFixture,
@@ -21,5 +22,6 @@ export const reportYieldAnalysisScenarios = {
       yieldCpFailAnalysis: reportWaferYieldCpFailFixture,
     },
   },
+  dynamic: { name: "dynamic", input: { yieldCpFailAnalysis: reportWaferYieldDynamicFixture } },
   empty: { name: "empty", input: { wafers: [] } },
 } satisfies Record<string, ReportYieldAnalysisScenario>

@@ -11,6 +11,8 @@ import {
   measurementY,
   measurementChartWidth,
   measurementGroupLabel,
+  measurementWaferIdentity,
+  measurementPopoverBounds,
   nearestMeasurementPoint,
   stableJitter,
 } from "@/components/domain/measurement-model"
@@ -18,6 +20,26 @@ import { measurementFixture, measurementLabelBoundaryFixture, measurementMixedSp
 import { measurementInputSchema } from "@/schemas/domain-component-inputs"
 
 describe("Measurement rendering model", () => {
+  it("keeps whole-wafer inspection within visible scroll bounds for right-edge, scrolled and narrow columns", () => {
+    for (const [anchor, scrollLeft, viewport] of [[900, 0, 936], [1500, 500, 936], [450, 500, 936], [230, 0, 260]]) {
+      const popover = measurementPopoverBounds(anchor, scrollLeft, viewport)
+      expect(popover.left).toBeGreaterThanOrEqual(scrollLeft + 8)
+      expect(popover.left + popover.width).toBeLessThanOrEqual(scrollLeft + viewport - 8)
+      expect(popover.width).toBeLessThanOrEqual(308)
+    }
+  })
+  it("includes full mean ±3σ endpoints in overview while respecting supplied focused bounds", () => {
+    const input = { ...measurementSmallFixture, groups: [{ ...measurementSmallFixture.groups[0], summary: { ...measurementSmallFixture.groups[0].summary, mean: 81.2, sampleSigma: 31.25 } }] }
+    const overview = createMeasurementDomain(input)!
+    expect(overview.minimum).toBeLessThanOrEqual(-12.55)
+    expect(overview.maximum).toBeGreaterThanOrEqual(174.95)
+    const focused = createMeasurementDomain({ ...input, scale: { mode: "fixed", min: 88, max: 92 } })
+    expect(focused).toEqual({ minimum: 88, maximum: 92 })
+    const layout = createMeasurementLayout(800, 560, 1)
+    const point = input.groups[0].points.find((point) => point.value < 88)!
+    const index = createMeasurementHitIndex({ ...input, scale: { mode: "fixed", min: 88, max: 92 } }, focused!, layout)
+    expect([...index.values()].flat().some((positioned) => positioned.point.id === point.id)).toBe(false)
+  })
   it("keeps the full 25 × 4,099 die fixture intact", () => {
     const parsed = measurementInputSchema.parse(measurementFixture)
 
@@ -66,6 +88,12 @@ describe("Measurement rendering model", () => {
     }
     const width = measurementChartWidth(936, 4)
     expect(width).toBe(936)
+  })
+
+  it("keeps full physical identity visible when two Lots share a short wafer label", () => {
+    expect(measurementWaferIdentity({ id: "LOT_A_01", label: "W01" })).toBe("W01 · LOT_A_01")
+    expect(measurementWaferIdentity({ id: "LOT_B_01", label: "W01" })).toBe("W01 · LOT_B_01")
+    expect(measurementWaferIdentity({ id: "W01", label: "W01" })).toBe("W01")
   })
 
   it("compacts source wafer suffixes while retaining arbitrary group labels and supplied identities", () => {
